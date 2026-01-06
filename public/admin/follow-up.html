@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Follow-up - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .chart-container {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo" id="sidebarLogo">DELIVERYHUB</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <a href="follow-up" class="nav-item active"><i class="fas fa-chart-line"></i> Follow-up</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Métricas de Follow-up</h1>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statSent">0</div>
+                    <div class="stat-label">Mensagens Enviadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statInactive">0</div>
+                    <div class="stat-label">Clientes Inativos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statAbandoned">0</div>
+                    <div class="stat-label">Carrinhos Abandonados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statReconversion">--</div>
+                    <div class="stat-label">Taxa de Reconquista</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="followUpChart" height="100"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (async function init() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = '/login'; return; }
+
+            try {
+                const res = await fetch('/api/reports/follow-up', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('statSent').textContent = data.summary.totalSent;
+                    document.getElementById('statInactive').textContent = data.summary.inactiveCount;
+                    document.getElementById('statAbandoned').textContent = data.summary.abandonedCount;
+
+                    renderChart(data.history);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatisticas:', error);
+            }
+        })();
+
+        function renderChart(history) {
+            const ctx = document.getElementById('followUpChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map(h => h.date),
+                    datasets: [{
+                        label: 'Envios por Dia',
+                        data: history.map(h => h.count),
+                        borderColor: '#d9432e',
+                        backgroundColor: 'rgba(217, 67, 46, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

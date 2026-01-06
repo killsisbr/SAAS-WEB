@@ -1,0 +1,72 @@
+{
+    "name": "DeliveryHub",
+    "short_name": "DeliveryHub",
+    "description": "Plataforma de Delivery para Restaurantes",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#030712",
+    "theme_color": "#ef4444",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot-wide.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/screenshot-mobile.png",
+            "sizes": "375x812",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
+    "categories": [
+        "food",
+        "shopping",
+        "business"
+    ],
+    "lang": "pt-BR",
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "Acessar painel administrativo",
+            "url": "/admin",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Pedidos",
+            "short_name": "Pedidos",
+            "description": "Ver pedidos em andamento",
+            "url": "/admin/pedidos.html",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}

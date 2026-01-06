@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuracoes - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1000px;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            border-bottom: 3px solid var(--dark);
+            padding-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: transparent;
+            border: 2px solid transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .toggle-label {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            width: 60px;
+            height: 32px;
+            background: var(--text-muted);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+        }
+
+        .toggle-switch.active {
+            background: var(--success);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+        }
+
+        .toggle-switch.active::after {
+            left: 30px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .module-card {
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 6px 6px 0 var(--dark);
+            border-color: var(--primary);
+        }
+
+        .module-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .module-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .module-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .trial-banner {
+            background: var(--warning);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 6px 6px 0 var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .trial-icon {
+            font-size: 2rem;
+            background: white;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 3px solid var(--dark);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+                <a href="logs" class="nav-item"><i class="fas fa-history"></i> Logs de Atividade</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Configuracoes</h1>
+                <p>Gerencie sua loja, recursos e assinatura</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('loja')">Loja</button>
+                <button class="tab" onclick="switchTab('recursos')">Recursos</button>
+                <button class="tab" onclick="switchTab('plano')">Plano</button>
+                <button class="tab" onclick="switchTab('conta')">Conta</button>
+                <button class="tab" onclick="switchTab('backup')"
+                    style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;">
+                    <i class="fas fa-database"></i> Backup
+                </button>
+            </div>
+
+            <!-- Tab Loja -->
+            <div class="tab-content active" id="tab-loja">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-store" style="color: var(--primary);"></i> Dados da Loja
+                    </div>
+                    <div class="form-group">
+                        <label>Nome da Loja</label>
+                        <input type="text" id="storeName" placeholder="Minha Hamburgueria">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" id="storePhone" placeholder="(00) 0000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp</label>
+                            <input type="tel" id="storeWhatsapp" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereco</label>
+                        <input type="text" id="storeAddress" placeholder="Rua Exemplo, 123 - Centro">
+                    </div>
+
+                    <!-- Logo Section -->
+                    <div style="border-top: 2px dashed var(--border); margin: 20px 0; padding-top: 20px;">
+                        <label style="font-weight: 700; display: block; margin-bottom: 12px;">
+                            <i class="fas fa-image" style="color: #8b5cf6;"></i> Logo da Loja
+                        </label>
+
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <label style="flex: 1; cursor: pointer;">
+                                <input type="radio" name="logoType" value="text" id="logoTypeText" checked
+                                    style="margin-right: 8px;" onchange="toggleLogoType()">
+                                <i class="fas fa-font"></i> Usar Nome em Texto
+                            </label>
+                            <label style="flex: 1; cursor: pointer;">
+                                <input type="radio" name="logoType" value="image" id="logoTypeImage"
+                                    style="margin-right: 8px;" onchange="toggleLogoType()">
+                                <i class="fas fa-image"></i> Usar Logo/Imagem
+                            </label>
+                        </div>
+
+                        <div id="logoUploadSection" style="display: none;">
+                            <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;">
+                                <div id="logoPreviewContainer"
+                                    style="width: 100px; height: 100px; border: 2px dashed var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg);">
+                                    <img id="logoPreview" src="" alt="Logo"
+                                        style="max-width: 100%; max-height: 100%; display: none;">
+                                    <i id="logoPlaceholder" class="fas fa-cloud-upload-alt"
+                                        style="font-size: 2rem; opacity: 0.3;"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="file" id="logoFile" accept="image/*" style="display: none;"
+                                        onchange="previewLogo(this)">
+                                    <button type="button" class="btn"
+                                        style="background: var(--secondary); color: white; width: 100%;"
+                                        onclick="document.getElementById('logoFile').click()">
+                                        <i class="fas fa-upload"></i> Escolher Imagem
+                                    </button>
+                                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                                        Formatos: JPG, PNG, GIF. Max: 2MB<br>
+                                        Recomendado: PNG com fundo transparente
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Logo Size Slider -->
+                            <div style="background: #f5f5f5; padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                                <label
+                                    style="font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span><i class="fas fa-expand-arrows-alt"></i> Tamanho da Logo</span>
+                                    <span id="logoSizeValue" style="color: var(--primary);">100px</span>
+                                </label>
+                                <input type="range" id="logoSize" min="50" max="150" value="100"
+                                    style="width: 100%; cursor: pointer;" oninput="updateLogoSizePreview(this.value)">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 0.7rem; opacity: 0.5; margin-top: 4px;">
+                                    <span>Pequeno</span>
+                                    <span>Medio</span>
+                                    <span>Grande</span>
+                                </div>
+                            </div>
+
+                            <!-- Size Preview -->
+                            <div
+                                style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); padding: 20px; border-radius: 12px; text-align: center;">
+                                <p
+                                    style="color: #888; font-size: 0.7rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                                    Preview na Loja</p>
+                                <div
+                                    style="display: flex; justify-content: center; align-items: center; min-height: 120px;">
+                                    <img id="logoSizePreviewImg" src="" alt="Preview"
+                                        style="max-height: 100px; border-radius: 8px; display: none;">
+                                    <span id="logoSizePreviewPlaceholder" style="color: #666; font-size: 0.9rem;">
+                                        <i class="fas fa-image"></i> Selecione uma imagem
+                                    </span>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="logoUrl" value="">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveStoreData()"><i class="fas fa-save"></i> Salvar
+                        Alteracoes</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-palette" style="color: #8b5cf6;"></i> Aparência da Loja
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                        Escolha o tema visual que será exibido para seus clientes na loja online.
+                    </p>
+                    <div class="form-group">
+                        <label>Tema Visual</label>
+                        <select id="storeTheme"
+                            style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem;">
+                            <option value="retro">🍔 Retro (Padrão)</option>
+                            <option value="midnight">🌙 Midnight (Escuro)</option>
+                            <option value="vibe">✨ Vibe (Moderno)</option>
+                            <option value="doodle">🎨 Doodle (Desenho)</option>
+                            <option value="luxury">💎 Luxury (Premium)</option>
+                            <option value="matrix">💚 Matrix (Tech)</option>
+                            <option value="candy">🍬 Candy (Colorido)</option>
+                        </select>
+                    </div>
+
+                    <!-- Preview Aprimorado -->
+                    <div id="themePreview"
+                        style="margin-top: 16px; border-radius: 16px; overflow: hidden; border: 3px solid #333; transition: all 0.3s ease;">
+                        <!-- Header -->
+                        <div id="previewHeader"
+                            style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                            <span id="previewStoreName" style="font-weight: 800; font-size: 1.1rem;">SUA LOJA</span>
+                            <div style="display: flex; gap: 8px;">
+                                <div
+                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
+                                </div>
+                                <div
+                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
+                                </div>
+                                <div
+                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div id="previewContent" style="padding: 16px;">
+                            <!-- Product Card -->
+                            <div id="previewCard"
+                                style="border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center;">
+                                <div
+                                    style="width: 60px; height: 60px; border-radius: 8px; background: linear-gradient(135deg, #ff6b6b, #ffd93d); flex-shrink: 0;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">X-Bacon
+                                        Especial</div>
+                                    <div style="font-size: 0.75rem; opacity: 0.6;">Hamburguer artesanal...</div>
+                                    <div id="previewPrice" style="font-weight: 800; font-size: 1rem; margin-top: 4px;">
+                                        R$ 32,90</div>
+                                </div>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <div id="previewButton"
+                                style="margin-top: 12px; padding: 10px 20px; border-radius: 25px; text-align: center; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                                🛒 ADICIONAR AO CARRINHO
+                            </div>
+                        </div>
+
+                        <!-- Theme Name -->
+                        <div id="previewLabel"
+                            style="padding: 8px; text-align: center; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">
+                            Tema Retro
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveTheme()" style="margin-top: 16px;">
+                        <i class="fas fa-save"></i> Salvar Tema
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-clock" style="color: var(--secondary);"></i> Funcionamento
+                    </div>
+                    <div class="toggle" id="toggle-store-open" onclick="toggleSwitch(this)">
+                        <span class="toggle-label">LOJA ABERTA AGORA</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <label style="font-weight: 600; margin-bottom: 12px; display: block;">Horario de
+                            Funcionamento</label>
+                        <div style="display: grid; gap: 8px;">
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Segunda</span>
+                                <input type="time" id="seg-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="seg-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Terca</span>
+                                <input type="time" id="ter-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="ter-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Quarta</span>
+                                <input type="time" id="qua-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="qua-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Quinta</span>
+                                <input type="time" id="qui-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="qui-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Sexta</span>
+                                <input type="time" id="sex-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="sex-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Sabado</span>
+                                <input type="time" id="sab-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="sab-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                            <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 100px; font-size: 0.9rem;">Domingo</span>
+                                <input type="time" id="dom-open"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                <span>ate</span>
+                                <input type="time" id="dom-close"
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Anuncios -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-bullhorn" style="color: var(--warning);"></i> Barra de
+                        Anuncios</div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.85rem;">
+                        Esta mensagem aparece no topo da sua loja para alertar clientes.
+                    </p>
+                    <div class="toggle" id="toggle-announcement" onclick="toggleSwitch(this)">
+                        <span class="toggle-label">ATIVAR BARRA DE ANUNCIOS</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label>Mensagem</label>
+                        <input type="text" id="announcementText"
+                            placeholder="Ex: Promocao de hoje: Combo X-Bacon + Refri por R$29,90!">
+                    </div>
+                </div>
+
+                <!-- Barra Passando (Marquee) -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-running" style="color: var(--primary);"></i> Barra de
+                        Texto Rolante</div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.85rem;">
+                        Esta e a barra preta no topo da loja com texto passando. Separe varias mensagens com |
+                    </p>
+                    <div class="toggle" id="toggle-marquee" onclick="toggleSwitch(this)">
+                        <span class="toggle-label">ATIVAR BARRA ROLANTE</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label>Texto da Barra (separe com |)</label>
+                        <input type="text" id="marqueeText"
+                            placeholder="Ex: Promocao do Dia! | Frete Gratis acima de R$50 | Delivery em ate 40min">
+                    </div>
+                    <small style="color: var(--text-muted); display: block; margin-top: 8px;">
+                        <i class="fas fa-info-circle"></i> Deixe vazio para mostrar o nome da loja
+                    </small>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveStoreData()" style="margin-top: 10px;"><i
+                        class="fas fa-save"></i> Salvar Configuracoes da Loja</button>
+            </div>
+
+            <!-- Tab Recursos -->
+            <div class="tab-content" id="tab-recursos">
+                <div class="modules-grid">
+                    <a href="whatsapp" class="module-card">
+                        <div class="module-icon"><i class="fab fa-whatsapp"></i></div>
+                        <div class="module-title">WhatsApp</div>
+                        <div class="module-desc">Configure mensagens automaticas</div>
+                    </a>
+                    <a href="custom" class="module-card">
+                        <div class="module-icon"><i class="fas fa-palette"></i></div>
+                        <div class="module-title">Visual</div>
+                        <div class="module-desc">Customize cores e tema da loja</div>
+                    </a>
+                    <a href="equipe" class="module-card">
+                        <div class="module-icon"><i class="fas fa-users"></i></div>
+                        <div class="module-title">Equipe</div>
+                        <div class="module-desc">Gerencie usuarios e permissoes</div>
+                    </a>
+                    <a href="cupons" class="module-card">
+                        <div class="module-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="module-title">Cupons</div>
+                        <div class="module-desc">Crie promocoes e descontos</div>
+                    </a>
+                    <a href="fidelidade" class="module-card">
+                        <div class="module-icon"><i class="fas fa-star"></i></div>
+                        <div class="module-title">Fidelidade</div>
+                        <div class="module-desc">Programa de pontos e recompensas</div>
+                    </a>
+                    <a href="avaliacoes" class="module-card">
+                        <div class="module-icon"><i class="fas fa-star-half-alt"></i></div>
+                        <div class="module-title">Avaliacoes</div>
+                        <div class="module-desc">Gerencie o feedback dos clientes</div>
+                    </a>
+                    <a href="relatorios" class="module-card">
+                        <div class="module-icon"><i class="fas fa-chart-bar"></i></div>
+                        <div class="module-title">Relatorios</div>
+                        <div class="module-desc">Vendas, produtos e metricas</div>
+                    </a>
+                    <div class="module-card" style="border-color: #3b82f6; cursor: pointer;"
+                        onclick="switchTab('entrega')">
+                        <div class="module-icon" style="color: #3b82f6;"><i class="fas fa-motorcycle"></i></div>
+                        <div class="module-title">Entrega</div>
+                        <div class="module-desc">Zonas, taxas e pedido minimo</div>
+                    </div>
+                    <div class="module-card" style="border-color: #22c55e; cursor: pointer;"
+                        onclick="switchTab('pagamento')">
+                        <div class="module-icon" style="color: #22c55e;"><i class="fas fa-wallet"></i></div>
+                        <div class="module-title">Pagamento</div>
+                        <div class="module-desc">Metodos, PIX e cartoes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Entrega -->
+            <div class="tab-content" id="tab-entrega">
+                <!-- Localizacao da Loja -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-map-marker-alt" style="color: var(--primary);"></i>
+                        Localizacao da Loja</div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
+                        Defina as coordenadas GPS da sua loja para calcular a distancia automaticamente.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Latitude</label>
+                            <input type="text" id="storeLat" placeholder="-23.550520">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude</label>
+                            <input type="text" id="storeLng" placeholder="-46.633308">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="getMyLocation()"
+                        style="background: var(--surface); margin-bottom: 12px;">
+                        <i class="fas fa-crosshairs"></i> Usar Minha Localizacao Atual
+                    </button>
+                </div>
+
+                <!-- Zonas de Entrega -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-motorcycle" style="color: var(--secondary);"></i> Zonas de
+                        Entrega</div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
+                        Configure as faixas de distancia e seus respectivos precos de entrega.
+                    </p>
+
+                    <div id="deliveryZones" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Zonas serao inseridas aqui dinamicamente -->
+                    </div>
+
+                    <button class="btn" onclick="addDeliveryZone()"
+                        style="background: var(--surface); margin-top: 16px;">
+                        <i class="fas fa-plus"></i> Adicionar Zona
+                    </button>
+                </div>
+
+                <!-- Configuracoes Gerais -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-cog" style="color: var(--info);"></i> Configuracoes Gerais
+                    </div>
+
+                    <!-- Toggle Retirada no Local -->
+                    <div class="toggle" id="toggle-pickup" onclick="toggleSwitch(this)">
+                        <span class="toggle-label"><i class="fas fa-store" style="color: var(--success);"></i> PERMITIR
+                            RETIRADA NO LOCAL</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">
+                        Se desativado, clientes nao poderao escolher retirar o pedido na loja.
+                    </p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Pedido Minimo (R$)</label>
+                            <input type="number" id="minOrder" step="0.01" placeholder="20.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Taxa de Entrega Fixa (R$)</label>
+                            <input type="number" id="deliveryFee" step="0.01" placeholder="7.00">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveDeliverySettings()"><i class="fas fa-save"></i> Salvar
+                        Configuracoes</button>
+                </div>
+            </div>
+
+            <!-- Tab Pagamento -->
+            <div class="tab-content" id="tab-pagamento">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-wallet" style="color: var(--success);"></i> Metodos de
+                        Pagamento</div>
+                    <div class="toggle" id="toggle-pay-cash" onclick="toggleSwitch(this)">
+                        <span class="toggle-label"><i class="fas fa-money-bill"></i> DINHEIRO</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="toggle" id="toggle-pay-pix" onclick="toggleSwitch(this)">
+                        <span class="toggle-label"><i class="fab fa-pix"></i> PIX</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="toggle" id="toggle-pay-card" onclick="toggleSwitch(this)">
+                        <span class="toggle-label"><i class="fas fa-credit-card"></i> CARTAO DE CREDITO</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fab fa-pix" style="color: var(--info);"></i> Chave PIX</div>
+                    <div class="form-group">
+                        <label>Nome do Titular</label>
+                        <input type="text" id="pixHolderName" placeholder="Nome completo do titular da conta">
+                    </div>
+                    <div class="form-group">
+                        <label>Sua Chave PIX</label>
+                        <input type="text" id="pixKey" placeholder="CPF, Email, Telefone ou Chave Aleatoria">
+                    </div>
+                    <button class="btn btn-primary" onclick="savePaymentSettings()"><i class="fas fa-save"></i>
+                        Salvar</button>
+                </div>
+            </div>
+
+            <!-- Tab Plano -->
+            <div class="tab-content" id="tab-plano">
+                <div class="trial-banner">
+                    <div class="trial-icon"><i class="fas fa-gift" style="color: var(--primary);"></i></div>
+                    <div>
+                        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;">Periodo de Teste Gratuito
+                        </h3>
+                        <p>Voce tem mais <strong>30 dias</strong> para aproveitar todos os recursos premium.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Seu Plano Atual</div>
+                    <div style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--primary);">TRIAL
+                        GRATUITO</div>
+                    <ul style="list-style: none; margin: 24px 0;">
+                        <li style="padding: 8px 0; display: flex; gap: 8px; font-weight: 600;"><i class="fas fa-check"
+                                style="color: var(--success);"></i> Produtos ilimitados</li>
+                        <li style="padding: 8px 0; display: flex; gap: 8px; font-weight: 600;"><i class="fas fa-check"
+                                style="color: var(--success);"></i> Painel de pedidos em tempo real</li>
+                        <li style="padding: 8px 0; display: flex; gap: 8px; font-weight: 600;"><i class="fas fa-check"
+                                style="color: var(--success);"></i> Suporte prioritario</li>
+                    </ul>
+                    <button class="btn btn-primary">Fazer Upgrade Agora</button>
+                </div>
+            </div>
+
+            <!-- Tab Conta -->
+            <div class="tab-content" id="tab-conta">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-user-circle"></i> Minha Conta</div>
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="userName">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="userEmail" disabled style="opacity: 0.7;">
+                    </div>
+                    <button class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
+                </div>
+
+                <div class="card" style="border-color: var(--danger);">
+                    <div class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i>
+                        Zona de Perigo</div>
+                    <p style="margin-bottom: 24px;">Essas acoes sao irreversiveis. Tenha cuidado.</p>
+                    <button class="btn btn-danger"><i class="fas fa-trash"></i> Excluir Minha Conta</button>
+                </div>
+            </div>
+
+            <!-- Tab Backup -->
+            <div class="tab-content" id="tab-backup">
+                <!-- Exportar Backup -->
+                <div class="card" style="border-color: #22c55e;">
+                    <div class="card-title"><i class="fas fa-download" style="color: #22c55e;"></i> Exportar Backup
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px;">
+                        Faca o download de todos os dados da sua loja em um arquivo criptografado.
+                        Inclui: categorias, produtos, pedidos, clientes, adicionais.
+                    </p>
+                    <div class="form-group">
+                        <label>Senha de Criptografia</label>
+                        <input type="password" id="exportPassword"
+                            placeholder="Digite uma senha para proteger o backup">
+                        <small style="color: var(--text-muted); font-size: 0.8rem;">
+                            Guarde esta senha! Voce precisara dela para restaurar o backup.
+                        </small>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportBackup()" id="btnExport"
+                        style="background: #22c55e;">
+                        <i class="fas fa-download"></i> Baixar Backup
+                    </button>
+                </div>
+
+                <!-- Importar Backup -->
+                <div class="card" style="border-color: #f59e0b;">
+                    <div class="card-title"><i class="fas fa-upload" style="color: #f59e0b;"></i> Restaurar Backup</div>
+                    <p style="color: var(--text-muted); margin-bottom: 16px;">
+                        Restaure seus dados a partir de um arquivo de backup (.dhub).
+                        <strong style="color: #ef4444;">Atencao:</strong> Isso pode substituir dados existentes.
+                    </p>
+                    <div class="form-group">
+                        <label>Arquivo de Backup (.dhub)</label>
+                        <input type="file" id="backupFile" accept=".dhub" onchange="previewBackup()"
+                            style="padding: 12px; background: var(--surface); border: 2px dashed var(--border); border-radius: 12px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha do Backup</label>
+                        <input type="password" id="importPassword"
+                            placeholder="Digite a senha usada na criacao do backup">
+                    </div>
+
+                    <!-- Preview do backup -->
+                    <div id="backupPreview"
+                        style="display: none; background: var(--surface); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                        <h4 style="margin-bottom: 12px;"><i class="fas fa-info-circle" style="color: var(--info);"></i>
+                            Preview do Backup</h4>
+                        <div id="backupStats"></div>
+                    </div>
+
+                    <div class="toggle" onclick="toggleSwitch(this)">
+                        <span class="toggle-label"><i class="fas fa-trash-alt" style="color: #ef4444;"></i> Limpar dados
+                            existentes antes de restaurar</span>
+                        <div class="toggle-switch" id="clearExisting"></div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="importBackup()" id="btnImport" style="background: #f59e0b;"
+                        disabled>
+                        <i class="fas fa-upload"></i> Restaurar Backup
+                    </button>
+                </div>
+
+                <!-- Info -->
+                <div class="card" style="background: linear-gradient(135deg, #dbeafe, #eff6ff);">
+                    <div class="card-title"><i class="fas fa-lightbulb" style="color: #3b82f6;"></i> Dicas</div>
+                    <ul style="list-style: disc; padding-left: 20px; color: var(--text);">
+                        <li>Faca backups regulares para proteger seus dados</li>
+                        <li>Use senhas fortes (8+ caracteres, letras e numeros)</li>
+                        <li>Guarde os arquivos .dhub em local seguro</li>
+                        <li>Pedidos antigos NAO sao apagados na restauracao</li>
+                    </ul>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let currentTenantId = null;
+        let currentSettings = {};
+        let deliveryZones = [];
+
+        // Funcoes de zonas de entrega
+        function renderDeliveryZones() {
+            const container = document.getElementById('deliveryZones');
+            if (deliveryZones.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Nenhuma zona configurada. Clique em "Adicionar Zona" para comecar.</p>';
+                return;
+            }
+            container.innerHTML = deliveryZones.map((zone, index) => `
+                <div style="display: flex; gap: 10px; align-items: center; background: var(--surface); padding: 12px; border-radius: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted);">Ate (km)</label>
+                        <input type="number" step="0.1" value="${zone.maxKm}" onchange="updateZone(${index}, 'maxKm', this.value)" 
+                               style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text);">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted);">Taxa (R$)</label>
+                        <input type="number" step="0.01" value="${zone.fee}" onchange="updateZone(${index}, 'fee', this.value)"
+                               style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text);">
+                    </div>
+                    <button onclick="removeZone(${index})" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-top: 16px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addDeliveryZone() {
+            const lastZone = deliveryZones[deliveryZones.length - 1];
+            const newMaxKm = lastZone ? lastZone.maxKm + 2 : 3;
+            deliveryZones.push({ maxKm: newMaxKm, fee: 7 });
+            renderDeliveryZones();
+        }
+
+        function updateZone(index, field, value) {
+            deliveryZones[index][field] = parseFloat(value) || 0;
+            // Nao ordenar aqui para nao quebrar o foco/index dos inputs enquanto digita
+            // A ordenacao sera feita no momento de salvar
+        }
+
+        function removeZone(index) {
+            deliveryZones.splice(index, 1);
+            renderDeliveryZones();
+        }
+
+        function getMyLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('storeLat').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('storeLng').value = position.coords.longitude.toFixed(6);
+                        showToast('Localizacao obtida com sucesso!', 'success');
+                    },
+                    (error) => {
+                        showToast('Erro ao obter localizacao: ' + error.message, 'error');
+                    }
+                );
+            } else {
+                showToast('Seu navegador nao suporta geolocalizacao', 'error');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            const buttons = document.querySelectorAll('.tab');
+            for (let btn of buttons) {
+                if (btn.onclick.toString().includes(tabId)) {
+                    btn.classList.add('active');
+                    break;
+                }
+            }
+            const content = document.getElementById(`tab-${tabId}`);
+            if (content) content.classList.add('active');
+        }
+
+        function toggleSwitch(el) {
+            el.querySelector('.toggle-switch').classList.toggle('active');
+        }
+
+        // Carregar dados do usuario e tenant
+        async function loadData() {
+            try {
+                const res = await fetch('/api/auth/me', { headers: API_HEADERS });
+                if (!res.ok) throw new Error('Nao autenticado');
+                const data = await res.json();
+
+                // Dados do usuario
+                document.getElementById('userName').value = data.user?.name || '';
+                document.getElementById('userEmail').value = data.user?.email || '';
+
+                // Dados do tenant
+                if (data.tenant) {
+                    currentTenantId = data.tenant.id;
+                    document.getElementById('storeName').value = data.tenant.name || '';
+
+                    // Carregar settings completos
+                    const tenantRes = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                    if (tenantRes.ok) {
+                        const tenantData = await tenantRes.json();
+                        currentSettings = tenantData.settings || {};
+
+                        document.getElementById('storePhone').value = currentSettings.phone || '';
+                        document.getElementById('storeWhatsapp').value = currentSettings.whatsapp || '';
+                        document.getElementById('storeAddress').value = currentSettings.address || '';
+
+                        // Toggle loja aberta
+                        const openToggle = document.querySelector('#toggle-store-open .toggle-switch');
+                        if (openToggle && currentSettings.isOpen) {
+                            openToggle.classList.add('active');
+                        }
+
+                        // Carregar horarios de funcionamento
+                        const schedule = currentSettings.schedule || {};
+                        const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                        days.forEach(day => {
+                            const daySchedule = schedule[day] || {};
+                            if (document.getElementById(`${day}-open`)) {
+                                document.getElementById(`${day}-open`).value = daySchedule.open || '';
+                                document.getElementById(`${day}-close`).value = daySchedule.close || '';
+                            }
+                        });
+
+                        // Carregar barra de anuncios
+                        const announcementToggle = document.querySelector('#toggle-announcement .toggle-switch');
+                        if (announcementToggle && currentSettings.announcementEnabled) {
+                            announcementToggle.classList.add('active');
+                        }
+                        document.getElementById('announcementText').value = currentSettings.announcementText || '';
+
+                        // Carregar texto do marquee/actionbar
+                        const marqueeToggle = document.querySelector('#toggle-marquee .toggle-switch');
+                        if (marqueeToggle) {
+                            if (currentSettings.marqueeEnabled !== false) {
+                                marqueeToggle.classList.add('active'); // Padrao: ativo
+                            }
+                        }
+                        if (document.getElementById('marqueeText')) {
+                            document.getElementById('marqueeText').value = currentSettings.marqueeText || '';
+                        }
+
+                        // Carregar configuracoes de entrega
+                        document.getElementById('storeLat').value = currentSettings.storeLat || '';
+                        document.getElementById('storeLng').value = currentSettings.storeLng || '';
+                        document.getElementById('minOrder').value = currentSettings.minOrder || '';
+                        document.getElementById('deliveryFee').value = currentSettings.deliveryFee || '';
+
+                        // Carregar zonas de entrega
+                        deliveryZones = currentSettings.deliveryZones || [];
+                        renderDeliveryZones();
+
+                        // Inicializar toggle de retirada
+                        const pickupToggle = document.querySelector('#toggle-pickup .toggle-switch');
+                        if (pickupToggle) {
+                            if (currentSettings.allow_pickup === false) {
+                                pickupToggle.classList.remove('active');
+                            } else {
+                                pickupToggle.classList.add('active'); // Padrao: ativo
+                            }
+                        }
+
+                        // Carregar dados do PIX
+                        if (document.getElementById('pixHolderName')) {
+                            document.getElementById('pixHolderName').value = currentSettings.pix_holder_name || '';
+                        }
+                        if (document.getElementById('pixKey')) {
+                            document.getElementById('pixKey').value = currentSettings.pix_key || '';
+                        }
+
+                        // Carregar toggles de pagamento
+                        const cashToggle = document.querySelector('#toggle-pay-cash .toggle-switch');
+                        if (cashToggle) {
+                            if (currentSettings.acceptCash === false) cashToggle.classList.remove('active');
+                            else cashToggle.classList.add('active');
+                        }
+                        const pixToggle = document.querySelector('#toggle-pay-pix .toggle-switch');
+                        if (pixToggle) {
+                            if (currentSettings.acceptPix === false) pixToggle.classList.remove('active');
+                            else pixToggle.classList.add('active');
+                        }
+                        const cardToggle = document.querySelector('#toggle-pay-card .toggle-switch');
+                        if (cardToggle) {
+                            if (currentSettings.acceptCard === false) cardToggle.classList.remove('active');
+                            else cardToggle.classList.add('active');
+                        }
+
+                        // Carregar tema salvo
+                        const themeSelect = document.getElementById('storeTheme');
+                        if (themeSelect && currentSettings.storeTheme) {
+                            themeSelect.value = currentSettings.storeTheme;
+                            updateThemePreview();
+                        }
+
+                        // Carregar logo salva
+                        if (currentSettings.logoType === 'image') {
+                            document.getElementById('logoTypeImage').checked = true;
+                            document.getElementById('logoUploadSection').style.display = 'block';
+
+                            if (currentSettings.logoUrl) {
+                                const preview = document.getElementById('logoPreview');
+                                const placeholder = document.getElementById('logoPlaceholder');
+                                const sizePreviewImg = document.getElementById('logoSizePreviewImg');
+                                const sizePreviewPlaceholder = document.getElementById('logoSizePreviewPlaceholder');
+
+                                preview.src = currentSettings.logoUrl;
+                                preview.style.display = 'block';
+                                placeholder.style.display = 'none';
+
+                                // Carregar preview de tamanho
+                                if (sizePreviewImg) {
+                                    sizePreviewImg.src = currentSettings.logoUrl;
+                                    sizePreviewImg.style.display = 'block';
+                                }
+                                if (sizePreviewPlaceholder) {
+                                    sizePreviewPlaceholder.style.display = 'none';
+                                }
+                            }
+
+                            // Carregar tamanho salvo
+                            const savedSize = currentSettings.logoSize || 100;
+                            document.getElementById('logoSize').value = savedSize;
+                            document.getElementById('logoSizeValue').textContent = savedSize + 'px';
+                            const sizePreviewImg = document.getElementById('logoSizePreviewImg');
+                            if (sizePreviewImg) {
+                                sizePreviewImg.style.maxHeight = savedSize + 'px';
+                            }
+                        } else {
+                            document.getElementById('logoTypeText').checked = true;
+                            document.getElementById('logoUploadSection').style.display = 'none';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                window.location.href = '/login';
+            }
+        }
+
+        // Salvar dados da loja
+        async function saveStoreData() {
+            if (!currentTenantId) { alert('Tenant nao carregado'); return; }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                // Atualizar nome da loja
+                const name = document.getElementById('storeName').value;
+
+                // Coletar horarios de funcionamento
+                const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                const schedule = {};
+                days.forEach(day => {
+                    schedule[day] = {
+                        open: document.getElementById(`${day}-open`)?.value || '',
+                        close: document.getElementById(`${day}-close`)?.value || ''
+                    };
+                });
+
+                // Logo settings
+                const logoType = document.getElementById('logoTypeImage').checked ? 'image' : 'text';
+                let logoUrl = currentSettings.logoUrl || '';
+
+                // Upload da logo se necessario
+                if (logoType === 'image') {
+                    const fileInput = document.getElementById('logoFile');
+                    if (fileInput.files && fileInput.files[0]) {
+                        const uploadedUrl = await uploadLogo();
+                        if (uploadedUrl) {
+                            logoUrl = uploadedUrl;
+                        }
+                    }
+                }
+
+                // Atualizar settings
+                const newSettings = {
+                    ...currentSettings,
+                    phone: document.getElementById('storePhone').value,
+                    whatsapp: document.getElementById('storeWhatsapp').value,
+                    address: document.getElementById('storeAddress').value,
+                    isOpen: document.querySelector('#toggle-store-open .toggle-switch')?.classList.contains('active') || false,
+                    schedule: schedule,
+                    announcementEnabled: document.querySelector('#toggle-announcement .toggle-switch')?.classList.contains('active') || false,
+                    announcementText: document.getElementById('announcementText').value,
+                    marqueeEnabled: document.querySelector('#toggle-marquee .toggle-switch')?.classList.contains('active') ?? true,
+                    marqueeText: document.getElementById('marqueeText')?.value || '',
+                    logoType: logoType,
+                    logoUrl: logoUrl,
+                    logoSize: parseInt(document.getElementById('logoSize')?.value) || 100
+                };
+
+                const res = await fetch(`/api/tenants/${currentTenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, settings: newSettings })
+                });
+
+                if (res.ok) {
+                    currentSettings = newSettings;
+                    showToast('Configuracoes salvas com sucesso!', 'success');
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Erro ao salvar');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao salvar configuracoes', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Salvar tema visual da loja
+        async function saveTheme() {
+            if (!currentTenantId) { alert('Tenant nao carregado'); return; }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                const selectedTheme = document.getElementById('storeTheme').value;
+
+                const newSettings = {
+                    ...currentSettings,
+                    storeTheme: selectedTheme
+                };
+
+                const res = await fetch(`/api/tenants/${currentTenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings: newSettings })
+                });
+
+                if (!res.ok) throw new Error('Erro ao salvar tema');
+
+                currentSettings = newSettings;
+                showToast('Tema salvo com sucesso!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao salvar tema', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Atualizar preview do tema
+        function updateThemePreview() {
+            const theme = document.getElementById('storeTheme').value;
+
+            // Configuracoes de cores por tema
+            const themeStyles = {
+                'retro': {
+                    bg: '#fff9f0', text: '#1a1a1a', brand: '#d9432e', card: '#ffffff',
+                    cardBorder: '#1a1a1a', btnBg: '#d9432e', btnText: '#ffffff',
+                    label: 'Tema Retro'
+                },
+                'midnight': {
+                    bg: '#0a0a0f', text: '#ffffff', brand: '#6366f1', card: '#1a1a2e',
+                    cardBorder: '#333355', btnBg: '#6366f1', btnText: '#ffffff',
+                    label: 'Tema Midnight'
+                },
+                'vibe': {
+                    bg: '#0f0f2e', text: '#ffffff', brand: '#f472b6', card: '#1e1e4a',
+                    cardBorder: '#3d3d7a', btnBg: '#f472b6', btnText: '#0f0f2e',
+                    label: 'Tema Vibe'
+                },
+                'doodle': {
+                    bg: '#f5f5f5', text: '#333333', brand: '#ff6b6b', card: '#ffffff',
+                    cardBorder: '#333333', btnBg: '#ff6b6b', btnText: '#ffffff',
+                    label: 'Tema Doodle'
+                },
+                'luxury': {
+                    bg: '#0d0d0d', text: '#d4af37', brand: '#d4af37', card: '#1a1a1a',
+                    cardBorder: '#d4af37', btnBg: '#d4af37', btnText: '#0d0d0d',
+                    label: 'Tema Luxury'
+                },
+                'matrix': {
+                    bg: '#0a0a0a', text: '#00ff00', brand: '#00ff00', card: '#0d1a0d',
+                    cardBorder: '#00ff00', btnBg: '#00ff00', btnText: '#0a0a0a',
+                    label: 'Tema Matrix'
+                },
+                'candy': {
+                    bg: '#ffd6e0', text: '#ff4081', brand: '#ff4081', card: '#ffffff',
+                    cardBorder: '#ff4081', btnBg: '#ff4081', btnText: '#ffffff',
+                    label: 'Tema Candy'
+                }
+            };
+
+            const style = themeStyles[theme] || themeStyles['retro'];
+
+            // Atualizar elementos do preview
+            const preview = document.getElementById('themePreview');
+            const header = document.getElementById('previewHeader');
+            const content = document.getElementById('previewContent');
+            const card = document.getElementById('previewCard');
+            const button = document.getElementById('previewButton');
+            const label = document.getElementById('previewLabel');
+            const price = document.getElementById('previewPrice');
+            const storeName = document.getElementById('previewStoreName');
+
+            if (preview) {
+                preview.style.borderColor = style.brand;
+            }
+            if (header) {
+                header.style.background = style.brand;
+                header.style.color = style.btnText;
+            }
+            if (content) {
+                content.style.background = style.bg;
+                content.style.color = style.text;
+            }
+            if (card) {
+                card.style.background = style.card;
+                card.style.border = `2px solid ${style.cardBorder}`;
+            }
+            if (button) {
+                button.style.background = style.btnBg;
+                button.style.color = style.btnText;
+            }
+            if (label) {
+                label.style.background = style.bg;
+                label.style.color = style.text;
+                label.innerText = style.label;
+            }
+            if (price) {
+                price.style.color = style.brand;
+            }
+            if (storeName) {
+                storeName.style.color = style.btnText;
+            }
+        }
+
+        // ===== LOGO FUNCTIONS =====
+        function toggleLogoType() {
+            const useImage = document.getElementById('logoTypeImage').checked;
+            const uploadSection = document.getElementById('logoUploadSection');
+            if (uploadSection) {
+                uploadSection.style.display = useImage ? 'block' : 'none';
+            }
+        }
+
+        function previewLogo(input) {
+            const preview = document.getElementById('logoPreview');
+            const placeholder = document.getElementById('logoPlaceholder');
+            const sizePreviewImg = document.getElementById('logoSizePreviewImg');
+            const sizePreviewPlaceholder = document.getElementById('logoSizePreviewPlaceholder');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // Validar tamanho (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('Imagem muito grande! Maximo: 2MB', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+
+                    // Atualizar preview de tamanho
+                    if (sizePreviewImg) {
+                        sizePreviewImg.src = e.target.result;
+                        sizePreviewImg.style.display = 'block';
+                        const size = document.getElementById('logoSize').value;
+                        sizePreviewImg.style.maxHeight = size + 'px';
+                    }
+                    if (sizePreviewPlaceholder) {
+                        sizePreviewPlaceholder.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateLogoSizePreview(size) {
+            document.getElementById('logoSizeValue').textContent = size + 'px';
+            const sizePreviewImg = document.getElementById('logoSizePreviewImg');
+            if (sizePreviewImg && sizePreviewImg.src) {
+                sizePreviewImg.style.maxHeight = size + 'px';
+            }
+        }
+
+        async function uploadLogo() {
+            const fileInput = document.getElementById('logoFile');
+            if (!fileInput.files || !fileInput.files[0]) {
+                return null;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/upload/image', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Erro no upload');
+
+                const data = await res.json();
+                return data.url || data.path;
+            } catch (e) {
+                console.error('Erro upload logo:', e);
+                showToast('Erro ao fazer upload da logo', 'error');
+                return null;
+            }
+        }
+
+        // Event listener para preview do tema
+        document.getElementById('storeTheme')?.addEventListener('change', updateThemePreview);
+
+        async function saveDeliverySettings() {
+            if (!currentTenantId) { alert('Tenant nao carregado'); return; }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                // Verificar toggle de retirada
+                const pickupToggle = document.querySelector('#toggle-pickup .toggle-switch');
+                const allowPickup = pickupToggle ? pickupToggle.classList.contains('active') : true;
+
+                // Ordenar zonas por km antes de salvar
+                const sortedZones = [...deliveryZones].sort((a, b) => (parseFloat(a.maxKm) || 0) - (parseFloat(b.maxKm) || 0));
+
+                const newSettings = {
+                    ...currentSettings,
+                    storeLat: parseFloat(document.getElementById('storeLat').value) || null,
+                    storeLng: parseFloat(document.getElementById('storeLng').value) || null,
+                    minOrder: parseFloat(document.getElementById('minOrder').value) || 0,
+                    deliveryFee: parseFloat(document.getElementById('deliveryFee').value) || 0,
+                    deliveryZones: sortedZones,
+                    allow_pickup: allowPickup
+                };
+
+                const res = await fetch(`/api/tenants/${currentTenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings: newSettings })
+                });
+
+                if (res.ok) {
+                    currentSettings = newSettings;
+                    showToast('Configuracoes de entrega salvas!', 'success');
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Erro ao salvar');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao salvar', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Salvar configuracoes de pagamento (PIX)
+        async function savePaymentSettings() {
+            if (!currentTenantId) { alert('Tenant nao carregado'); return; }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                const pixHolderName = document.getElementById('pixHolderName')?.value || '';
+                const pixKey = document.getElementById('pixKey')?.value || '';
+
+                // Coletar estados dos toggles
+                const acceptCash = document.querySelector('#toggle-pay-cash .toggle-switch')?.classList.contains('active') !== false;
+                const acceptPix = document.querySelector('#toggle-pay-pix .toggle-switch')?.classList.contains('active') !== false;
+                const acceptCard = document.querySelector('#toggle-pay-card .toggle-switch')?.classList.contains('active') !== false;
+
+                const newSettings = {
+                    ...currentSettings,
+                    pix_holder_name: pixHolderName,
+                    pix_key: pixKey,
+                    acceptCash,
+                    acceptPix,
+                    acceptCard
+                };
+
+                const res = await fetch(`/api/tenants/${currentTenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings: newSettings })
+                });
+
+                if (res.ok) {
+                    currentSettings = newSettings;
+                    showToast('Configuracoes de pagamento salvas!', 'success');
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Erro ao salvar');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao salvar', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; padding: 16px 24px;
+                background: ${type === 'success' ? '#22c55e' : '#ef4444'}; color: white;
+                border-radius: 10px; font-weight: 600; z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ========================================
+        // BACKUP FUNCTIONS
+        // ========================================
+
+        let backupFileContent = null;
+
+        async function exportBackup() {
+            const password = document.getElementById('exportPassword').value;
+            if (!password || password.length < 4) {
+                showToast('Senha obrigatoria (minimo 4 caracteres)', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnExport');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/backup/export?password=${encodeURIComponent(password)}`, {
+                    headers: API_HEADERS
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Erro ao exportar');
+                }
+
+                // Baixar arquivo
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'backup.dhub';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+                showToast('Backup exportado com sucesso!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao exportar backup', 'error');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-download"></i> Baixar Backup';
+                btn.disabled = false;
+            }
+        }
+
+        async function previewBackup() {
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                backupFileContent = e.target.result;
+                document.getElementById('btnImport').disabled = false;
+                document.getElementById('backupPreview').style.display = 'block';
+                document.getElementById('backupStats').innerHTML = `
+                    <p style="color: var(--text-muted);">Arquivo carregado: <strong>${file.name}</strong></p>
+                    <p style="color: var(--text-muted);">Tamanho: <strong>${(file.size / 1024).toFixed(1)} KB</strong></p>
+                    <p style="margin-top: 8px; font-size: 0.9rem;">Digite a senha e clique em "Restaurar Backup" para continuar.</p>
+                `;
+            };
+            reader.readAsText(file);
+        }
+
+        async function importBackup() {
+            const password = document.getElementById('importPassword').value;
+            if (!password) {
+                showToast('Digite a senha do backup', 'error');
+                return;
+            }
+
+            if (!backupFileContent) {
+                showToast('Selecione um arquivo de backup', 'error');
+                return;
+            }
+
+            const clearExisting = document.getElementById('clearExisting').classList.contains('active');
+
+            if (clearExisting) {
+                if (!confirm('ATENCAO: Isso ira APAGAR todos os produtos e categorias existentes antes de restaurar. Deseja continuar?')) {
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('btnImport');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/backup/import', {
+                    method: 'POST',
+                    headers: {
+                        ...API_HEADERS,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        encryptedData: backupFileContent,
+                        password,
+                        clearExisting
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Erro ao importar');
+                }
+
+                document.getElementById('backupStats').innerHTML = `
+                    <p style="color: #22c55e; font-weight: 700;"><i class="fas fa-check-circle"></i> Backup restaurado!</p>
+                    <p>Origem: <strong>${result.originalTenant}</strong></p>
+                    <p>Data do backup: <strong>${new Date(result.exportedAt).toLocaleString()}</strong></p>
+                    <hr style="margin: 12px 0; border-color: var(--border);">
+                    <p>Categorias restauradas: <strong>${result.restored.categories}</strong></p>
+                    <p>Produtos restaurados: <strong>${result.restored.products}</strong></p>
+                    <p>Itens buffet: <strong>${result.restored.buffetItems}</strong></p>
+                    <p>Adicionais acai: <strong>${result.restored.acaiAdicionais}</strong></p>
+                `;
+
+                showToast('Backup restaurado com sucesso!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast(e.message || 'Erro ao restaurar backup', 'error');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-upload"></i> Restaurar Backup';
+                btn.disabled = false;
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>

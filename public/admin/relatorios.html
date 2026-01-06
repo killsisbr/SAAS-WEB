@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatorios - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .date-range {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: var(--card);
+            padding: 8px;
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+        }
+
+        .date-range input {
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: var(--card);
+            border: 2px solid var(--dark);
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            background: var(--dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 var(--secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .stat-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .stat-change.up {
+            color: var(--success);
+        }
+
+        .stat-change.down {
+            color: var(--danger);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .chart-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .table-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 4px 4px 0 var(--dark);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 3px solid var(--dark);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Relatorios</h1>
+                    <p>Analise o desempenho da sua loja</p>
+                </div>
+                <div class="header-actions">
+                    <div class="date-range">
+                        <input type="date" id="startDate">
+                        <span style="font-weight: 800;">ATE</span>
+                        <input type="date" id="endDate">
+                    </div>
+                    <button onclick="loadReports()" class="btn btn-primary"><i class="fas fa-sync-alt"></i></button>
+                    <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('vendas')">Vendas</div>
+                <div class="tab" onclick="showTab('produtos')">Produtos</div>
+                <div class="tab" onclick="showTab('clientes')">Clientes</div>
+            </div>
+
+            <!-- Tab Vendas -->
+            <div id="tab-vendas" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Faturamento Hoje</div>
+                        <div class="stat-value" id="revenueToday">R$ 0</div>
+                        <div class="stat-change" id="revenueChange"></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pedidos Hoje</div>
+                        <div class="stat-value" id="ordersToday">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Ticket Medio</div>
+                        <div class="stat-value" id="avgTicket">R$ 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Fat. Mes</div>
+                        <div class="stat-value" id="revenueMonth">R$ 0</div>
+                    </div>
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, #fef3c7, #fff9f0); border-color: #f59e0b;">
+                        <div class="stat-label"><i class="fas fa-motorcycle" style="color: #f59e0b;"></i> Taxas Motoboy
+                            (Mes)</div>
+                        <div class="stat-value" id="deliveryFeeTotal" style="color: #f59e0b;">R$ 0</div>
+                        <div class="stat-change" id="deliveryFeeCount" style="color: #78350f;"></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Vendas por Periodo</div>
+                        <div class="chart-container"><canvas id="salesChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Formas de Pagamento</div>
+                        <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Horarios de Pico</div>
+                        <div class="chart-container"><canvas id="hoursChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Tipo de Entrega</div>
+                        <div class="chart-container"><canvas id="deliveryChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Produtos -->
+            <div id="tab-produtos" class="tab-content" style="display:none;">
+                <div class="table-card">
+                    <div class="chart-title"><i class="fas fa-crown" style="color: var(--secondary);"></i> Produtos Mais
+                        Vendidos</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Produto</th>
+                                <th>Qtd.</th>
+                                <th>Faturamento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bestSellersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Clientes -->
+            <div id="tab-clientes" class="tab-content" style="display:none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Clientes</div>
+                        <div class="stat-value" id="totalCustomers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Recorrentes</div>
+                        <div class="stat-value" id="recurringCustomers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Taxa Recorrencia</div>
+                        <div class="stat-value" id="recurringRate">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Ticket Medio</div>
+                        <div class="stat-value" id="customerAvgTicket">R$ 0</div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="chart-title"><i class="fas fa-users" style="color: var(--info);"></i> Melhores Clientes
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Pedidos</th>
+                                <th>Gasto Total</th>
+                                <th>Ticket</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topCustomersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let salesChart, paymentChart, hoursChart, deliveryChart;
+
+        // Defaults
+        const today = new Date();
+        const lastMonth = new Date();
+        lastMonth.setDate(lastMonth.getDate() - 30);
+        document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+
+        function showTab(t) {
+            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(x => x.style.display = 'none');
+            document.querySelector(`.tab[onclick="showTab('${t}')"]`).classList.add('active');
+            document.getElementById(`tab-${t}`).style.display = 'block';
+
+            if (t === 'vendas') loadSalesReport();
+            if (t === 'produtos') loadProductsReport();
+            if (t === 'clientes') loadCustomersReport();
+        }
+
+        async function loadReports() {
+            await loadSummary();
+            await loadSalesReport();
+        }
+
+        async function loadSummary() {
+            try {
+                const res = await fetch('/api/reports/summary', { headers: API_HEADERS });
+                const data = await res.json();
+
+                document.getElementById('revenueToday').textContent = 'R$ ' + (data.today.revenue || 0).toFixed(2);
+                document.getElementById('ordersToday').textContent = data.today.orders || 0;
+                document.getElementById('avgTicket').textContent = 'R$ ' + ((data.today.revenue / (data.today.orders || 1)) || 0).toFixed(2);
+                document.getElementById('revenueMonth').textContent = 'R$ ' + (data.thisMonth.revenue || 0).toFixed(2);
+
+                if (data.today.revenueChange) {
+                    const el = document.getElementById('revenueChange');
+                    el.textContent = `${data.today.revenueChange > 0 ? '+' : ''}${data.today.revenueChange}% vs ontem`;
+                    el.className = `stat-change ${data.today.revenueChange >= 0 ? 'up' : 'down'}`;
+                }
+
+                // Taxas de entrega do motoboy
+                if (data.deliveryFees) {
+                    document.getElementById('deliveryFeeTotal').textContent = 'R$ ' + (data.deliveryFees.total || 0).toFixed(2);
+                    document.getElementById('deliveryFeeCount').textContent = `${data.deliveryFees.count || 0} entregas`;
+                }
+            } catch (e) { }
+        }
+
+        // Colors
+        const colors = {
+            primary: '#d9432e',
+            secondary: '#ffb800',
+            success: '#22c55e',
+            info: '#06b6d4',
+            bg: '#1a1a1a'
+        };
+
+        async function loadSalesReport() {
+            try {
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                const res = await fetch(`/api/reports/sales?startDate=${start}&endDate=${end}`, { headers: API_HEADERS });
+                const data = await res.json();
+
+                // Sales
+                if (salesChart) salesChart.destroy();
+                salesChart = new Chart(document.getElementById('salesChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.salesByPeriod.map(d => d.period),
+                        datasets: [{
+                            label: 'Faturamento',
+                            data: data.salesByPeriod.map(d => d.revenue),
+                            borderColor: colors.primary,
+                            backgroundColor: 'rgba(217, 67, 46, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: colors.secondary
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: '#eee' }, ticks: { font: { family: 'Outfit' } } },
+                            x: { grid: { display: false }, ticks: { font: { family: 'Outfit' } } }
+                        }
+                    }
+                });
+
+                // Payment
+                if (paymentChart) paymentChart.destroy();
+                paymentChart = new Chart(document.getElementById('paymentChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.byPayment.map(p => p.payment_method || 'Outro'),
+                        datasets: [{
+                            data: data.byPayment.map(p => p.revenue),
+                            backgroundColor: [colors.primary, colors.secondary, colors.success, colors.info, '#8b5cf6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Outfit' } } } } }
+                });
+
+                // Hours
+                if (hoursChart) hoursChart.destroy();
+                hoursChart = new Chart(document.getElementById('hoursChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.byHour.map(h => h.hour + 'h'),
+                        datasets: [{
+                            label: 'Pedidos',
+                            data: data.byHour.map(h => h.orders),
+                            backgroundColor: colors.primary,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // Delivery
+                if (deliveryChart) deliveryChart.destroy();
+                deliveryChart = new Chart(document.getElementById('deliveryChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: data.byDelivery.map(d => d.delivery_type === 'DELIVERY' ? 'Entrega' : 'Retirada'),
+                        datasets: [{
+                            data: data.byDelivery.map(d => d.orders),
+                            backgroundColor: [colors.primary, colors.secondary],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+
+            } catch (e) { }
+        }
+
+        async function loadProductsReport() {
+            try {
+                const res = await fetch('/api/reports/products', { headers: API_HEADERS });
+                const data = await res.json();
+                document.getElementById('bestSellersTable').innerHTML = data.bestSellers.map((p, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${p.name}</td>
+                        <td>${p.quantity}</td>
+                        <td>R$ ${p.revenue.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            } catch (e) { }
+        }
+
+        async function loadCustomersReport() {
+            try {
+                const res = await fetch('/api/reports/customers', { headers: API_HEADERS });
+                const data = await res.json();
+
+                document.getElementById('totalCustomers').textContent = data.totals.total_customers || 0;
+                document.getElementById('recurringCustomers').textContent = data.recurringCustomers || 0;
+                document.getElementById('recurringRate').textContent = (data.recurringRate || 0) + '%';
+                document.getElementById('customerAvgTicket').textContent = 'R$ ' + (data.totals.avg_ticket || 0).toFixed(2);
+
+                document.getElementById('topCustomersTable').innerHTML = data.topCustomers.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.phone}</td>
+                        <td>${c.total_orders}</td>
+                        <td>R$ ${c.total_spent.toFixed(2)}</td>
+                        <td>R$ ${(c.avg_ticket || 0).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            } catch (e) { }
+        }
+
+        loadReports();
+    </script>
+</body>
+
+</html>

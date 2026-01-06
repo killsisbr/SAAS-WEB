@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+            --whatsapp: #25d366;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1000px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-whatsapp {
+            background: var(--whatsapp);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: 2px solid var(--dark);
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-left: auto;
+        }
+
+        .status-connected {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-disconnected {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-initializing {
+            background: var(--warning);
+            color: var(--dark);
+        }
+
+        .qr-placeholder {
+            width: 250px;
+            height: 250px;
+            background: var(--bg);
+            border: 3px dashed var(--dark);
+            border-radius: 16px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: 16px;
+        }
+
+        .qr-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .toggle-switch {
+            width: 60px;
+            height: 32px;
+            background: var(--text-muted);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 12px;
+        }
+
+        .toggle-switch.active {
+            background: var(--success);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+        }
+
+        .toggle-switch.active::after {
+            left: 30px;
+        }
+
+        .info-box {
+            background: #e0e7ff;
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .groups-list {
+            margin-top: 16px;
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .group-item {
+            padding: 12px;
+            border-bottom: 2px solid var(--dark);
+            cursor: pointer;
+            background: var(--bg);
+        }
+
+        .group-item:hover {
+            background: var(--card);
+        }
+
+        .group-item.selected {
+            background: var(--secondary);
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>WhatsApp Bot</h1>
+                    <p>Configure o atendimento automatico</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-plug" style="color: var(--primary);"></i> Status da Conexao
+                    <div id="statusBadge" class="status-badge status-initializing">Verificando...</div>
+                </div>
+
+                <div id="qrSection" style="display: none; text-align: center;">
+                    <div class="qr-placeholder" id="qrContainer">
+                        <i class="fas fa-spinner spinner fa-2x"></i>
+                        <span>Gerando QR Code...</span>
+                    </div>
+                    <p>Escaneie o QR Code com seu WhatsApp Conectado.</p>
+                </div>
+
+                <div id="connectedSection" style="display: none; text-align: center; padding: 20px;">
+                    <div style="font-size: 4rem; color: var(--success); margin-bottom: 16px;"><i
+                            class="fas fa-check-circle"></i></div>
+                    <h3 style="font-family: 'Bebas Neue'; font-size: 2rem;">Conectado!</h3>
+                    <p>O bot esta ativo e pronto para uso.</p>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                    <button class="btn btn-whatsapp" id="btnConnect" onclick="initializeWhatsApp()">
+                        <i class="fab fa-whatsapp"></i> CONECTAR
+                    </button>
+                    <button class="btn btn-secondary" id="btnRestart" onclick="restartWhatsApp()"
+                        style="display: none;">
+                        <i class="fas fa-sync"></i> REINICIAR
+                    </button>
+                    <button class="btn btn-danger" id="btnDisconnect" onclick="disconnectWhatsApp()"
+                        style="display: none;">
+                        <i class="fas fa-power-off"></i> DESCONECTAR
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-robot"></i> Configuracoes</div>
+
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div class="toggle-switch" id="botToggle" onclick="toggleBot()"></div>
+                        <label style="margin: 0; cursor: pointer;" onclick="toggleBot()">Habilitar Bot</label>
+                    </div>
+                    <small style="color: var(--text-muted);">O bot respondera automaticamente com o cardapio.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>ID do Grupo de Pedidos</label>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="groupId" placeholder="123456@g.us">
+                        <button class="btn btn-secondary" id="btnLoadGroups" onclick="loadGroups()"
+                            title="Listar grupos"><i class="fas fa-list"></i></button>
+                    </div>
+                    <div id="groupsList" class="groups-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Link da Loja</label>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="storeLink" readonly>
+                        <button class="btn btn-secondary" onclick="copyLink()"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <div style="text-align: right; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="openMessageConfig()"><i class="fas fa-comment-alt"></i>
+                        MENSAGENS DO BOT</button>
+                    <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> SALVAR
+                        CONFIGURACOES</button>
+                </div>
+            </div>
+
+            <!-- Card de IA -->
+            <div class="card" style="border-color: #8b5cf6;">
+                <div class="card-title" style="color: #8b5cf6;">
+                    <i class="fas fa-brain"></i> Bot com IA (Premium)
+                    <span id="aiProviderBadge"
+                        style="background: linear-gradient(135deg, #8b5cf6, #d946ef); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-left: 12px;">GROQ</span>
+                </div>
+
+                <div class="info-box"
+                    style="background: linear-gradient(135deg, #ede9fe, #fce7f3); margin-bottom: 20px;">
+                    <i class="fas fa-magic" style="color: #8b5cf6; font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Atendimento por IA</strong><br>
+                        <small>O bot anota pedidos direto pelo WhatsApp, sem precisar de link!</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div class="toggle-switch" id="aiToggle" onclick="toggleAI()" style="background: #8b5cf6;">
+                        </div>
+                        <label style="margin: 0; cursor: pointer;" onclick="toggleAI()">Habilitar Bot com IA</label>
+                    </div>
+                    <small style="color: var(--text-muted);">Quando ativado, o bot usara IA para anotar pedidos via
+                        conversa.</small>
+                </div>
+
+                <div id="aiConfigSection" style="display: none;">
+                    <div class="form-group">
+                        <label><i class="fas fa-robot"></i> Provedor de IA</label>
+                        <select id="aiProvider" onchange="updateProviderUI()">
+                            <option value="groq">Groq (Llama 3) - Recomendado</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                        <small style="color: var(--text-muted);" id="providerHint">
+                            Groq: 30 req/min gratis | Gemini: 20 req/dia gratis
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-key"></i> <span id="apiKeyLabel">Chave API Groq</span></label>
+                        <input type="password" id="aiApiKey" placeholder="Cole sua chave da API">
+                        <small style="color: var(--text-muted);">
+                            <span id="apiKeyHint">Obtenha em <a href="https://console.groq.com" target="_blank"
+                                    style="color: #8b5cf6;">console.groq.com</a></span>
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="display: flex; gap: 12px;">
+                        <button class="btn" style="background: linear-gradient(135deg, #8b5cf6, #d946ef); color: white;"
+                            onclick="testAI()">
+                            <i class="fas fa-flask"></i> TESTAR IA
+                        </button>
+                        <button class="btn btn-secondary" onclick="saveAISettings()">
+                            <i class="fas fa-save"></i> SALVAR IA
+                        </button>
+                    </div>
+
+                    <div id="aiStatus" style="display: none; padding: 12px; border-radius: 12px; margin-top: 12px;">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        let pollInterval = null;
+        let isBotEnabled = false;
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        async function init() {
+            await loadStatus();
+            await loadSettings();
+            loadStoreLink();
+        }
+
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/whatsapp/status', { headers: API_HEADERS });
+                const data = await res.json();
+                updateStatusUI(data);
+            } catch (error) { console.error(error); }
+        }
+
+        function updateStatusUI(data) {
+            const badge = document.getElementById('statusBadge');
+            const qrSection = document.getElementById('qrSection');
+            const connectedSection = document.getElementById('connectedSection');
+            const btnConnect = document.getElementById('btnConnect');
+            const btnRestart = document.getElementById('btnRestart');
+            const btnDisconnect = document.getElementById('btnDisconnect');
+
+            if (data.connected) {
+                badge.textContent = 'CONECTADO';
+                badge.className = 'status-badge status-connected';
+                qrSection.style.display = 'none';
+                connectedSection.style.display = 'block';
+                btnConnect.style.display = 'none';
+                btnRestart.style.display = 'inline-flex';
+                btnDisconnect.style.display = 'inline-flex';
+                if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+            } else if (data.qrAvailable || data.status === 'initializing') {
+                badge.textContent = 'AGUARDANDO SCAN';
+                badge.className = 'status-badge status-initializing';
+                qrSection.style.display = 'block';
+                connectedSection.style.display = 'none';
+                btnConnect.style.display = 'none';
+                btnRestart.style.display = 'inline-flex';
+                btnDisconnect.style.display = 'none';
+                if (data.qrAvailable) loadQRCode();
+            } else {
+                badge.textContent = 'DESCONECTADO';
+                badge.className = 'status-badge status-disconnected';
+                qrSection.style.display = 'none';
+                connectedSection.style.display = 'none';
+                btnConnect.style.display = 'inline-flex';
+                btnRestart.style.display = 'none';
+                btnDisconnect.style.display = 'none';
+            }
+        }
+
+        async function loadQRCode() {
+            try {
+                const res = await fetch('/api/whatsapp/qr', { headers: API_HEADERS });
+                const data = await res.json();
+                const container = document.getElementById('qrContainer');
+                if (data.available && data.qrCode) {
+                    container.innerHTML = `<img src="${data.qrCode}" alt="QR Code">`;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function initializeWhatsApp() {
+            const btn = document.getElementById('btnConnect');
+            btn.innerHTML = '<i class="fas fa-spinner spinner"></i> INICIANDO...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/whatsapp/initialize', { method: 'POST', headers: API_HEADERS });
+                const data = await res.json();
+                if (data.success) {
+                    pollInterval = setInterval(loadStatus, 3000);
+                    loadStatus();
+                }
+            } catch (e) { alert('Erro ao iniciar'); }
+            btn.disabled = false;
+        }
+
+        async function restartWhatsApp() {
+            if (!confirm('Reiniciar conexão?')) return;
+            try {
+                await fetch('/api/whatsapp/restart', { method: 'POST', headers: API_HEADERS });
+                pollInterval = setInterval(loadStatus, 3000);
+                loadStatus();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function disconnectWhatsApp() {
+            if (!confirm('Desconectar?')) return;
+            try {
+                await fetch('/api/whatsapp/disconnect', { method: 'POST', headers: API_HEADERS });
+                loadStatus();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                const data = await res.json();
+                if (data.settings) {
+                    isBotEnabled = data.settings.whatsappBotEnabled || false;
+                    document.getElementById('botToggle').classList.toggle('active', isBotEnabled);
+                    document.getElementById('groupId').value = data.settings.whatsappGroupId || '';
+                }
+            } catch (e) { }
+        }
+
+        function toggleBot() {
+            isBotEnabled = !isBotEnabled;
+            document.getElementById('botToggle').classList.toggle('active', isBotEnabled);
+        }
+
+        async function saveSettings() {
+            try {
+                await fetch('/api/whatsapp/settings', {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        whatsappBotEnabled: isBotEnabled,
+                        whatsappGroupId: document.getElementById('groupId').value
+                    })
+                });
+                alert('Configurações salvas!');
+            } catch (e) { alert('Erro ao salvar'); }
+        }
+
+        async function loadGroups() {
+            const btn = document.getElementById('btnLoadGroups');
+            btn.innerHTML = '<i class="fas fa-spinner spinner"></i>';
+            try {
+                const res = await fetch('/api/whatsapp/groups', { headers: API_HEADERS });
+                const groups = await res.json();
+                const list = document.getElementById('groupsList');
+                list.style.display = 'block';
+                if (groups.length) {
+                    list.innerHTML = groups.map(g => `
+                        <div class="group-item" onclick="selectGroup('${g.id}')">
+                            <div style="font-weight:700;">${g.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${g.id}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div style="padding:12px;">Nenhum grupo encontrado</div>';
+                }
+            } catch (e) { alert('Erro ao carregar grupos'); }
+            btn.innerHTML = '<i class="fas fa-list"></i>';
+        }
+
+        function selectGroup(id) {
+            document.getElementById('groupId').value = id;
+            document.getElementById('groupsList').style.display = 'none';
+        }
+
+        async function loadStoreLink() {
+            try {
+                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                const data = await res.json();
+                document.getElementById('storeLink').value = `${window.location.origin}/loja/${data.slug}`;
+            } catch (e) { }
+        }
+
+        function copyLink() {
+            const el = document.getElementById('storeLink');
+            el.select();
+            document.execCommand('copy');
+            alert('Copiado!');
+        }
+
+        // ========================================
+        // Funcoes de IA
+        // ========================================
+        let isAIEnabled = false;
+        let currentProvider = 'groq';
+
+        function toggleAI() {
+            isAIEnabled = !isAIEnabled;
+            document.getElementById('aiToggle').classList.toggle('active', isAIEnabled);
+            document.getElementById('aiConfigSection').style.display = isAIEnabled ? 'block' : 'none';
+            updateProviderUI();
+
+            // Auto-salvar quando toggle muda
+            saveAISettings();
+        }
+
+        function updateProviderUI() {
+            const provider = document.getElementById('aiProvider').value;
+            currentProvider = provider;
+
+            const badge = document.getElementById('aiProviderBadge');
+            const label = document.getElementById('apiKeyLabel');
+            const hint = document.getElementById('apiKeyHint');
+
+            if (provider === 'groq') {
+                badge.textContent = 'GROQ';
+                label.textContent = 'Chave API Groq';
+                hint.innerHTML = 'Obtenha em <a href="https://console.groq.com" target="_blank" style="color: #8b5cf6;">console.groq.com</a> (30 req/min gratis)';
+            } else {
+                badge.textContent = 'GEMINI';
+                label.textContent = 'Chave API Gemini';
+                hint.innerHTML = 'Obtenha em <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #8b5cf6;">aistudio.google.com</a> (20 req/dia gratis)';
+            }
+        }
+
+        async function loadAISettings() {
+            try {
+                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                const data = await res.json();
+                const aiBot = data.settings?.aiBot || {};
+
+                isAIEnabled = aiBot.enabled || false;
+                currentProvider = aiBot.provider || 'groq';
+
+                document.getElementById('aiToggle').classList.toggle('active', isAIEnabled);
+                document.getElementById('aiConfigSection').style.display = isAIEnabled ? 'block' : 'none';
+                document.getElementById('aiProvider').value = currentProvider;
+
+                if (aiBot.apiKey) {
+                    document.getElementById('aiApiKey').value = aiBot.apiKey;
+                }
+
+                updateProviderUI();
+
+                // Mostrar status se ativado
+                if (isAIEnabled && aiBot.apiKey) {
+                    showAIStatus(true, `IA ativa usando ${currentProvider.toUpperCase()}`);
+                }
+            } catch (e) {
+                console.error('Erro ao carregar config IA:', e);
+            }
+        }
+
+        function showAIStatus(success, message) {
+            const status = document.getElementById('aiStatus');
+            status.style.display = 'block';
+            status.style.background = success ? '#dcfce7' : '#fef2f2';
+            status.style.color = success ? '#166534' : '#991b1b';
+            status.innerHTML = `<i class="fas fa-${success ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+        }
+
+        async function saveAISettings() {
+            const apiKey = document.getElementById('aiApiKey').value.trim();
+            const provider = document.getElementById('aiProvider').value;
+
+            if (isAIEnabled && !apiKey) {
+                alert('Insira a chave API para habilitar a IA');
+                return false;
+            }
+
+            try {
+                const res = await fetch('/api/whatsapp/settings', {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        aiBot: {
+                            enabled: isAIEnabled,
+                            apiKey: apiKey,
+                            provider: provider
+                        }
+                    })
+                });
+
+                if (res.ok) {
+                    showAIStatus(true, `Configuracoes salvas! IA ${isAIEnabled ? 'ativada' : 'desativada'} (${provider.toUpperCase()})`);
+                } else {
+                    showAIStatus(false, 'Erro ao salvar configuracoes');
+                }
+                return true;
+            } catch (e) {
+                console.error('Erro ao salvar config IA:', e);
+                showAIStatus(false, 'Erro ao salvar: ' + e.message);
+                return false;
+            }
+        }
+
+        async function testAI() {
+            const apiKey = document.getElementById('aiApiKey').value.trim();
+            const provider = document.getElementById('aiProvider').value;
+
+            if (!apiKey) {
+                alert('Insira a chave API primeiro');
+                return;
+            }
+
+            const btn = event.target.closest('button');
+            btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Testando...';
+            btn.disabled = true;
+
+            try {
+                let response;
+
+                if (provider === 'groq') {
+                    response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify({
+                            model: 'llama-3.3-70b-versatile',
+                            messages: [{ role: 'user', content: 'Responda apenas: OK' }],
+                            max_tokens: 10
+                        })
+                    });
+                } else {
+                    response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Responda apenas: OK' }] }]
+                        })
+                    });
+                }
+
+                if (response.ok) {
+                    showAIStatus(true, `Conexao com ${provider.toUpperCase()} OK! A IA esta funcionando.`);
+                } else {
+                    const error = await response.json();
+                    showAIStatus(false, 'Erro na API: ' + (error.error?.message || 'Chave invalida'));
+                }
+            } catch (e) {
+                showAIStatus(false, 'Erro ao testar: ' + e.message);
+            }
+
+            btn.innerHTML = '<i class="fas fa-flask"></i> TESTAR IA';
+            btn.disabled = false;
+        }
+
+        // Modificar saveSettings para incluir IA
+        const originalSaveSettings = saveSettings;
+        saveSettings = async function () {
+            await originalSaveSettings();
+        };
+
+        // Carregar config IA no init
+        const originalInit = init;
+        init = async function () {
+            await originalInit();
+            await loadAISettings();
+        };
+
+        init();
+    </script>
+
+    <!-- Modal de Configuracao de Mensagens -->
+    <div id="messageConfigModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;">
+        <div
+            style="background: var(--card); border: 4px solid var(--dark); border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 8px 8px 0 var(--dark);">
+            <div
+                style="padding: 24px; border-bottom: 3px solid var(--dark); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-family: 'Bebas Neue'; font-size: 2rem; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-comment-alt" style="color: var(--whatsapp);"></i> Mensagens do Bot
+                </h2>
+                <button onclick="closeMessageConfig()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="padding: 24px;">
+                <div class="form-group">
+                    <label><i class="fas fa-hand-wave"></i> Mensagem de Boas-Vindas</label>
+                    <textarea id="msgWelcome" rows="4"
+                        style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">Ola! Bem-vindo ao {restaurante}!
+
+Faca seu pedido pelo link:
+{link}
+
+Seu pedido sera enviado diretamente para nos!</textarea>
+                    <small style="color: var(--text-muted);">Variaveis: {restaurante}, {link}, {nome}</small>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-link"></i> Mensagem de Link do Pedido</label>
+                    <textarea id="msgOrderLink" rows="3"
+                        style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">Clique no link para fazer seu pedido:
+{link}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-question-circle"></i> Mensagem de Ajuda</label>
+                    <textarea id="msgHelp" rows="4"
+                        style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">Como fazer seu pedido:
+
+1. Clique no link que enviei
+2. Monte seu pedido no site
+3. Confirme e aguarde a entrega!
+
+Qualquer duvida, estou aqui!</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-check-circle"></i> Mensagem de Confirmacao de Pedido</label>
+                    <textarea id="msgConfirmation" rows="4"
+                        style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">Pedido Confirmado! #{numero}
+
+Itens:
+{itens}
+
+Total: R$ {total}
+
+Seu pedido esta sendo preparado!</textarea>
+                    <small style="color: var(--text-muted);">Variaveis: {numero}, {itens}, {total}</small>
+                </div>
+
+                <div style="border-top: 3px dashed var(--dark); padding-top: 20px; margin-top: 20px;">
+                    <h3 style="font-family: 'Bebas Neue'; font-size: 1.5rem; margin-bottom: 16px;">
+                        <i class="fas fa-clock" style="color: var(--warning);"></i> Mensagens de Follow-up
+                    </h3>
+
+                    <div class="form-group">
+                        <label>7-14 dias sem pedido</label>
+                        <textarea id="msgFollowup7" rows="3"
+                            style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">Ola {nome}! Sentimos sua falta no {restaurante}!
+
+Que tal um lanche hoje? Estamos com novidades deliciosas esperando por voce!
+
+Faca seu pedido: {link}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>15-30 dias sem pedido</label>
+                        <textarea id="msgFollowup15" rows="3"
+                            style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">{nome}! Faz um tempinho que voce nao pede no {restaurante}!
+
+Estamos com saudade! Aproveite e mate a vontade:
+{link}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>31-60 dias sem pedido</label>
+                        <textarea id="msgFollowup30" rows="3"
+                            style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; resize: vertical;">{nome}! Lembra de nos? Somos o {restaurante}!
+
+Voce faz falta aqui! Que tal relembrar nosso sabor?
+{link}</textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="closeMessageConfig()">CANCELAR</button>
+                    <button class="btn btn-whatsapp" onclick="saveMessageConfig()"><i class="fas fa-save"></i> SALVAR
+                        MENSAGENS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // Configuracao de Mensagens
+        // ========================================
+        let messageConfig = {};
+
+        function openMessageConfig() {
+            loadMessageConfig();
+            document.getElementById('messageConfigModal').style.display = 'flex';
+        }
+
+        function closeMessageConfig() {
+            document.getElementById('messageConfigModal').style.display = 'none';
+        }
+
+        async function loadMessageConfig() {
+            try {
+                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                const data = await res.json();
+                messageConfig = data.settings?.botMessages || {};
+
+                if (messageConfig.welcome) document.getElementById('msgWelcome').value = messageConfig.welcome;
+                if (messageConfig.orderLink) document.getElementById('msgOrderLink').value = messageConfig.orderLink;
+                if (messageConfig.help) document.getElementById('msgHelp').value = messageConfig.help;
+                if (messageConfig.confirmation) document.getElementById('msgConfirmation').value = messageConfig.confirmation;
+                if (messageConfig.followup7) document.getElementById('msgFollowup7').value = messageConfig.followup7;
+                if (messageConfig.followup15) document.getElementById('msgFollowup15').value = messageConfig.followup15;
+                if (messageConfig.followup30) document.getElementById('msgFollowup30').value = messageConfig.followup30;
+            } catch (e) {
+                console.error('Erro ao carregar mensagens:', e);
+            }
+        }
+
+        async function saveMessageConfig() {
+            const messages = {
+                welcome: document.getElementById('msgWelcome').value,
+                orderLink: document.getElementById('msgOrderLink').value,
+                help: document.getElementById('msgHelp').value,
+                confirmation: document.getElementById('msgConfirmation').value,
+                followup7: document.getElementById('msgFollowup7').value,
+                followup15: document.getElementById('msgFollowup15').value,
+                followup30: document.getElementById('msgFollowup30').value
+            };
+
+            try {
+                await fetch('/api/whatsapp/settings', {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ botMessages: messages })
+                });
+                alert('Mensagens salvas com sucesso!');
+                closeMessageConfig();
+            } catch (e) {
+                alert('Erro ao salvar mensagens');
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('messageConfigModal').addEventListener('click', function (e) {
+            if (e.target === this) closeMessageConfig();
+        });
+    </script>
+</body>
+
+</html>

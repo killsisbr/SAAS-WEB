@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizar - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 32px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .color-input {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .color-input input[type="color"] {
+            width: 60px;
+            height: 50px;
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .color-input input[type="text"] {
+            flex: 1;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .theme-option {
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .theme-option:hover {
+            transform: translateY(-4px);
+        }
+
+        .theme-option.selected {
+            background: var(--dark);
+            color: white;
+            border-color: var(--secondary);
+            box-shadow: 4px 4px 0 var(--secondary);
+        }
+
+        .theme-preview {
+            height: 50px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 2px solid var(--dark);
+        }
+
+        .preview-section {
+            position: sticky;
+            top: 24px;
+        }
+
+        .preview-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 8px 8px 0 var(--dark);
+        }
+
+        .preview-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--dark);
+            background: var(--bg);
+        }
+
+        .preview-content {
+            padding: 20px;
+        }
+
+        .preview-product {
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 3px solid var(--dark);
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 900px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Customizar Loja</h1>
+                    <p>Defina a identidade visual</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="settings-section">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-swatchbook"></i> Temas Pre-definidos</div>
+                    <div class="themes-grid" id="themesGrid"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-palette"></i> Cores</div>
+                    <div class="form-group">
+                        <label>Cor Primaria</label>
+                        <div class="color-input">
+                            <input type="color" id="primaryColor" value="#d9432e" onchange="updateColorsFromInput()">
+                            <input type="text" id="primaryColorText" value="#d9432e" onchange="updateColorsFromText()">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cor Secundaria</label>
+                        <div class="color-input">
+                            <input type="color" id="secondaryColor" value="#ffb800" onchange="updateColorsFromInput()">
+                            <input type="text" id="secondaryColorText" value="#ffb800"
+                                onchange="updateColorsFromText()">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Fundo</label>
+                        <div class="color-input">
+                            <input type="color" id="bgColor" value="#fff9f0" onchange="updateColorsFromInput()">
+                            <input type="text" id="bgColorText" value="#fff9f0" onchange="updateColorsFromText()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-image"></i> Logo</div>
+                    <div class="form-group">
+                        <label>URL do Logo</label>
+                        <input type="text" id="logoUrl" placeholder="https://..."
+                            style="width: 100%; padding: 14px; background: var(--bg); border: 3px solid var(--dark); border-radius: 12px;">
+                    </div>
+                </div>
+
+                <!-- Custom Domains Section -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-globe"></i> Dominio Personalizado</div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                        Use seu proprio dominio para acessar a loja (ex: pedidos.sualoja.com.br)
+                    </p>
+
+                    <div id="domainsList" style="margin-bottom: 16px;"></div>
+
+                    <div class="form-group">
+                        <label>Adicionar Dominio</label>
+                        <div style="display: flex; gap: 12px;">
+                            <input type="text" id="newDomain" placeholder="pedidos.sualoja.com.br"
+                                style="flex: 1; padding: 14px; background: var(--bg); border: 3px solid var(--dark); border-radius: 12px;">
+                            <button class="btn btn-primary" onclick="addDomain()" style="white-space: nowrap;">
+                                <i class="fas fa-plus"></i> Adicionar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(0,0,0,0.05); padding: 16px; border-radius: 12px; border: 2px dashed var(--dark);">
+                        <div style="font-weight: 700; margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Como
+                            Configurar</div>
+                        <ol style="margin-left: 20px; font-size: 0.85rem; color: var(--text-muted);">
+                            <li>Adicione o dominio acima</li>
+                            <li>No painel DNS do seu dominio, crie um CNAME apontando para: <code
+                                    style="background: var(--dark); color: white; padding: 2px 6px; border-radius: 4px;">app.killsis.com</code>
+                            </li>
+                            <li>Clique em "Verificar" para confirmar a configuracao</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; justify-content: center;"
+                    onclick="saveCustomization()">
+                    <i class="fas fa-save"></i> SALVAR ALTERACOES
+                </button>
+            </div>
+
+            <div class="preview-section">
+                <div class="card-title"><i class="fas fa-mobile-alt"></i> Preview</div>
+                <div class="preview-card" id="previewCard">
+                    <div class="preview-header" id="previewHeader">
+                        <div style="font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 1px;" id="previewName">
+                            NOME DA LOJA</div>
+                        <div style="font-size: 0.85rem; opacity: 0.8;">Hamburgueria Artesanal</div>
+                    </div>
+                    <div class="preview-content" id="previewContent">
+                        <div class="preview-product">
+                            <div>
+                                <div style="font-weight: 800; font-size: 1.1rem;">X-Bacon</div>
+                                <div style="font-size: 0.9rem; opacity: 0.7;">Pao, carne, bacon...</div>
+                            </div>
+                            <div style="font-weight: 800;" id="previewPrice">R$ 25,90</div>
+                        </div>
+                        <button class="preview-btn" id="previewBtn">ADICIONAR</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        const themes = [
+            { id: 'retro', name: 'Retro Burga', p: '#d9432e', s: '#ffb800', b: '#fff9f0' },
+            { id: 'dark', name: 'Dark Mode', p: '#6366f1', s: '#8b5cf6', b: '#0a0a0f' },
+            { id: 'fresh', name: 'Fresh Salad', p: '#22c55e', s: '#84cc16', b: '#f0fdf4' },
+            { id: 'night', name: 'Night Pizza', p: '#ef4444', s: '#f59e0b', b: '#1e1e2e' }
+        ];
+
+        function init() {
+            renderThemes();
+            updatePreview();
+        }
+
+        function renderThemes() {
+            document.getElementById('themesGrid').innerHTML = themes.map(t => `
+                <div class="theme-option" onclick="applyTheme('${t.id}')">
+                    <div class="theme-preview" style="background: linear-gradient(135deg, ${t.p}, ${t.s});"></div>
+                    <div style="font-weight: 800;">${t.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function applyTheme(id) {
+            const t = themes.find(x => x.id === id);
+            if (t) {
+                setColors(t.p, t.s, t.b);
+                updatePreview();
+            }
+        }
+
+        function setColors(p, s, b) {
+            document.getElementById('primaryColor').value = p;
+            document.getElementById('primaryColorText').value = p;
+            document.getElementById('secondaryColor').value = s;
+            document.getElementById('secondaryColorText').value = s;
+            document.getElementById('bgColor').value = b;
+            document.getElementById('bgColorText').value = b;
+        }
+
+        function updateColorsFromInput() {
+            document.getElementById('primaryColorText').value = document.getElementById('primaryColor').value;
+            document.getElementById('secondaryColorText').value = document.getElementById('secondaryColor').value;
+            document.getElementById('bgColorText').value = document.getElementById('bgColor').value;
+            updatePreview();
+        }
+
+        function updateColorsFromText() {
+            document.getElementById('primaryColor').value = document.getElementById('primaryColorText').value;
+            document.getElementById('secondaryColor').value = document.getElementById('secondaryColorText').value;
+            document.getElementById('bgColor').value = document.getElementById('bgColorText').value;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const p = document.getElementById('primaryColor').value;
+            const s = document.getElementById('secondaryColor').value;
+            const b = document.getElementById('bgColor').value;
+
+            const card = document.getElementById('previewCard');
+            const header = document.getElementById('previewHeader');
+            const btn = document.getElementById('previewBtn');
+            const price = document.getElementById('previewPrice');
+
+            // Simulate card styling
+            card.style.background = b;
+            header.style.background = 'rgba(0,0,0,0.05)';
+            header.style.color = contrastColor(b);
+
+            price.style.color = p;
+            btn.style.background = p;
+            btn.style.color = contrastColor(p);
+
+            // Text color inside preview
+            document.getElementById('previewContent').style.color = contrastColor(b);
+        }
+
+        function contrastColor(hex) {
+            const r = parseInt(hex.substr(1, 2), 16);
+            const g = parseInt(hex.substr(3, 2), 16);
+            const b = parseInt(hex.substr(5, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#1a1a1a' : 'white';
+        }
+
+        async function saveCustomization() {
+            alert('Salvo com sucesso! (Simulacao)');
+            // Here you would PUT to /api/custom
+        }
+
+        // ========================================
+        // Custom Domains Management
+        // ========================================
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = {
+            'Authorization': `Bearer ${token}`,
+            'X-Tenant-Slug': TENANT_SLUG,
+            'Content-Type': 'application/json'
+        };
+
+        async function loadDomains() {
+            try {
+                const res = await fetch('/api/domains', { headers: API_HEADERS });
+                if (res.ok) {
+                    const domains = await res.json();
+                    renderDomains(domains);
+                }
+            } catch (e) {
+                console.error('Error loading domains:', e);
+            }
+        }
+
+        function renderDomains(domains) {
+            const container = document.getElementById('domainsList');
+            if (!domains || domains.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Nenhum dominio configurado.</p>';
+                return;
+            }
+
+            container.innerHTML = domains.map(d => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg); border: 2px solid var(--dark); border-radius: 12px; margin-bottom: 8px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700;">${d.domain}</div>
+                        <div style="font-size: 0.8rem; color: ${d.verified ? 'var(--success)' : 'var(--warning)'};">
+                            <i class="fas fa-${d.verified ? 'check-circle' : 'clock'}"></i> 
+                            ${d.verified ? 'Verificado' : 'Aguardando verificacao'}
+                            ${d.verified ? ' | SSL: ' + d.ssl_status : ''}
+                        </div>
+                    </div>
+                    ${!d.verified ? `
+                        <button onclick="verifyDomain('${d.id}')" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;">
+                            <i class="fas fa-sync"></i> Verificar
+                        </button>
+                    ` : ''}
+                    <button onclick="removeDomain('${d.id}')" style="background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function addDomain() {
+            const domainInput = document.getElementById('newDomain');
+            const domain = domainInput.value.trim();
+            if (!domain) {
+                alert('Digite um dominio');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/domains', {
+                    method: 'POST',
+                    headers: API_HEADERS,
+                    body: JSON.stringify({ domain })
+                });
+
+                if (res.ok) {
+                    domainInput.value = '';
+                    loadDomains();
+                    alert('Dominio adicionado! Configure o CNAME no seu provedor DNS.');
+                } else {
+                    const err = await res.json();
+                    alert('Erro: ' + (err.error || 'Nao foi possivel adicionar'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Erro de conexao');
+            }
+        }
+
+        async function verifyDomain(id) {
+            try {
+                const res = await fetch(`/api/domains/${id}/verify`, {
+                    method: 'POST',
+                    headers: API_HEADERS
+                });
+
+                const data = await res.json();
+                if (data.verified) {
+                    alert('Dominio verificado com sucesso!');
+                } else {
+                    alert('Verificacao falhou: ' + (data.message || 'CNAME nao configurado'));
+                }
+                loadDomains();
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao verificar');
+            }
+        }
+
+        async function removeDomain(id) {
+            if (!confirm('Remover este dominio?')) return;
+
+            try {
+                const res = await fetch(`/api/domains/${id}`, {
+                    method: 'DELETE',
+                    headers: API_HEADERS
+                });
+
+                if (res.ok) {
+                    loadDomains();
+                } else {
+                    alert('Erro ao remover');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        init();
+        loadDomains();
+    </script>
+</body>
+
+</html>

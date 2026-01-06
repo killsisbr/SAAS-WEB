@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeliveryHub - Atendente WhatsApp Automatico para seu Delivery</title>
+    <meta name="description"
+        content="Tenha seu proprio atendente virtual no WhatsApp 24/7. Receba pedidos automaticamente, sem perder nenhuma venda.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* NOVO TEMA: Fogo + Tecnologia */
+            --primary: #ff6b35;
+            --primary-dark: #e85d2b;
+            --primary-glow: rgba(255, 107, 53, 0.4);
+            --secondary: #00d9ff;
+            --secondary-glow: rgba(0, 217, 255, 0.3);
+            --whatsapp: #25d366;
+            --accent: #ffd23f;
+            --danger: #ff3b5c;
+
+            /* Fundos */
+            --bg-dark: #0a0a0b;
+            --bg-surface: #111113;
+            --bg-card: #18181b;
+            --bg-elevated: #1f1f23;
+
+            /* Textos */
+            --text-white: #ffffff;
+            --text-light: #e4e4e7;
+            --text-muted: #71717a;
+            --text-dim: #52525b;
+
+            /* Bordas */
+            --border-soft: rgba(255, 255, 255, 0.06);
+            --border-medium: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(255, 107, 53, 0.3);
+
+            /* Gradientes */
+            --gradient-fire: linear-gradient(135deg, #ff6b35 0%, #ff3b5c 50%, #ff6b35 100%);
+            --gradient-sunset: linear-gradient(135deg, #ff6b35, #ffd23f);
+            --gradient-ocean: linear-gradient(135deg, #00d9ff, #0099ff);
+            --gradient-dark: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-surface) 100%);
+            --gradient-radial: radial-gradient(ellipse at 50% 0%, rgba(255, 107, 53, 0.15) 0%, transparent 60%);
+
+            /* Sombras */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px var(--primary-glow);
+            --shadow-glow-lg: 0 0 80px var(--primary-glow);
+
+            /* Raios */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-full: 9999px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Tipografia */
+        .title-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .gradient-text {
+            background: var(--gradient-fire);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ========== HEADER ========== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 11, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-soft);
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        header.scrolled {
+            background: rgba(10, 10, 11, 0.95);
+            box-shadow: var(--shadow-md);
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 1.4rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        .logo span {
+            background: var(--gradient-fire);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--text-white);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-fire);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            padding: 12px 28px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient-fire);
+            color: white;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px var(--primary-glow), var(--shadow-glow);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-light);
+            border: 1px solid var(--border-medium);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--text-white);
+        }
+
+        .btn-whatsapp {
+            background: var(--whatsapp);
+            color: white;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp:hover {
+            box-shadow: 0 8px 40px rgba(37, 211, 102, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-large {
+            padding: 18px 44px;
+            font-size: 1rem;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            min-height: 100vh;
+            padding: 160px 40px 100px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(255, 107, 53, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(255, 59, 92, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 217, 255, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 400px;
+            background: radial-gradient(ellipse, var(--primary-glow) 0%, transparent 70%);
+            filter: blur(100px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-badge i {
+            font-size: 1rem;
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.8rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .hero-title span {
+            background: var(--gradient-fire);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            max-width: 500px;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+            margin-top: 56px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-soft);
+        }
+
+        .stat-item h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: var(--gradient-fire);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-item p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* WhatsApp Mockup */
+        .whatsapp-mockup {
+            background: linear-gradient(145deg, #0d1418, #0b141a);
+            border-radius: 28px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 107, 53, 0.1);
+            position: relative;
+        }
+
+        .wa-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #1f2c34;
+            border-radius: 16px 16px 0 0;
+            margin: -20px -20px 16px;
+        }
+
+        .wa-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+        }
+
+        .wa-name {
+            font-weight: 700;
+        }
+
+        .wa-status {
+            font-size: 0.75rem;
+            color: var(--whatsapp);
+        }
+
+        .wa-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .wa-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .wa-msg.received {
+            background: #1f2c34;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .wa-msg.sent {
+            background: #005c4b;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .wa-msg .time {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+            float: right;
+            margin-left: 8px;
+            margin-top: 4px;
+        }
+
+        .wa-link {
+            display: block;
+            background: rgba(37, 211, 102, 0.1);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            color: var(--whatsapp);
+            font-size: 0.85rem;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 14px 18px;
+            background: #1f2c34;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite both;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ========== PROBLEM/SOLUTION ========== */
+        .problem-section {
+            padding: 120px 40px;
+            background: var(--surface);
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+
+        .problem-card,
+        .solution-card {
+            padding: 40px;
+            border-radius: 24px;
+            border: 2px solid;
+        }
+
+        .problem-card {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .solution-card {
+            background: rgba(34, 197, 94, 0.05);
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .problem-card h3 {
+            color: #ef4444;
+        }
+
+        .solution-card h3 {
+            color: var(--secondary);
+        }
+
+        .problem-card h3,
+        .solution-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .problem-list,
+        .solution-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .problem-list li,
+        .solution-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: var(--text-muted);
+        }
+
+        .problem-list li i {
+            color: #ef4444;
+            margin-top: 4px;
+        }
+
+        .solution-list li i {
+            color: var(--secondary);
+            margin-top: 4px;
+        }
+
+        /* ========== HOW IT WORKS ========== */
+        .how-section {
+            padding: 120px 40px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            position: relative;
+        }
+
+        .steps-grid::before {
+            content: '';
+            position: absolute;
+            top: 60px;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: var(--gradient);
+            opacity: 0.3;
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0 auto 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 20px;
+        }
+
+        .step-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* ========== FEATURES ========== */
+        .features-section {
+            padding: 120px 40px;
+            background: var(--surface);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .feature-card.highlight {
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.1), rgba(99, 102, 241, 0.1));
+            border-color: var(--whatsapp);
+            grid-column: span 2;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon.green {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--secondary);
+        }
+
+        .feature-icon.purple {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        .feature-icon.orange {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+        }
+
+        .feature-icon.pink {
+            background: rgba(236, 72, 153, 0.2);
+            color: #ec4899;
+        }
+
+        .feature-icon.cyan {
+            background: rgba(6, 182, 212, 0.2);
+            color: #06b6d4;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* ========== SCREENSHOTS GALLERY ========== */
+        .screenshots-section {
+            padding: 120px 40px;
+            background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .screenshot-card {
+            background: var(--card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .screenshot-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .screenshot-card::after {
+            content: '\f00e';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 2.5rem;
+            color: white;
+            z-index: 2;
+            transition: transform 0.3s;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 30px 60px rgba(99, 102, 241, 0.3);
+        }
+
+        .screenshot-card:hover::before {
+            opacity: 1;
+        }
+
+        .screenshot-card:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            object-position: top left;
+            transition: transform 0.5s;
+        }
+
+        .screenshot-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .screenshot-card .info {
+            padding: 20px;
+            position: relative;
+            z-index: 3;
+            background: var(--card);
+        }
+
+        .screenshot-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .screenshot-card h4 i {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .screenshot-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .screenshot-card .badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--gradient);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 5;
+        }
+
+        /* LIGHTBOX MODAL */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            padding: 40px;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox-content {
+            max-width: 1200px;
+            max-height: 90vh;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-info {
+            background: var(--card);
+            padding: 24px;
+            border-radius: 0 0 16px 16px;
+            margin-top: -8px;
+        }
+
+        .lightbox-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .lightbox-info p {
+            color: var(--text-muted);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .lightbox-close:hover {
+            background: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lightbox-nav:hover {
+            background: var(--primary);
+        }
+
+        .lightbox-nav.prev {
+            left: -80px;
+        }
+
+        .lightbox-nav.next {
+            right: -80px;
+        }
+
+        /* ========== TESTIMONIALS ========== */
+        .testimonials-section {
+            padding: 120px 40px;
+            background: var(--surface);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .testimonial-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .testimonial-stars {
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .testimonial-author h4 {
+            font-size: 1rem;
+        }
+
+        .testimonial-author p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ========== PRICING ========== */
+        .pricing-section {
+            padding: 120px 40px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .price-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .price-card.popular {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .price-card.popular::before {
+            content: 'MAIS POPULAR';
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .price-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .price-value {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .price-value span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .price-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        .price-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .price-features li {
+            padding: 10px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .price-features li:last-child {
+            border-bottom: none;
+        }
+
+        .price-features li i {
+            color: var(--secondary);
+        }
+
+        /* ========== FAQ ========== */
+        .faq-section {
+            padding: 120px 40px;
+            background: var(--surface);
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 20px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: var(--primary);
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s;
+            color: var(--text-muted);
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 24px 20px;
+            max-height: 200px;
+        }
+
+        /* ========== CTA FINAL ========== */
+        .cta-section {
+            padding: 120px 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-content h2 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+
+        .cta-content p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .guarantee {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .guarantee i {
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            padding: 60px 40px 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            margin-top: 16px;
+            max-width: 300px;
+        }
+
+        .footer-col h4 {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-col a:hover {
+            color: var(--primary);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .footer-social a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .footer-bottom {
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+
+            .hero-grid,
+            .problem-grid,
+            .screenshots-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .steps-grid::before {
+                display: none;
+            }
+
+            .features-grid,
+            .testimonials-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card.highlight {
+                grid-column: span 1;
+            }
+
+            .price-card.popular {
+                transform: none;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .section-header h2,
+            .cta-content h2 {
+                font-size: 2rem;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                display: none;
+            }
+
+            header {
+                padding: 16px 20px;
+            }
+
+            .hero,
+            .problem-section,
+            .how-section,
+            .features-section,
+            .screenshots-section,
+            .testimonials-section,
+            .pricing-section,
+            .faq-section,
+            .cta-section {
+                padding: 80px 20px;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-rocket"></i>
+            DeliveryHub
+        </div>
+        <nav>
+            <a href="#como-funciona">Como Funciona</a>
+            <a href="#recursos">Recursos</a>
+            <a href="#precos">Precos</a>
+            <a href="/login" class="btn btn-secondary">Entrar</a>
+            <a href="/onboarding" class="btn btn-primary">
+                <i class="fab fa-whatsapp"></i>
+                Comecar Gratis
+            </a>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container hero-grid">
+            <div class="hero-text">
+                <div class="hero-badge">
+                    <i class="fab fa-whatsapp"></i>
+                    Atendimento Automatico 24/7
+                </div>
+                <h1 class="hero-title">
+                    Seu atendente WhatsApp que <span>nunca dorme</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Enquanto voce descansa, seu bot recebe pedidos automaticamente.
+                    Nunca mais perca uma venda por nao responder a tempo.
+                </p>
+                <div class="hero-buttons">
+                    <a href="/onboarding" class="btn btn-primary btn-large">
+                        <i class="fas fa-rocket"></i>
+                        Comecar Gratis - 30 dias
+                    </a>
+                    <a href="#como-funciona" class="btn btn-secondary btn-large">
+                        Ver como funciona
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h3>+15.000</h3>
+                        <p>Pedidos processados</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>24/7</h3>
+                        <p>Atendimento</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>3seg</h3>
+                        <p>Tempo de resposta</p>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-mockup">
+                <div class="whatsapp-mockup">
+                    <div class="wa-header">
+                        <div class="wa-avatar">BB</div>
+                        <div>
+                            <div class="wa-name">Brutus Burger</div>
+                            <div class="wa-status">online</div>
+                        </div>
+                    </div>
+                    <div class="wa-messages">
+                        <div class="wa-msg received">
+                            Oi, boa noite! Quero fazer um pedido
+                            <span class="time">21:32</span>
+                        </div>
+                        <div class="wa-msg sent">
+                            Ola! Bem-vindo ao Brutus Burger!
+                            <br><br>
+                            Faca seu pedido pelo link:
+                            <div class="wa-link">
+                                <i class="fas fa-external-link-alt"></i>
+                                brutus-burger.deliveryhub.com.br
+                            </div>
+                            <span class="time">21:32 <i class="fas fa-check-double" style="color: #53bdeb;"></i></span>
+                        </div>
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROBLEMA / SOLUCAO -->
+    <section class="problem-section">
+        <div class="container problem-grid">
+            <div class="problem-card">
+                <h3><i class="fas fa-times-circle"></i> Sem atendente automatico</h3>
+                <ul class="problem-list">
+                    <li><i class="fas fa-times"></i> Perde vendas enquanto dorme ou esta ocupado</li>
+                    <li><i class="fas fa-times"></i> Cliente desiste se demora para responder</li>
+                    <li><i class="fas fa-times"></i> Precisa ficar 24h no celular</li>
+                    <li><i class="fas fa-times"></i> Erros ao anotar pedidos manualmente</li>
+                    <li><i class="fas fa-times"></i> Dificil gerenciar muitos pedidos</li>
+                </ul>
+            </div>
+            <div class="solution-card">
+                <h3><i class="fas fa-check-circle"></i> Com DeliveryHub</h3>
+                <ul class="solution-list">
+                    <li><i class="fas fa-check"></i> Bot responde instantaneamente 24/7</li>
+                    <li><i class="fas fa-check"></i> Cliente faz pedido sozinho na sua loja</li>
+                    <li><i class="fas fa-check"></i> Voce so vê o pedido pronto no quadro</li>
+                    <li><i class="fas fa-check"></i> Zero erros - tudo automatizado</li>
+                    <li><i class="fas fa-check"></i> Dashboard com metricas em tempo real</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="how-section" id="como-funciona">
+        <div class="container">
+            <div class="section-header">
+                <h2>Como funciona?</h2>
+                <p>Em 3 passos simples, seu atendimento vira automatico</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon" style="color: var(--whatsapp);"><i class="fab fa-whatsapp"></i></div>
+                    <h3>Cliente manda mensagem</h3>
+                    <p>Quando alguem envia "Oi" ou "Quero pedir" no seu WhatsApp</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon" style="color: var(--primary);"><i class="fas fa-robot"></i></div>
+                    <h3>Bot responde na hora</h3>
+                    <p>Em 3 segundos, seu bot envia o link da sua loja personalizada</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon" style="color: var(--accent);"><i class="fas fa-bell"></i></div>
+                    <h3>Pedido no seu quadro</h3>
+                    <p>Voce recebe o pedido completo no painel, pronto para preparar</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features-section" id="recursos">
+        <div class="container">
+            <div class="section-header">
+                <h2>Tudo que voce precisa</h2>
+                <p>Uma plataforma completa para automatizar seu delivery</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card highlight">
+                    <div class="feature-icon green"><i class="fab fa-whatsapp"></i></div>
+                    <h3>Bot WhatsApp 24/7</h3>
+                    <p>Atendente virtual que responde instantaneamente, envia link da loja e nunca deixa cliente
+                        esperando. Funciona enquanto voce dorme!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-store"></i></div>
+                    <h3>Loja Online Premium</h3>
+                    <p>Cardapio digital bonito e profissional. Seu cliente monta o pedido sozinho.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon orange"><i class="fas fa-columns"></i></div>
+                    <h3>Quadro de Pedidos</h3>
+                    <p>Kanban em tempo real. Acompanhe: Pendentes, Preparando, Prontos e Entregues.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-chart-line"></i></div>
+                    <h3>Dashboard Completo</h3>
+                    <p>Faturamento, pedidos, clientes e metricas importantes em tempo real.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon cyan"><i class="fas fa-map-marker-alt"></i></div>
+                    <h3>Taxa por Zona</h3>
+                    <p>Calcule automaticamente a taxa de entrega baseada na distancia do cliente.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon pink"><i class="fas fa-credit-card"></i></div>
+                    <h3>Multi-Pagamento</h3>
+                    <p>PIX, cartao, dinheiro. Configure quais formas aceita na sua loja.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCREENSHOTS GALLERY -->
+    <section class="screenshots-section" id="galeria">
+        <div class="container">
+            <div class="section-header">
+                <h2>Veja o sistema em acao</h2>
+                <p>Clique nas imagens para ampliar e conhecer cada funcionalidade</p>
+            </div>
+            <div class="screenshots-grid">
+                <div class="screenshot-card" onclick="openLightbox(0)">
+                    <span class="badge">Principal</span>
+                    <img src="/landing/images/sys_store_1767487589077.png" alt="Loja Online">
+                    <div class="info">
+                        <h4><i class="fas fa-store"
+                                style="background: rgba(99, 102, 241, 0.2); color: var(--primary);"></i> Loja Online
+                        </h4>
+                        <p>Cardapio digital profissional com categorias, produtos com fotos, precos e adicionais
+                            personalizaveis</p>
+                    </div>
+                </div>
+                <div class="screenshot-card" onclick="openLightbox(1)">
+                    <span class="badge">Gestao</span>
+                    <img src="/landing/images/sys_quadro_1767487605815.png" alt="Quadro de Pedidos">
+                    <div class="info">
+                        <h4><i class="fas fa-columns"
+                                style="background: rgba(245, 158, 11, 0.2); color: var(--accent);"></i> Quadro Kanban
+                        </h4>
+                        <p>Gestao visual de pedidos em tempo real. Arraste entre colunas: Pendente, Preparando, Pronto e
+                            Entregue</p>
+                    </div>
+                </div>
+                <div class="screenshot-card" onclick="openLightbox(2)">
+                    <img src="/landing/images/sys_dashboard_1767487622176.png" alt="Dashboard">
+                    <div class="info">
+                        <h4><i class="fas fa-chart-line"
+                                style="background: rgba(34, 197, 94, 0.2); color: var(--secondary);"></i> Dashboard</h4>
+                        <p>Faturamento do dia, total de pedidos, ultimos clientes e metricas importantes de um so lugar
+                        </p>
+                    </div>
+                </div>
+                <div class="screenshot-card" onclick="openLightbox(3)">
+                    <img src="/landing/images/sys_produtos_1767487645539.png" alt="Gestao de Produtos">
+                    <div class="info">
+                        <h4><i class="fas fa-box" style="background: rgba(236, 72, 153, 0.2); color: #ec4899;"></i>
+                            Produtos</h4>
+                        <p>Cadastre produtos com foto, descricao, preco e adicionais. Organize por categorias</p>
+                    </div>
+                </div>
+                <div class="screenshot-card" onclick="openLightbox(4)">
+                    <img src="/landing/images/sys_config_1767487674747.png" alt="Configuracoes">
+                    <div class="info">
+                        <h4><i class="fas fa-cog" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4;"></i>
+                            Configuracoes</h4>
+                        <p>Personalize sua loja: horarios, taxas de entrega por zona, formas de pagamento e WhatsApp</p>
+                    </div>
+                </div>
+                <div class="screenshot-card"
+                    style="background: var(--gradient); display: flex; align-items: center; justify-content: center; min-height: 320px;">
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-rocket" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <h4 style="font-size: 1.5rem; margin-bottom: 12px;">Quer ver ao vivo?</h4>
+                        <p style="opacity: 0.9; margin-bottom: 24px;">Crie sua conta gratis e explore todas as
+                            funcionalidades</p>
+                        <a href="/onboarding" class="btn btn-secondary"
+                            style="background: white; color: var(--primary);">Comecar Agora</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIGHTBOX MODAL -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+            <button class="lightbox-nav prev" onclick="navigateLightbox(-1)"><i
+                    class="fas fa-chevron-left"></i></button>
+            <button class="lightbox-nav next" onclick="navigateLightbox(1)"><i
+                    class="fas fa-chevron-right"></i></button>
+            <img id="lightbox-img" src="" alt="">
+            <div class="lightbox-info">
+                <h3 id="lightbox-title"></h3>
+                <p id="lightbox-desc"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <section class="testimonials-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>O que dizem nossos clientes</h2>
+                <p>Negocios que ja transformaram seu atendimento</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Antes eu perdia pedidos de madrugada. Agora o bot responde na hora e ja
+                        acordei com 5 pedidos prontos no quadro!"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">MR</div>
+                        <div>
+                            <h4>Marcos Ribeiro</h4>
+                            <p>Burger House</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Minha acaiteria triplicou os pedidos. O cliente faz tudo sozinho e eu
+                        so preparo. Muito mais organizado!"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">AS</div>
+                        <div>
+                            <h4>Ana Silva</h4>
+                            <p>Acai da Ana</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"O quadro de pedidos e incrivel. Consigo ver tudo em tempo real e nunca
+                        mais errei um pedido. Super recomendo!"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">PO</div>
+                        <div>
+                            <h4>Pedro Oliveira</h4>
+                            <p>Pizza Express</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="pricing-section" id="precos">
+        <div class="container">
+            <div class="section-header">
+                <h2>Planos simples e transparentes</h2>
+                <p>Comece gratis e escale conforme cresce</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <div class="price-name">Trial</div>
+                    <div class="price-value">Gratis <span>/ 30 dias</span></div>
+                    <p class="price-desc">Perfeito para testar</p>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> Bot WhatsApp</li>
+                        <li><i class="fas fa-check"></i> 20 produtos</li>
+                        <li><i class="fas fa-check"></i> 100 pedidos/mes</li>
+                        <li><i class="fas fa-check"></i> Loja online</li>
+                        <li><i class="fas fa-check"></i> Quadro de pedidos</li>
+                    </ul>
+                    <a href="/onboarding" class="btn btn-secondary"
+                        style="width: 100%; justify-content: center;">Comecar Gratis</a>
+                </div>
+                <div class="price-card popular">
+                    <div class="price-name">Pro</div>
+                    <div class="price-value">R$ 99 <span>/ mes</span></div>
+                    <p class="price-desc">Para negocios em crescimento</p>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> Tudo do Trial</li>
+                        <li><i class="fas fa-check"></i> Produtos ilimitados</li>
+                        <li><i class="fas fa-check"></i> Pedidos ilimitados</li>
+                        <li><i class="fas fa-check"></i> Temas premium</li>
+                        <li><i class="fas fa-check"></i> Dashboard analytics</li>
+                        <li><i class="fas fa-check"></i> Suporte prioritario</li>
+                    </ul>
+                    <a href="/onboarding" class="btn btn-primary" style="width: 100%; justify-content: center;">Assinar
+                        Agora</a>
+                </div>
+                <div class="price-card">
+                    <div class="price-name">Enterprise</div>
+                    <div class="price-value">R$ 199 <span>/ mes</span></div>
+                    <p class="price-desc">Para grandes operacoes</p>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> Tudo do Pro</li>
+                        <li><i class="fas fa-check"></i> Multi-usuarios</li>
+                        <li><i class="fas fa-check"></i> API Access</li>
+                        <li><i class="fas fa-check"></i> Dominio proprio</li>
+                        <li><i class="fas fa-check"></i> Suporte dedicado</li>
+                    </ul>
+                    <a href="/onboarding" class="btn btn-secondary" style="width: 100%; justify-content: center;">Falar
+                        com Vendas</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Perguntas frequentes</h2>
+                <p>Tire suas duvidas sobre o DeliveryHub</p>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item active">
+                    <button class="faq-question">
+                        Como funciona o bot do WhatsApp?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Voce conecta seu WhatsApp Business ao nosso sistema escaneando um QR code. A partir dai, quando
+                        alguem mandar mensagem no seu numero, nosso bot responde automaticamente com o link da sua loja.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Preciso de conhecimento tecnico?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Nao! O sistema e super intuitivo. Voce cadastra seus produtos, configura o bot e pronto. Em 5
+                        minutos sua loja esta funcionando.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        O trial e realmente gratis?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Sim! Voce tem 30 dias gratis para testar todas as funcionalidades. Nao pedimos cartao de
+                        credito. So cobra depois se voce quiser continuar.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Posso cancelar a qualquer momento?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Claro! Nao tem fidelidade nem multa. Cancele quando quiser direto no painel.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Funciona em qualquer tipo de delivery?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Sim! Hamburgueria, pizzaria, acaiteria, marmitaria, lanchonete, restaurante... Qualquer negocio
+                        que receba pedidos pode usar.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Pronto para automatizar seu delivery?</h2>
+            <p>Enquanto voce pensa, seu concorrente ja esta recebendo pedidos automaticamente. Comece hoje - e gratis!
+            </p>
+            <div class="cta-buttons">
+                <a href="/onboarding" class="btn btn-primary btn-large">
+                    <i class="fas fa-rocket"></i>
+                    Criar Minha Loja Gratis
+                </a>
+                <a href="https://wa.me/5562999999999" class="btn btn-whatsapp btn-large" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    Falar com Suporte
+                </a>
+            </div>
+            <div class="guarantee">
+                <i class="fas fa-shield-alt"></i>
+                30 dias gratis | Sem cartao de credito | Cancele quando quiser
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <i class="fas fa-rocket"></i>
+                        DeliveryHub
+                    </div>
+                    <p>Automatize seu atendimento no WhatsApp e nunca mais perca uma venda.</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Produto</h4>
+                    <a href="#recursos">Recursos</a>
+                    <a href="#precos">Precos</a>
+                    <a href="#como-funciona">Como Funciona</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Empresa</h4>
+                    <a href="#">Sobre nos</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Contato</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <a href="#">Termos de Uso</a>
+                    <a href="#">Privacidade</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DeliveryHub. Desenvolvido por Lucas Larocca (killsis)</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const wasActive = item.classList.contains('active');
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+                if (!wasActive) item.classList.add('active');
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(3, 7, 18, 0.95)';
+            } else {
+                header.style.background = 'rgba(3, 7, 18, 0.85)';
+            }
+        });
+
+        // ========== LIGHTBOX GALLERY ==========
+        const screenshots = [
+            {
+                src: '/landing/images/sys_store_1767487589077.png',
+                title: 'Loja Online',
+                desc: 'Cardapio digital profissional com categorias, produtos com fotos, precos e adicionais personalizaveis. Seu cliente faz o pedido sozinho!'
+            },
+            {
+                src: '/landing/images/sys_quadro_1767487605815.png',
+                title: 'Quadro de Pedidos (Kanban)',
+                desc: 'Gestao visual de pedidos em tempo real. Arraste entre colunas: Pendente, Preparando, Pronto e Entregue. Veja faturamento do dia!'
+            },
+            {
+                src: '/landing/images/sys_dashboard_1767487622176.png',
+                title: 'Dashboard Administrativo',
+                desc: 'Faturamento do dia, total de pedidos, base de clientes e metricas importantes. Tudo em tempo real!'
+            },
+            {
+                src: '/landing/images/sys_produtos_1767487645539.png',
+                title: 'Gestao de Produtos',
+                desc: 'Cadastre produtos com foto, descricao, preco e adicionais. Organize por categorias. Facil de gerenciar!'
+            },
+            {
+                src: '/landing/images/sys_config_1767487674747.png',
+                title: 'Configuracoes',
+                desc: 'Personalize sua loja: horarios de funcionamento, taxas de entrega por zona, formas de pagamento, integracao WhatsApp e muito mais!'
+            }
+        ];
+
+        let currentLightboxIndex = 0;
+
+        function openLightbox(index) {
+            currentLightboxIndex = index;
+            updateLightbox();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function navigateLightbox(direction) {
+            currentLightboxIndex += direction;
+            if (currentLightboxIndex < 0) currentLightboxIndex = screenshots.length - 1;
+            if (currentLightboxIndex >= screenshots.length) currentLightboxIndex = 0;
+            updateLightbox();
+        }
+
+        function updateLightbox() {
+            const item = screenshots[currentLightboxIndex];
+            document.getElementById('lightbox-img').src = item.src;
+            document.getElementById('lightbox-title').textContent = item.title;
+            document.getElementById('lightbox-desc').textContent = item.desc;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox');
+            if (!lightbox.classList.contains('active')) return;
+
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        });
+    </script>
+</body>
+
+</html>

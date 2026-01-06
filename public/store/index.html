@@ -1,0 +1,2620 @@
+<!DOCTYPE html>
+<html lang="pt-pt" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brutus Burger | Multiverse Themes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Leaflet CSS para o mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: 'var(--primary-red)',
+                        mainBg: 'var(--bg-color)',
+                        dark: 'var(--dark)',
+                        highlight: 'var(--yellow)',
+                        card: 'var(--card-bg)',
+                        textMain: 'var(--text-color)',
+                        accent: 'var(--accent-blue)'
+                    },
+                    borderRadius: {
+                        'custom': 'var(--radius)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            /* Tema Retro */
+            --primary-red: #d9432e;
+            --bg-color: #fff9f0;
+            --dark: #1a1a1a;
+            --yellow: #ffb800;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --accent-blue: #2e5bd9;
+            --pattern-opacity: 1;
+            --radius: 20px;
+            --border-width: 3px;
+            --border-style: solid;
+            --shadow-offset: 6px;
+            --modal-rotate: -2deg;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        [data-theme="midnight"] {
+            --primary-red: #10b981;
+            --bg-color: #050505;
+            --dark: #ffffff;
+            --yellow: #a855f7;
+            --card-bg: #111827;
+            --text-color: #f9fafb;
+            --accent-blue: #3b82f6;
+            --pattern-opacity: 0.15;
+            --radius: 12px;
+            --border-width: 2px;
+            --border-style: solid;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+        }
+
+        [data-theme="vibe"] {
+            --primary-red: #4f46e5;
+            --bg-color: #f8fafc;
+            --dark: #e2e8f0;
+            --yellow: #0ea5e9;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --accent-blue: #6366f1;
+            --pattern-opacity: 0.05;
+            --radius: 32px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+        }
+
+        [data-theme="doodle"] {
+            --primary-red: #e11d48;
+            --bg-color: #ffffff;
+            --dark: #000000;
+            --yellow: #fde047;
+            --card-bg: #ffffff;
+            --text-color: #000000;
+            --accent-blue: #2563eb;
+            --pattern-opacity: 0.3;
+            --radius: 2px;
+            --border-width: 2px;
+            --border-style: dashed;
+            --shadow-offset: 4px;
+            --modal-rotate: 1deg;
+        }
+
+        [data-theme="luxury"] {
+            --primary-red: #c5a059;
+            --bg-color: #0a0a0a;
+            --dark: #c5a059;
+            --yellow: #ffffff;
+            --card-bg: #151515;
+            --text-color: #f5f5f5;
+            --accent-blue: #c5a059;
+            --pattern-opacity: 0.1;
+            --radius: 0px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+        }
+
+        [data-theme="matrix"] {
+            --primary-red: #00ff41;
+            --bg-color: #000000;
+            --dark: #00ff41;
+            --yellow: #003b00;
+            --card-bg: #000000;
+            --text-color: #00ff41;
+            --accent-blue: #008f11;
+            --pattern-opacity: 0.2;
+            --radius: 4px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+            --font-main: 'Fira Code', monospace;
+        }
+
+        [data-theme="candy"] {
+            --primary-red: #ff85a1;
+            --bg-color: #fff5f7;
+            --dark: #ff85a1;
+            --yellow: #a2d2ff;
+            --card-bg: #ffffff;
+            --text-color: #4a4e69;
+            --accent-blue: #ffc2d1;
+            --pattern-opacity: 0.2;
+            --radius: 40px;
+            --border-width: 4px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            transition: all 0.4s ease;
+        }
+
+        [data-theme="doodle"] body {
+            background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        [data-theme="matrix"] body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .bebas {
+            font-family: 'Bebas Neue', cursive;
+        }
+
+        .neo-card {
+            background: var(--card-bg);
+            border: var(--border-width) var(--border-style) var(--dark);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--dark);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neo-button {
+            background: var(--primary-red);
+            color: #fff;
+            border: var(--border-width) var(--border-style) var(--dark);
+            box-shadow: calc(var(--shadow-offset) / 1.5) calc(var(--shadow-offset) / 1.5) 0px var(--dark);
+            transition: all 0.2s ease;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal-active.modal-overlay {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Checkout modal deve ter scroll, nao centralizar */
+        #checkout-modal.modal-overlay {
+            display: block;
+            align-items: unset;
+            justify-content: unset;
+        }
+
+        #sidebar {
+            background-color: var(--card-bg);
+            border-right: var(--border-width) var(--border-style) var(--dark);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        .paper-modal {
+            background-color: var(--card-bg);
+            border: var(--border-width) var(--border-style) var(--dark);
+            transform: scale(0.9) rotate(var(--modal-rotate));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: var(--radius);
+        }
+
+        .modal-active .paper-modal {
+            transform: scale(1) rotate(0deg);
+        }
+
+        .marquee {
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            animation: scroll 30s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        #map-container {
+            height: 250px;
+            width: 100%;
+            border: var(--border-width) var(--border-style) var(--dark);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="max-w-md mx-auto min-h-screen border-x-4 border-dark relative">
+
+    <!-- Barra de Anuncios/Status -->
+    <div id="announcement-bar"
+        class="hidden bg-amber-500 text-black font-bold py-2 px-4 text-center text-sm sticky top-0 z-[200] animate-pulse">
+        <div class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span id="announcement-text">Estamos fechados no momento</span>
+        </div>
+    </div>
+
+    <!-- Toast de Notificacao -->
+    <div id="store-toast"
+        class="fixed top-4 right-0 z-[250] bg-green-500 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-x-[calc(100%+1rem)] opacity-0 transition-all duration-300 font-bold pointer-events-none">
+        <span id="store-toast-text">Mensagem</span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Sidebar -->
+    <div id="sidebar-overlay"
+        class="fixed inset-0 z-[150] opacity-0 pointer-events-none transition-opacity duration-300"
+        onclick="toggleSidebar()"></div>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 z-[151] p-8 flex flex-col shadow-2xl">
+        <div class="flex justify-between items-center mb-12">
+            <h2 class="bebas text-4xl text-brand tracking-widest">MENU BRUTAL</h2>
+            <button onclick="toggleSidebar()" class="neo-card p-2 rounded-custom">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <nav id="sidebar-nav" class="flex-1 space-y-6">
+            <p class="opacity-50 bebas text-xl">Carregando categorias...</p>
+        </nav>
+    </aside>
+
+    <!-- Top Marquee -->
+    <div class="bg-dark text-mainBg py-3 border-b-4 border-dark overflow-hidden sticky top-0 z-[100]">
+        <div id="marquee-content" class="marquee flex gap-12 bebas text-2xl tracking-[0.2em] uppercase">
+            <span>Carregando...</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="px-6 py-10 flex flex-col items-center relative">
+        <div class="flex justify-between w-full items-start mb-8">
+            <button onclick="toggleSidebar()" class="neo-card p-4 rounded-custom">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <div class="text-center">
+                <!-- Logo container - shows either image or text -->
+                <div id="store-logo-container">
+                    <img id="store-logo-img" src="" alt="Logo"
+                        style="display: none; max-height: 70px; max-width: 180px; margin: 0 auto; object-fit: contain; border-radius: 8px;">
+                    <h1 id="store-name"
+                        class="bebas text-7xl leading-none text-brand transition-all drop-shadow-[4px_4px_0_var(--dark)]">
+                        CARREGANDO...</h1>
+                </div>
+                <p id="store-type" class="bebas text-xl tracking-[0.3em] uppercase opacity-50 font-bold">Delivery</p>
+            </div>
+            <button onclick="openModal('cart-modal')" class="neo-card p-4 rounded-custom bg-highlight relative">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span id="cart-count"
+                    class="absolute -top-3 -right-3 bg-brand text-white text-[10px] font-black w-7 h-7 rounded-full flex items-center justify-center border-4 border-card">0</span>
+            </button>
+        </div>
+        <div class="w-full relative px-2">
+            <input type="text" id="search-input" placeholder="Deseja comer o quê hoje?..." onkeyup="handleSearch()"
+                class="w-full bg-card border-2 border-dark p-5 rounded-custom font-bold placeholder:text-zinc-400 focus:outline-none transition-all shadow-lg">
+        </div>
+    </header>
+
+    <!-- Menu Section -->
+    <main class="px-6 space-y-16 pb-24" id="main-menu">
+
+        <p class="text-center py-20 opacity-50 bebas text-3xl">Carregando produtos...</p>
+    </main>
+
+    <!-- Footer & Debug -->
+    <footer id="footer" class="bg-dark text-mainBg px-8 py-20 text-center relative border-t-8 border-brand">
+        <h2 id="store-footer-name" class="bebas text-7xl text-highlight mb-6">LOJA</h2>
+        <p class="text-[11px] tracking-[0.4em] opacity-40 uppercase font-black mb-12">Universal Taste Experience</p>
+
+        <div class="bg-card/10 p-10 rounded-[3rem] border-2 border-white/5 flex flex-col items-center gap-4">
+            <p class="text-[11px] tracking-[0.3em] opacity-50 uppercase font-bold">Powered by</p>
+            <span class="bebas text-2xl text-brand">DeliveryHub</span>
+            <p class="text-[9px] opacity-30 uppercase font-bold">Sistema de Pedidos Online</p>
+        </div>
+    </footer>
+
+    <!-- BOTAO FLUTUANTE DO CARRINHO (FAB) -->
+    <button id="cart-fab" onclick="openModal('cart-modal')"
+        class="fixed bottom-8 right-4 w-16 h-16 bg-brand text-white rounded-full shadow-2xl z-[150] flex items-center justify-center border-4 border-dark transition-all duration-300 hover:scale-110 opacity-0 pointer-events-none"
+        style="box-shadow: 4px 4px 0 var(--dark);">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <span id="cart-fab-count"
+            class="absolute -top-1 -right-1 w-6 h-6 bg-dark text-mainBg rounded-full text-xs font-black flex items-center justify-center border-2 border-brand">0</span>
+    </button>
+
+    <!-- MODAL: DETALHES DO PRODUTO -->
+    <div id="product-modal" class="modal-overlay fixed inset-0 p-6">
+        <div class="paper-modal w-full max-w-sm rounded-custom overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            <div class="h-48 relative border-b-2 border-dark flex-shrink-0">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <button onclick="closeModal('product-modal')"
+                    class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto no-scrollbar flex-1">
+                <h2 id="modal-title" class="bebas text-5xl text-brand mb-2 leading-none"></h2>
+                <p id="modal-desc" class="text-zinc-500 font-medium mb-10 text-sm"></p>
+
+                <div class="space-y-10">
+                    <div>
+                        <label
+                            class="bebas text-2xl block mb-4 opacity-70 underline decoration-brand decoration-4">Observações</label>
+                        <textarea id="modal-obs" placeholder="Ex: Bem passado, sem cebola..."
+                            class="w-full bg-zinc-500/5 border-2 border-dark p-5 rounded-custom font-bold focus:outline-none min-h-[120px] text-sm"></textarea>
+                    </div>
+                    <div id="extras-section">
+                        <label
+                            class="bebas text-2xl block mb-6 border-b-2 border-dark/10 pb-2 uppercase tracking-tighter">MONTAR</label>
+                        <div class="space-y-5" id="extras-container"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-8 border-t-2 border-dark bg-zinc-500/5 flex-shrink-0">
+                <div class="flex items-center justify-between mb-8">
+                    <div
+                        class="flex items-center gap-8 bg-card border-2 border-dark rounded-custom p-3 px-8 shadow-inner">
+                        <button onclick="changeQty(-1)"
+                            class="bebas text-4xl font-bold opacity-30 hover:opacity-100 transition-opacity">-</button>
+                        <span id="modal-qty" class="bebas text-4xl w-10 text-center">1</span>
+                        <button onclick="changeQty(1)" class="bebas text-4xl font-bold text-brand">+</button>
+                    </div>
+                    <div id="modal-price" class="bebas text-4xl text-textMain font-black"></div>
+                </div>
+                <button onclick="addToOrder()"
+                    class="neo-button w-full py-6 rounded-custom bebas text-3xl tracking-widest uppercase shadow-xl">ADICIONAR
+                    À LISTA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CARRINHO -->
+    <div id="cart-modal" class="modal-overlay fixed inset-0 items-end">
+        <div class="w-full bg-card border-t-8 border-dark p-8 rounded-t-[4rem] max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="w-24 h-2 bg-zinc-300 rounded-full mx-auto mb-10 cursor-pointer"
+                onclick="closeModal('cart-modal')"></div>
+            <div class="bebas text-6xl mb-10 flex justify-between items-baseline leading-none">
+                PEDIDO <span class="text-brand">#BRUTUS</span>
+            </div>
+            <div id="cart-list" class="flex-1 overflow-y-auto space-y-6 no-scrollbar mb-10 px-2"></div>
+            <div class="border-t-4 border-dark pt-10">
+                <div class="flex justify-between items-center mb-10">
+                    <span class="bebas text-4xl uppercase opacity-40">Valor Total</span>
+                    <span id="cart-total" class="bebas text-6xl text-brand">R$ 0,00</span>
+                </div>
+                <button onclick="openCheckoutModal()"
+                    class="neo-button w-full py-7 rounded-[3rem] bebas text-5xl bg-dark text-mainBg">FINALIZAR
+                    🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECKOUT -->
+    <div id="checkout-modal" class="modal-overlay fixed inset-0 z-[200] overflow-y-auto py-4 px-4">
+        <div class="paper-modal w-full max-w-md mx-auto rounded-[2rem] overflow-hidden shadow-2xl">
+            <div class="p-6 pb-20">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="bebas text-5xl text-textMain">Finalizar</h2>
+                    <button onclick="closeModal('checkout-modal')" class="neo-card p-2 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex gap-2 p-2 bg-zinc-500/10 border-2 border-dark rounded-3xl mb-8">
+                    <button id="btn-entrega" onclick="setCheckoutType('entrega')"
+                        class="flex-1 py-4 bebas text-2xl rounded-2xl bg-dark text-mainBg transition-all">Entrega</button>
+                    <button id="btn-retirada" onclick="setCheckoutType('retirada')"
+                        class="flex-1 py-4 bebas text-2xl rounded-2xl transition-all">Retirada</button>
+                </div>
+
+                <div class="space-y-6 mb-10">
+                    <div>
+                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu Nome</label>
+                        <input type="text" id="cust-name" placeholder="Ex: João Brutus"
+                            class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu
+                            Telemóvel</label>
+                        <input type="text" id="cust-phone" placeholder="9xx xxx xxx"
+                            class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
+                    </div>
+
+                    <div id="delivery-fields" class="space-y-6">
+                        <!-- Secao do Mapa (abre modal fullscreen) -->
+                        <div class="p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <label class="bebas text-xl">Localizar Endereco</label>
+                                <span id="map-status" class="text-xs opacity-50"></span>
+                            </div>
+
+                            <!-- Preview do Mapa (miniatura) -->
+                            <div id="map-preview" onclick="openMapModal()"
+                                class="relative w-full h-32 rounded-2xl overflow-hidden border-2 border-dark cursor-pointer group">
+                                <div class="absolute inset-0 bg-zinc-800 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="w-10 h-10 mx-auto mb-2 opacity-50 group-hover:opacity-80 transition-opacity"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span
+                                            class="text-sm opacity-50 group-hover:opacity-80 transition-opacity">Clique
+                                            para abrir o mapa</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botao Usar Minha Localizacao -->
+                            <button onclick="openMapModalWithGeolocation()" id="btn-geolocate"
+                                class="w-full py-4 mt-4 bg-emerald-600 text-white bebas text-xl rounded-2xl border-2 border-dark flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                USAR MINHA LOCALIZACAO
+                            </button>
+                        </div>
+
+                        <!-- Campos de Endereco (aparecem apos confirmar no mapa) -->
+                        <div id="address-fields"
+                            class="hidden space-y-4 mt-4 p-4 bg-emerald-500/10 border-2 border-emerald-500 rounded-3xl">
+                            <div class="flex items-center gap-2 text-emerald-600 mb-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="bebas text-lg">Endereco Localizado</span>
+                            </div>
+                            <input type="text" id="cust-address" placeholder="Rua, Numero..."
+                                class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
+                            <input type="text" id="cust-neighbor" placeholder="Bairro / Complemento..."
+                                class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
+                            <textarea id="cust-obs-address"
+                                placeholder="Observacoes do local (cor da casa, ponto de referencia...)"
+                                class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none resize-none h-20"></textarea>
+                        </div>
+                        <input type="hidden" id="cust-coordinates" value="">
+                    </div>
+
+                    <!-- Forma de Pagamento -->
+                    <div class="mt-8 p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
+                        <label class="bebas text-xl block mb-4">Forma de Pagamento</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setPaymentMethod('pix')" id="pay-pix"
+                                class="py-4 rounded-2xl border-2 border-dark bebas text-lg bg-dark text-mainBg transition-all flex flex-col items-center gap-1">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M8.32 21.97a6.92 6.92 0 01-4.71-1.89l-.11-.1-1.77 1.77a.5.5 0 01-.71 0 .5.5 0 010-.71l1.77-1.77-.1-.11a6.92 6.92 0 01-1.89-4.71c0-1.83.72-3.54 2.02-4.84l5.73-5.73a3.03 3.03 0 014.28 0l4.56 4.56a3.03 3.03 0 010 4.28l-5.73 5.73a6.82 6.82 0 01-4.84 2.02zm6.97-18.13a2.02 2.02 0 00-1.43.59l-5.73 5.73a5.9 5.9 0 00-1.73 4.54c.06 1.68.76 3.26 1.97 4.47s2.79 1.91 4.47 1.97a5.9 5.9 0 004.54-1.73l5.73-5.73a2.03 2.03 0 000-2.87l-4.56-4.56a2.02 2.02 0 00-1.43-.59l-.83.18z" />
+                                </svg>
+                                PIX
+                            </button>
+                            <button type="button" onclick="setPaymentMethod('cartao')" id="pay-cartao"
+                                class="py-4 rounded-2xl border-2 border-dark bebas text-lg transition-all flex flex-col items-center gap-1">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                CARTAO
+                            </button>
+                            <button type="button" onclick="setPaymentMethod('dinheiro')" id="pay-dinheiro"
+                                class="py-4 rounded-2xl border-2 border-dark bebas text-lg transition-all flex flex-col items-center gap-1">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                DINHEIRO
+                            </button>
+                        </div>
+
+                        <!-- Campo de Troco (visivel apenas para dinheiro) -->
+                        <div id="change-field" class="mt-4 hidden">
+                            <label class="text-sm opacity-70 block mb-2">Precisa de troco para quanto?</label>
+                            <input type="number" id="cust-change" placeholder="Ex: 50,00"
+                                class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Resumo do Pedido -->
+                    <div class="mt-8 p-4 bg-card/30 border-2 border-dark rounded-3xl">
+                        <label class="bebas text-xl block mb-4">Resumo do Pedido</label>
+                        <div id="checkout-summary" class="space-y-2 text-sm max-h-40 overflow-y-auto">
+                            <!-- Itens serao preenchidos dinamicamente -->
+                        </div>
+                        <div class="border-t-2 border-dark mt-4 pt-4 flex justify-between items-center">
+                            <span class="bebas text-2xl">TOTAL:</span>
+                            <span id="checkout-total" class="bebas text-3xl text-brand">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="openConfirmationModal()"
+                    class="neo-button w-full py-6 rounded-3xl bebas text-4xl bg-emerald-600 mt-6">CONFIRMAR
+                    PEDIDO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmacao Final -->
+    <div id="confirmation-modal" class="modal-overlay fixed inset-0 z-[250] px-4">
+        <div class="paper-modal w-full max-w-md mx-auto my-auto p-8 max-h-[90vh] overflow-y-auto">
+            <div class="text-center">
+                <div
+                    class="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-dark">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h2 class="bebas text-5xl text-brand mb-4">CONFIRMAR PEDIDO</h2>
+                <p class="opacity-60 mb-6">Revise os dados antes de enviar:</p>
+
+                <div id="confirm-summary"
+                    class="text-left p-4 bg-zinc-500/10 rounded-2xl border-2 border-dark mb-6 text-sm">
+                    <!-- Dados do resumo -->
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="closeModal('confirmation-modal')"
+                        class="flex-1 py-4 rounded-2xl border-2 border-dark bebas text-2xl">VOLTAR</button>
+                    <button onclick="sendFinalWhatsApp()"
+                        class="flex-1 py-4 rounded-2xl bg-emerald-600 text-white bebas text-2xl border-2 border-dark flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        ENVIAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Endereco Detalhado -->
+    <div id="address-details-modal" class="modal-overlay fixed inset-0 z-[400] px-4">
+        <div
+            class="paper-modal w-full max-w-sm mx-auto my-auto p-8 bg-card border-4 border-dark shadow-[12px_12px_0_var(--dark)]">
+            <div class="flex items-center gap-3 text-brand mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center border-2 border-dark">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <h2 class="bebas text-4xl leading-none">DETALHES DA ENTREGA</h2>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="bebas text-lg block mb-1 opacity-60">Rua / Logradouro (Editavel)</label>
+                    <input type="text" id="modal-address-street"
+                        class="w-full bg-zinc-100 border-2 border-dark p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-brand/20">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="bebas text-lg block mb-1 opacity-60">Nº da Casa*</label>
+                        <input type="text" id="modal-address-number" placeholder="Ex: 123"
+                            class="w-full bg-zinc-100 border-2 border-dark p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-brand/20">
+                    </div>
+                    <div>
+                        <label class="bebas text-lg block mb-1 opacity-60">Bairro</label>
+                        <input type="text" id="modal-address-neighbor"
+                            class="w-full bg-zinc-100 border-2 border-dark p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-brand/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="bebas text-lg block mb-1 opacity-60">Ponto de Referencia / Obs</label>
+                    <textarea id="modal-address-obs" placeholder="Ex: Portao branco, proximo ao mercado..."
+                        class="w-full bg-zinc-100 border-2 border-dark p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 h-24 resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeModal('address-details-modal')"
+                    class="flex-1 py-4 rounded-xl border-2 border-dark bebas text-2xl active:scale-95 transition-transform">
+                    VOLTAR
+                </button>
+                <button onclick="saveAddressDetails()"
+                    class="flex-1 py-4 rounded-xl bg-emerald-600 text-white border-2 border-dark bebas text-2xl shadow-[4px_4px_0_var(--dark)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                    CONFIRMAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pedido Enviado -->
+    <div id="success-modal" class="modal-overlay fixed inset-0 z-[300] px-4">
+        <div class="paper-modal w-full max-w-md mx-auto my-auto p-8 text-center">
+            <div
+                class="w-24 h-24 mx-auto mb-6 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-dark animate-bounce">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h2 class="bebas text-6xl text-brand mb-4">PEDIDO ENVIADO!</h2>
+            <p class="opacity-60 mb-8 text-lg">Seu pedido foi enviado para o WhatsApp da loja. Em breve entraremos em
+                contato!</p>
+            <button onclick="closeSuccessAndReset()"
+                class="neo-button w-full py-5 rounded-3xl bebas text-3xl bg-brand">FAZER NOVO PEDIDO</button>
+        </div>
+    </div>
+
+    <!-- Modal de Mapa Fullscreen -->
+    <div id="map-modal" class="modal-overlay fixed inset-0 z-[350] bg-black/95">
+        <div class="h-full flex flex-col">
+            <!-- Header do Mapa -->
+            <div class="flex items-center justify-between p-4 bg-dark/80 backdrop-blur-sm border-b border-white/10">
+                <h2 class="bebas text-2xl text-white">Selecionar Localizacao</h2>
+                <button onclick="closeMapModalWithoutSave()"
+                    class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Container do Mapa Fullscreen -->
+            <div id="map-container" class="flex-1 w-full"></div>
+
+            <!-- Footer com Acoes -->
+            <div class="p-4 bg-dark/80 backdrop-blur-sm border-t border-white/10 space-y-3">
+                <p id="map-status-modal" class="text-center text-sm text-white/60">Arraste o alfinete para ajustar a
+                    posicao</p>
+                <div class="flex gap-3">
+                    <button onclick="closeMapModalWithoutSave()"
+                        class="flex-1 py-4 rounded-2xl border-2 border-white/30 text-white bebas text-xl">
+                        CANCELAR
+                    </button>
+                    <button onclick="confirmMapLocation()" id="btn-confirm-map"
+                        class="flex-1 py-4 rounded-2xl bg-emerald-600 text-white bebas text-xl border-2 border-emerald-500 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        CONFIRMAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"
+        class="fixed bottom-12 left-1/2 -translate-x-1/2 bg-dark text-mainBg px-12 py-6 rounded-full bebas text-3xl tracking-widest border-2 border-white shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-[400] whitespace-nowrap uppercase">
+        Brutal!</div>
+
+    <!-- MODAL: POPUP PREMIUM (Alertas) -->
+    <div id="popup-modal" class="modal-overlay fixed inset-0 z-[500] px-4">
+        <div
+            class="paper-modal w-full max-w-sm mx-auto my-auto p-8 text-center bg-card border-4 border-dark shadow-[12px_12px_0_var(--dark)]">
+            <div id="popup-icon"
+                class="w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center border-4 border-dark shadow-[4px_4px_0_var(--dark)]">
+                <!-- Icone dinamico -->
+            </div>
+            <h2 id="popup-title" class="bebas text-5xl text-brand mb-4 leading-none">ALERTA!</h2>
+            <p id="popup-message" class="font-bold opacity-70 mb-10 text-lg leading-tight">Mensagem do popup...</p>
+            <button onclick="closeModal('popup-modal')"
+                class="neo-button w-full py-5 rounded-2xl bebas text-3xl tracking-wider shadow-[6px_6px_0_var(--dark)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                ENTENDI
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ===== ESTADO DA APLICACAO =====
+        let cart = [];
+        let currentItem = null;
+        let qty = 1;
+        let selectedExtras = [];
+        let checkoutType = 'entrega';
+        let map, marker;
+        const themes = ['retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy'];
+        let currentThemeIdx = 0;
+
+        // Dados da loja carregados da API
+        let storeData = null;
+        let storeWhatsApp = '5511999999999'; // Fallback
+        let whatsappFromUrl = null; // Telefone vindo do link do WhatsApp
+
+        // Configuracao de entrega
+        let deliveryFee = 0;
+        let customerLat = null;
+        let customerLng = null;
+        let tempCoords = null; // Para guardar coordenadas antes de confirmar detalhes
+        let deliveryOutOfRange = false;
+        let lastCalculatedDistance = null;
+        let isUsingFixedFeeFallback = false;
+
+        // Calcular distancia entre dois pontos GPS (Haversine)
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Raio da Terra em km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Calcular taxa de entrega baseado na distancia
+        function calculateDeliveryFee() {
+            const settings = storeData?.settings || {};
+            isUsingFixedFeeFallback = false;
+            lastCalculatedDistance = null;
+
+            if (!settings.storeLat || !settings.storeLng) {
+                const fixedFee = parseFloat(settings.deliveryFee) || 0;
+                deliveryFee = fixedFee;
+                deliveryOutOfRange = false;
+                isUsingFixedFeeFallback = true;
+                return;
+            }
+
+            if (!customerLat || !customerLng) {
+                return;
+            }
+
+            const zones = storeData.settings.deliveryZones || [];
+            if (zones.length === 0) {
+                // Sem zonas configuradas, usar taxa fixa se existir
+                deliveryFee = parseFloat(storeData.settings.deliveryFee) || 0;
+                deliveryOutOfRange = false;
+                isUsingFixedFeeFallback = true;
+                return;
+            }
+
+            // Converter para numero para garantir calculo correto
+            const sLat = parseFloat(storeData.settings.storeLat);
+            const sLng = parseFloat(storeData.settings.storeLng);
+            const cLat = parseFloat(customerLat);
+            const cLng = parseFloat(customerLng);
+
+            const distance = calculateDistance(sLat, sLng, cLat, cLng);
+            lastCalculatedDistance = distance;
+
+            // Ordenar zonas por distancia
+            const sortedZones = [...zones].sort((a, b) => parseFloat(a.maxKm) - parseFloat(b.maxKm));
+
+            // Encontrar a zona correta
+            for (const zone of sortedZones) {
+                if (distance <= parseFloat(zone.maxKm)) {
+                    deliveryFee = parseFloat(zone.fee);
+                    deliveryOutOfRange = false;
+                    return;
+                }
+            }
+
+            // Fora de todas as zonas
+            deliveryFee = 0;
+            deliveryOutOfRange = true;
+            console.warn('DEBUG [calculateDeliveryFee] Fora da area de entrega. Distance:', distance);
+        }
+
+        // Variavel global para nome do titular do PIX
+        let pixHolderName = '';
+        let pixKey = '';
+        let allowPickup = true; // Padrao: permite retirada
+        let isStoreOpen = true; // Status da loja (aberta/fechada)
+
+        /**
+         * Verificar se esta dentro do horario de funcionamento
+         */
+        function isWithinSchedule(schedule) {
+            if (!schedule) return true; // Sem horario configurado = sempre aberta
+
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0=Domingo, 1=Segunda, etc.
+
+            // Mapear dia da semana para key do schedule
+            const dayKeys = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+            const dayKey = dayKeys[dayOfWeek];
+
+            const todaySchedule = schedule[dayKey];
+
+            // Se nao tem horario para hoje = fechado
+            if (!todaySchedule || !todaySchedule.open || !todaySchedule.close) {
+                return false;
+            }
+
+            // Converter horario atual para minutos desde meia-noite
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            // Converter horarios de abertura/fechamento
+            const [openHour, openMin] = todaySchedule.open.split(':').map(Number);
+            const [closeHour, closeMin] = todaySchedule.close.split(':').map(Number);
+
+            const openMinutes = openHour * 60 + openMin;
+            const closeMinutes = closeHour * 60 + closeMin;
+
+            // Verificar se horario atual esta dentro do intervalo
+            // Caso especial: se fecha apos meia-noite (ex: 18:00 - 02:00)
+            if (closeMinutes < openMinutes) {
+                // Horario atravessa meia-noite
+                return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+            }
+
+            return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+        }
+
+        // Aplicar configuracoes de entrega/retirada apos carregar dados da loja
+        function applyDeliverySettings() {
+            if (!storeData) return;
+
+            // Parse settings se for string JSON
+            let settings = storeData.settings;
+            if (typeof settings === 'string') {
+                try { settings = JSON.parse(settings); } catch (e) { settings = {}; }
+            }
+            settings = settings || {};
+
+            console.log('DEBUG [applyDeliverySettings] Store Coordinates:', {
+                lat: settings.storeLat,
+                lng: settings.storeLng,
+                typeLat: typeof settings.storeLat,
+                typeLng: typeof settings.storeLng
+            });
+            console.log('DEBUG [applyDeliverySettings] Delivery Zones:', settings.deliveryZones);
+            console.log('DEBUG [applyDeliverySettings] Fixed Delivery Fee:', settings.deliveryFee);
+
+            // ====== VERIFICAR STATUS DA LOJA ======
+            // 1. Override manual (se isOpen = false, sempre fechada)
+            if (settings.isOpen === false) {
+                isStoreOpen = false;
+            } else {
+                // 2. Verificar automaticamente pelo horario
+                isStoreOpen = isWithinSchedule(settings.schedule);
+            }
+            console.log('DEBUG [applyDeliverySettings] isStoreOpen:', isStoreOpen, 'Schedule:', settings.schedule);
+
+            // Configurar visibilidade do botao de retirada
+            allowPickup = settings.allow_pickup !== false; // Padrao: true
+            const btnRetirada = document.getElementById('btn-retirada');
+            if (btnRetirada) {
+                if (allowPickup) {
+                    btnRetirada.style.display = '';
+                } else {
+                    btnRetirada.style.display = 'none';
+                    // Se nao permite retirada, forcar entrega
+                    setCheckoutType('entrega');
+                }
+            }
+
+            // Esconder/Mostrar metodos de pagamento
+            const payPix = document.getElementById('pay-pix');
+            const payCartao = document.getElementById('pay-cartao');
+            const payDinheiro = document.getElementById('pay-dinheiro');
+
+            if (payPix) payPix.style.display = settings.acceptPix !== false ? '' : 'none';
+            if (payCartao) payCartao.style.display = settings.acceptCard !== false ? '' : 'none';
+            if (payDinheiro) payDinheiro.style.display = settings.acceptCash !== false ? '' : 'none';
+
+            // Selecionar o primeiro disponivel se o atual sumir
+            if (settings.acceptPix !== false) setPaymentMethod('pix');
+            else if (settings.acceptCard !== false) setPaymentMethod('cartao');
+            else if (settings.acceptCash !== false) setPaymentMethod('dinheiro');
+
+            console.log('Configuracoes aplicadas:', { allowPickup, isStoreOpen, pixHolderName, pixKey, acceptPix: settings.acceptPix, acceptCard: settings.acceptCard, acceptCash: settings.acceptCash });
+        }
+
+        // ===== INICIALIZACAO =====
+        async function init() {
+            const path = window.location.pathname;
+            const slug = path.split('/loja/')[1]?.split('?')[0]; // Limpar querystring do slug
+
+            // Detectar telefone da URL (enviado pelo bot) - link simples ?p=PHONE
+            const urlParams = new URLSearchParams(window.location.search);
+            const phoneFromUrl = urlParams.get('p'); // Novo: parametro simples
+            const orderToken = urlParams.get('t'); // Compatibilidade JWT
+            const whatsappLegacy = urlParams.get('whatsapp'); // Compatibilidade antiga
+
+            // Armazenar telefone para uso
+            let phoneFromToken = null;
+            if (phoneFromUrl) {
+                whatsappFromUrl = phoneFromUrl.replace(/\D/g, '');
+                sessionStorage.setItem('whatsappPhone', whatsappFromUrl);
+                console.log('Telefone detectado (simples):', whatsappFromUrl);
+            } else if (orderToken) {
+                sessionStorage.setItem('orderToken', orderToken);
+                // Decodificar telefone do token
+                try {
+                } catch (e) {
+                    console.warn('Erro ao decodificar token:', e);
+                }
+            } else if (whatsappLegacy) {
+                whatsappFromUrl = whatsappLegacy.replace(/\D/g, '');
+            }
+
+            // === CARREGAMENTO DA LOJA ===
+            try {
+                // 1. Tentar pegar slug da URL
+                const pathParts = window.location.pathname.split('/');
+                const slugIndex = pathParts.indexOf('loja');
+                let slug = '';
+                if (slugIndex !== -1 && pathParts[slugIndex + 1]) {
+                    slug = pathParts[slugIndex + 1];
+                }
+
+                if (slug) {
+                    const res = await fetch(`/api/tenants/${slug}`);
+                    if (!res.ok) throw new Error('Loja nao encontrada');
+                    storeData = await res.json();
+                } else {
+                    // Fallback para dev/teste local
+                    const res = await fetch('/api/tenants/me', {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    if (res.ok) storeData = await res.json();
+                }
+
+                if (storeData) {
+                    // === FORCE CAMPESTRE CONFIG (Fix Frontend) ===
+                    if (!storeData.settings) storeData.settings = {};
+
+                    // Forcar coordenadas da loja (Brutus Burger - Imbituva)
+                    if (!storeData.settings.storeLat || !storeData.settings.storeLng) {
+                        storeData.settings.storeLat = -25.236655;
+                        storeData.settings.storeLng = -50.601611;
+                        console.log('Coordenadas da loja forçadas (Frontend):', storeData.settings.storeLat, storeData.settings.storeLng);
+                    }
+
+                    // Forcar zonas de entrega estilo Campestre
+                    storeData.settings.deliveryZones = [
+                        { maxKm: 4, fee: 7 },
+                        { maxKm: 10, fee: 15 },
+                        { maxKm: 20, fee: 25 },
+                        { maxKm: 70, fee: 65 }
+                    ];
+                    console.log('Zonas de entrega forçadas (Frontend):', storeData.settings.deliveryZones);
+
+                    renderMenu();
+                }
+
+            } catch (e) {
+                console.error('Erro ao iniciar:', e);
+                document.body.innerHTML = '<div class="flex h-screen items-center justify-center text-white"><h1>Erro ao carregar loja</h1></div>';
+                return;
+            }
+
+            renderStore();
+
+            // Aplicar tema salvo nas configuracoes
+            if (storeData?.settings?.storeTheme) {
+                const savedTheme = storeData.settings.storeTheme;
+                if (themes.includes(savedTheme)) {
+                    currentThemeIdx = themes.indexOf(savedTheme);
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    const themeLabel = document.getElementById('theme-label');
+                    if (themeLabel) {
+                        themeLabel.innerText = `Atual: ${savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)}`;
+                    }
+                }
+            }
+
+            // Aplicar configuracoes de entrega/retirada
+            applyDeliverySettings();
+
+            // Pre-preencher dados se veio do WhatsApp
+            if (whatsappFromUrl) {
+                await prefillCustomerData(whatsappFromUrl);
+            }
+        }
+
+        // Buscar e pre-preencher dados do cliente
+        async function prefillCustomerData(phone) {
+            const phoneInput = document.getElementById('cust-phone');
+            const nameInput = document.getElementById('cust-name');
+            const addressInput = document.getElementById('cust-address');
+            const neighborInput = document.getElementById('cust-neighbor');
+            const phoneContainer = phoneInput?.closest('.form-group') || phoneInput?.parentElement;
+
+            if (!phoneInput) return;
+
+            // Formatar numero (remover codigo do pais se muito longo)
+            let formattedPhone = phone;
+            if (formattedPhone.startsWith('55') && formattedPhone.length > 11) {
+                formattedPhone = formattedPhone.substring(2);
+            }
+
+            // ESCONDER campo de telefone completamente (veio do WhatsApp)
+            phoneInput.value = formattedPhone;
+            if (phoneContainer) {
+                phoneContainer.style.display = 'none';
+            }
+
+            // Recuperar nome salvo do localStorage (cliente recorrente)
+            const savedName = localStorage.getItem(`customer_name_${phone}`);
+            if (savedName && nameInput) {
+                nameInput.value = savedName;
+            }
+
+            // Buscar dados do cliente no servidor
+            try {
+                const customerRes = await fetch(`/api/orders/customer/${phone}?tenantId=${storeData?.id}`);
+                const customerData = await customerRes.json();
+
+                if (customerData.exists && customerData.customer) {
+                    // Pre-preencher nome se disponivel (e nao tiver no localStorage)
+                    if (customerData.customer.name && nameInput && !savedName) {
+                        nameInput.value = customerData.customer.name;
+                        localStorage.setItem(`customer_name_${phone}`, customerData.customer.name);
+                    }
+
+                    // Pre-preencher endereco se disponivel
+                    if (customerData.customer.lastAddress) {
+                        const addr = customerData.customer.lastAddress;
+                        if (addr.street && addressInput) {
+                            addressInput.value = addr.street + (addr.number ? ', ' + addr.number : '');
+                        }
+                        if (addr.neighborhood && neighborInput) {
+                            neighborInput.value = addr.neighborhood;
+                        }
+                        if (addr.neighbor && neighborInput && !addr.neighborhood) {
+                            neighborInput.value = addr.neighbor;
+                        }
+                        console.log('Dados carregados do servidor');
+                    }
+                }
+            } catch (e) {
+                console.log('Buscando dados local...');
+            }
+
+            // Salvar nome quando preenchido (para proximas vezes)
+            if (nameInput) {
+                nameInput.addEventListener('blur', () => {
+                    if (nameInput.value.trim()) {
+                        localStorage.setItem(`customer_name_${phone}`, nameInput.value.trim());
+                    }
+                });
+            }
+        }
+
+        function showNotFound() {
+            document.body.innerHTML = `
+                <div class="min-h-screen flex flex-col items-center justify-center p-8 text-center">
+                    <h1 class="bebas text-6xl text-brand mb-4">LOJA NAO ENCONTRADA</h1>
+                    <p class="opacity-50 mb-8">Verifique o endereco e tente novamente.</p>
+                    <a href="/" class="neo-button px-8 py-4 rounded-custom bebas text-2xl">VOLTAR AO INICIO</a>
+                </div>
+            `;
+        }
+
+        function renderStore() {
+            // Atualizar titulo e nome da loja
+            document.title = `${storeData.name} | DeliveryHub`;
+
+            // Logo ou nome em texto
+            const logoImg = document.getElementById('store-logo-img');
+            const storeName = document.getElementById('store-name');
+
+            if (storeData.settings?.logoType === 'image' && storeData.settings?.logoUrl) {
+                // Mostrar logo
+                logoImg.src = storeData.settings.logoUrl;
+                logoImg.style.display = 'block';
+                storeName.style.display = 'none';
+
+                // Aplicar tamanho configurado
+                const logoSize = storeData.settings.logoSize || 100;
+                logoImg.style.maxHeight = logoSize + 'px';
+                logoImg.style.maxWidth = (logoSize * 2) + 'px'; // Proporcional
+
+                // Esconder tipo quando tem logo
+                document.getElementById('store-type').style.display = 'none';
+            } else {
+                // Mostrar nome em texto
+                logoImg.style.display = 'none';
+                storeName.style.display = 'block';
+                storeName.textContent = storeData.name.toUpperCase();
+                document.getElementById('store-type').style.display = 'block';
+                document.getElementById('store-type').textContent = formatBusinessType(storeData.business_type);
+            }
+
+            document.getElementById('store-footer-name').textContent = storeData.name.toUpperCase();
+
+            // WhatsApp
+            if (storeData.settings?.whatsapp) {
+                storeWhatsApp = storeData.settings.whatsapp.replace(/\D/g, '');
+            }
+
+            // Marquee/ActionBar text
+            renderMarquee();
+
+            // Renderizar categorias e produtos
+            renderMenu();
+            renderSidebar();
+
+            // Verificar status da loja e mostrar barra de anuncios
+            checkStoreStatus();
+        }
+
+        function renderMarquee() {
+            const marqueeContainer = document.getElementById('marquee-content')?.parentElement;
+            const marqueeEl = document.getElementById('marquee-content');
+            if (!marqueeEl || !marqueeContainer) return;
+
+            const settings = storeData.settings || {};
+
+            // Verificar se marquee esta habilitado (padrao: true)
+            if (settings.marqueeEnabled === false) {
+                marqueeContainer.style.display = 'none';
+                return;
+            }
+            marqueeContainer.style.display = 'block';
+
+            let marqueeText = settings.marqueeText || settings.actionbarText;
+
+            // Se nao tiver texto configurado, usar o nome da loja
+            if (!marqueeText || !marqueeText.trim()) {
+                marqueeText = `${storeData.name} - Faca seu pedido agora!`;
+            }
+
+            // Separar por | ou usar texto unico repetido
+            let items = marqueeText.split('|').map(t => t.trim()).filter(t => t);
+            if (items.length === 0) items = [storeData.name];
+
+            // Duplicar para efeito de scroll infinito
+            const allItems = [...items, ...items, ...items, ...items];
+
+            marqueeEl.innerHTML = allItems.map(text => `<span>${text}</span>`).join('');
+        }
+
+        // Verificar se loja esta aberta e mostrar anuncios
+        let storeClosedReason = '';
+
+        function checkStoreStatus() {
+            const settings = storeData.settings || {};
+            const bar = document.getElementById('announcement-bar');
+            const text = document.getElementById('announcement-text');
+
+            console.log('[checkStoreStatus] Settings:', settings);
+
+            // Reset state
+            isStoreOpen = true;
+            storeClosedReason = '';
+
+            if (!bar || !text) {
+                console.log('[checkStoreStatus] ERRO: bar ou text nao encontrado!');
+                return;
+            }
+
+            bar.classList.add('hidden');
+
+            // 1. Verificar se loja esta manualmente fechada (isOpen = false)
+            if (settings.isOpen === false) {
+                isStoreOpen = false;
+                storeClosedReason = 'A loja esta fechada no momento.';
+                bar.classList.remove('hidden');
+                bar.className = 'bg-red-500 text-white font-bold py-2 px-4 text-center text-sm sticky top-0 z-[200]';
+                text.textContent = 'Loja fechada no momento';
+                return;
+            }
+
+            // 2. Verificar horario de funcionamento por dia da semana
+            const schedule = settings.schedule || {};
+            const now = new Date();
+            const dayNames = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+            const dayName = dayNames[now.getDay()];
+            const daySchedule = schedule[dayName];
+
+            if (daySchedule && daySchedule.open && daySchedule.close) {
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                const [openH, openM] = daySchedule.open.split(':').map(Number);
+                const [closeH, closeM] = daySchedule.close.split(':').map(Number);
+
+                const openTime = openH * 60 + openM;
+                const closeTime = closeH * 60 + closeM;
+
+                let open = false;
+                if (closeTime > openTime) {
+                    open = currentTime >= openTime && currentTime < closeTime;
+                } else {
+                    // Horario passa da meia noite
+                    open = currentTime >= openTime || currentTime < closeTime;
+                }
+
+                if (!open) {
+                    isStoreOpen = false;
+                    storeClosedReason = `Fechado agora. Abrimos as ${daySchedule.open}h`;
+                    bar.classList.remove('hidden');
+                    bar.className = 'bg-red-500 text-white font-bold py-2 px-4 text-center text-sm sticky top-0 z-[200]';
+                    text.textContent = `Fechado agora. Abrimos as ${daySchedule.open}h`;
+                    return;
+                }
+            }
+
+            // 3. Mostrar barra de anuncios customizada (apenas informativa)
+            if (settings.announcementEnabled && settings.announcementText && settings.announcementText.trim()) {
+                bar.classList.remove('hidden');
+                bar.className = 'bg-blue-500 text-white font-bold py-2 px-4 text-center text-sm sticky top-0 z-[200]';
+                text.textContent = settings.announcementText;
+            }
+        }
+
+        // Mostrar anuncio temporario
+        function showAnnouncement(message, type = 'info') {
+            const bar = document.getElementById('announcement-bar');
+            const text = document.getElementById('announcement-text');
+            if (!bar || !text) return;
+
+            const colors = {
+                'info': 'bg-blue-500',
+                'warning': 'bg-amber-500',
+                'error': 'bg-red-500',
+                'success': 'bg-green-500'
+            };
+
+            bar.className = `fixed top-0 left-0 right-0 ${colors[type] || colors.info} text-white font-bold py-2 px-4 text-center text-sm z-[200]`;
+            text.textContent = message;
+            bar.classList.remove('hidden');
+        }
+
+        function formatBusinessType(type) {
+            const types = {
+                'HAMBURGUERIA': 'Burger & Eats',
+                'PIZZARIA': 'Pizza House',
+                'ACAITERIA': 'Acai & Bowls',
+                'RESTAURANTE': 'Restaurante',
+                'LANCHONETE': 'Lanches',
+                'CAFETERIA': 'Cafe & Drinks',
+                'JAPONESA': 'Sushi & More'
+            };
+            return types[type] || 'Delivery';
+        }
+
+        function getCategoryEmoji(categoryName) {
+            const name = categoryName.toLowerCase();
+            const emojiMap = {
+                // Food categories
+                'hamburguer': '🍔', 'hamburger': '🍔', 'burger': '🍔', 'lanche': '🍔',
+                'pizza': '🍕', 'pizzaria': '🍕',
+                'acai': '🍇', 'açai': '🍇', 'bowl': '🍇',
+                'bebida': '🥤', 'drink': '🥤', 'suco': '🥤', 'refri': '🥤',
+                'sobremesa': '🍰', 'doce': '🍰', 'sorvete': '🍨', 'icecream': '🍨',
+                'marmita': '🍱', 'buffet': '🍱', 'prato': '🍽️', 'refeicao': '🍽️',
+                'sushi': '🍣', 'japones': '🍣', 'oriental': '🍣',
+                'cafe': '☕', 'coffee': '☕', 'capuccino': '☕',
+                'frango': '🍗', 'chicken': '🍗', 'aves': '🍗',
+                'salada': '🥗', 'saudavel': '🥗', 'light': '🥗', 'fit': '🥗',
+                'massa': '🍝', 'macarrao': '🍝', 'pasta': '🍝',
+                'carne': '🥩', 'churrasco': '🥩', 'grill': '🥩',
+                'peixe': '🐟', 'frutos': '🦐', 'camarao': '🦐',
+                'mexicano': '🌮', 'taco': '🌮', 'burrito': '🌯',
+                'arabe': '🥙', 'kebab': '🥙', 'shawarma': '🥙',
+                'entrada': '🥗', 'aperitivo': '🍿', 'petisco': '🍿',
+                'porcao': '🍟', 'batata': '🍟', 'frita': '🍟',
+                'combo': '🍱', 'kit': '📦', 'promocao': '🎁',
+                'picole': '🍦', 'paleta': '🍦', 'gelado': '🍦',
+                'casquinha': '🍦', 'cascao': '🍦',
+                'milkshake': '🥛', 'milk': '🥛', 'shake': '🥛',
+                'pote': '🍨'
+            };
+
+            for (const [key, emoji] of Object.entries(emojiMap)) {
+                if (name.includes(key)) return emoji;
+            }
+            return '🍽️'; // Default
+        }
+
+        function renderSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            if (!storeData.categories || storeData.categories.length === 0) return;
+
+            nav.innerHTML = storeData.categories.map((cat, i) => `
+                <a href="#" class="block bebas text-3xl hover:translate-x-2 transition-transform"
+                   onclick="filterCategory('${cat.id}'); toggleSidebar()">
+                    ${getCategoryEmoji(cat.name)} ${cat.name}
+                </a>
+            `).join('') + `
+                <a href="#" class="block bebas text-3xl hover:translate-x-2 transition-transform"
+                   onclick="filterCategory('all'); toggleSidebar()">
+                    📋 Ver Tudo
+                </a>
+            `;
+        }
+
+        function renderMenu() {
+            const menu = document.getElementById('main-menu');
+
+            if (!storeData.categories || storeData.categories.length === 0) {
+                menu.innerHTML = '<p class="text-center py-20 opacity-50 bebas text-3xl">Nenhum produto disponivel</p>';
+                return;
+            }
+
+            menu.innerHTML = storeData.categories.map(cat => `
+                <div class="category-section" data-category="${cat.id}">
+                    <div class="flex items-center gap-6 mb-8">
+                        <h2 class="bebas text-5xl bg-card inline-block px-6 border-2 border-dark rounded-custom italic">
+                            ${cat.name}
+                        </h2>
+                    </div>
+                    <div class="grid gap-10">
+                        ${cat.products.map(prod => renderProductCard(prod)).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderProductCard(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
+            const price = product.price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="neo-card rounded-custom overflow-hidden product-item group" 
+                     data-title="${product.name}" data-id="${product.id}">
+                    <div class="h-60 relative cursor-pointer overflow-hidden"
+                         onclick="openProductById('${product.id}')">
+                        <img src="${imgUrl}" alt="${product.name}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                             style="${product.image_settings ? `transform: scale(${(product.image_settings.zoom || 1.0) * 1.05}); object-position: ${product.image_settings.posX || 50}% ${product.image_settings.posY || 50}%;` : ''}"
+                             onerror="this.src='https://placehold.co/400x300?text=Sem+Imagem'">
+                    </div>
+                    <div class="p-8 bg-card/50">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="bebas text-4xl uppercase tracking-tighter">${product.name}</h3>
+                            <span class="bebas text-3xl text-brand">R$ ${price}</span>
+                        </div>
+                        ${desc ? `<p class="text-sm opacity-60 mb-4 line-clamp-2">${desc}</p>` : ''}
+                        <button onclick="openProductById('${product.id}')"
+                                class="w-full neo-button py-5 bebas text-3xl tracking-widest rounded-custom">
+                            PEDIR AGORA
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Buscar produto por ID
+        function findProductById(id) {
+            console.log('Buscando produto ID:', id);
+            for (const cat of storeData.categories) {
+                const prod = cat.products.find(p => String(p.id) === String(id));
+                if (prod) {
+                    console.log('Produto encontrado:', prod);
+                    prod._categoryName = cat.name; // Guardar nome da categoria
+                    return prod;
+                }
+            }
+            console.log('Produto NAO encontrado');
+            return null;
+        }
+
+        async function openProductById(id) {
+            console.log('openProductById chamado com:', id);
+            const product = findProductById(id);
+            if (!product) {
+                console.error('Produto nao encontrado para ID:', id);
+                showToast('Produto nao encontrado');
+                return;
+            }
+
+            const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
+            // Inicializar como array vazio - adicionais serao carregados das fontes especificas
+            let addons = [];
+
+            // Verificar se e marmita/buffet - PRIMEIRO buscar adicionais da CATEGORIA
+            const catName = (product._categoryName || '').toLowerCase();
+            const isMarmita = catName.includes('marmita') || catName.includes('buffet');
+
+            if (isMarmita && product.category_id) {
+                try {
+                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
+                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                    if (catAddonsRes.ok) {
+                        const catAddonsData = await catAddonsRes.json();
+                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                            // Juntar todos os itens de todos os grupos
+                            for (const group of catAddonsData.groups) {
+                                if (group.items && group.items.length > 0) {
+                                    const groupAddons = group.items.map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }));
+                                    addons = [...addons, ...groupAddons];
+                                }
+                            }
+                            console.log('Adicionais da categoria (marmita) carregados:', addons);
+                        }
+                    }
+
+                    // FALLBACK: Se nao encontrou na categoria, usar sistema antigo de buffet
+                    if (addons.length === 0 && storeData?.id) {
+                        const buffetRes = await fetch(`/api/buffet/tenant/${storeData.id}`);
+                        const buffetData = await buffetRes.json();
+                        if (buffetData.itens && buffetData.itens.length > 0) {
+                            const buffetAddons = buffetData.itens.map(item => ({
+                                id: 'buffet_' + item.id,
+                                name: item.nome,
+                                price: 0 // Buffet items sao gratis
+                            }));
+                            addons = buffetAddons;
+                            console.log('Fallback: Itens do buffet antigo carregados:', addons);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar adicionais de marmita:', e);
+                }
+            }
+
+
+            // Verificar se e acai - PRIMEIRO buscar adicionais da CATEGORIA
+            const isAcai = catName.includes('acai') || catName.includes('bowl');
+
+            if (isAcai && product.category_id) {
+                try {
+                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
+                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                    if (catAddonsRes.ok) {
+                        const catAddonsData = await catAddonsRes.json();
+                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                            // Juntar todos os itens de todos os grupos
+                            for (const group of catAddonsData.groups) {
+                                if (group.items && group.items.length > 0) {
+                                    const groupAddons = group.items.map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }));
+                                    addons = [...addons, ...groupAddons];
+                                }
+                            }
+                            console.log('Adicionais da categoria (acai) carregados:', addons);
+                        }
+                    }
+
+                    // FALLBACK: Se nao encontrou na categoria, usar sistema antigo
+                    if (addons.length === 0 && storeData?.id) {
+                        const acaiRes = await fetch(`/api/acai/adicionais/tenant/${storeData.id}`);
+                        const acaiData = await acaiRes.json();
+                        if (acaiData.adicionais && acaiData.adicionais.length > 0) {
+                            const acaiAddons = acaiData.adicionais.map(item => ({
+                                id: 'acai_' + item.id,
+                                name: item.nome,
+                                price: item.preco || 0
+                            }));
+                            addons = acaiAddons;
+                            console.log('Fallback: Adicionais de acai antigos carregados:', addons);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar adicionais de acai:', e);
+                }
+            }
+
+            // Verificar se e hamburguer/lanche - PRIMEIRO buscar adicionais da CATEGORIA
+            const isHamburguer = catName.includes('hamburguer') || catName.includes('burger') ||
+                catName.includes('lanche') || catName.includes('sanduiche') ||
+                catName.includes('hot dog') || catName.includes('hotdog');
+
+            if (isHamburguer && product.category_id) {
+                try {
+                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
+                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                    if (catAddonsRes.ok) {
+                        const catAddonsData = await catAddonsRes.json();
+                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                            // Juntar todos os itens de todos os grupos
+                            for (const group of catAddonsData.groups) {
+                                if (group.items && group.items.length > 0) {
+                                    const groupAddons = group.items.map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }));
+                                    addons = [...addons, ...groupAddons];
+                                }
+                            }
+                            console.log('Adicionais da categoria (hamburguer) carregados:', addons);
+                        }
+                    }
+
+                    // FALLBACK: Se nao encontrou na categoria, usar do produto
+                    if (addons.length === 0 && product.has_addons) {
+                        let prodAddons = product.addons || [];
+                        if (typeof prodAddons === 'string') {
+                            prodAddons = JSON.parse(prodAddons);
+                        }
+                        if (prodAddons && prodAddons.length > 0) {
+                            addons = prodAddons.map((addon, idx) => ({
+                                id: 'addon_' + (addon.id || idx),
+                                name: addon.name || addon.nome,
+                                price: parseFloat(addon.price || addon.preco || 0)
+                            }));
+                            console.log('Fallback: Adicionais do produto carregados:', addons);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar adicionais de hamburguer:', e);
+                }
+            }
+
+            // Se produto tem has_addons mas nao caiu em nenhuma categoria especifica
+            // usar os adicionais do produto
+            if (!isMarmita && !isAcai && !isHamburguer && product.has_addons) {
+                try {
+                    let prodAddons = product.addons || [];
+                    if (typeof prodAddons === 'string') {
+                        prodAddons = JSON.parse(prodAddons);
+                    }
+                    if (prodAddons && prodAddons.length > 0) {
+                        addons = prodAddons.map((addon, idx) => ({
+                            id: 'addon_' + (addon.id || idx),
+                            name: addon.name || addon.nome,
+                            price: parseFloat(addon.price || addon.preco || 0)
+                        }));
+                        console.log('Adicionais do produto carregados:', addons);
+                    }
+                } catch (e) {
+                    console.error('Erro ao parsear adicionais:', e);
+                }
+            }
+
+            // FALLBACK: Se nao tem adicionais, buscar da categoria
+            if (addons.length === 0 && product.category_id) {
+                try {
+                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                    if (catAddonsRes.ok) {
+                        const catAddonsData = await catAddonsRes.json();
+                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                            // Juntar todos os itens de todos os grupos
+                            for (const group of catAddonsData.groups) {
+                                if (group.items && group.items.length > 0) {
+                                    const groupAddons = group.items.map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: parseFloat(item.price || 0)
+                                    }));
+                                    addons = [...addons, ...groupAddons];
+                                }
+                            }
+                            console.log('Adicionais da categoria carregados:', addons);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar adicionais da categoria:', e);
+                }
+            }
+
+            // Verificar se e bebida - nao mostrar adicionais
+            const isBebida = catName.includes('bebida') || catName.includes('drink') || catName.includes('refri') || catName.includes('suco');
+
+            openProduct(product.name, product.description || '', product.price, imgUrl, product.id, addons, isBebida);
+        }
+
+        // ===== EXTRAS/ADICIONAIS =====
+        let productAddons = [];
+
+
+
+        function openProduct(title, desc, price, img, productId, addons, isBebida = false) {
+            const product = findProductById(productId);
+            currentItem = { id: productId, title, desc, price, img };
+            // Garantir que addons seja sempre um array
+            productAddons = Array.isArray(addons) ? addons : [];
+            qty = 1;
+            selectedExtras = [];
+
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+
+            const modalImg = document.getElementById('modal-img');
+            modalImg.src = img;
+
+            // Aplicar ajustes de imagem no modal
+            if (product && product.image_settings) {
+                modalImg.style.transform = `scale(${product.image_settings.zoom || 1.0})`;
+                modalImg.style.objectPosition = `${product.image_settings.posX || 50}% ${product.image_settings.posY || 50}%`;
+            } else {
+                modalImg.style.transform = '';
+                modalImg.style.objectPosition = '';
+            }
+            document.getElementById('modal-qty').innerText = qty;
+            document.getElementById('modal-obs').value = '';
+
+            const container = document.getElementById('extras-container');
+            const extrasSection = document.getElementById('extras-section');
+
+            // Esconder secao MONTAR para bebidas
+            if (isBebida) {
+                if (extrasSection) extrasSection.style.display = 'none';
+            } else {
+                if (extrasSection) extrasSection.style.display = 'block';
+
+                if (productAddons.length > 0) {
+                    container.innerHTML = productAddons.map(addon => `
+                        <div class="flex items-center justify-between group cursor-pointer" 
+                             onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}')">
+                            <div class="flex items-center gap-5">
+                                <div class="w-9 h-9 border-2 border-dark rounded-custom flex items-center justify-center bg-card transition-all" 
+                                     id="check-${addon.id}">
+                                    <svg class="w-6 h-6 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <span class="font-bold text-lg uppercase tracking-tight">${addon.name}</span>
+                            </div>
+                            <span class="font-black text-brand text-lg">+ R$ ${(addon.price || 0).toFixed(2)}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-sm opacity-40 italic">Sem adicionais disponiveis</p>';
+                }
+            }
+
+            updateModalPrice();
+            openModal('product-modal');
+        }
+
+        // ===== TEMAS =====
+        function cycleTheme() {
+            currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+            const target = themes[currentThemeIdx];
+            document.documentElement.setAttribute('data-theme', target);
+            document.getElementById('theme-label').innerText = `Atual: ${target.charAt(0).toUpperCase() + target.slice(1)}`;
+
+            if (map) {
+                const url = target === 'midnight' || target === 'matrix' || target === 'luxury'
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                map.eachLayer(layer => { if (layer instanceof L.TileLayer) layer.setUrl(url); });
+            }
+        }
+
+        // ===== UI HELPERS =====
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            const overlay = document.getElementById('sidebar-overlay');
+            overlay.classList.toggle('opacity-0');
+            overlay.classList.toggle('pointer-events-none');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('modal-active');
+            document.body.style.overflow = 'hidden';
+            if (id === 'checkout-modal' && checkoutType === 'entrega') setTimeout(initMap, 300);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('modal-active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ===== MAPA FULLSCREEN =====
+        // Coordenadas de Imbituva como fallback
+        const IMBITUVA_LAT = -25.2274;
+        const IMBITUVA_LNG = -50.6037;
+
+        function initMap(centerLat, centerLng) {
+            const container = document.getElementById('map-container');
+            if (!container) return;
+
+            // Posicao inicial (parametros ou Imbituva como fallback)
+            const initialPos = [centerLat || IMBITUVA_LAT, centerLng || IMBITUVA_LNG];
+
+            if (map) {
+                // Se mapa ja existe, apenas recentrar
+                map.setView(initialPos, 16);
+                if (marker) marker.setLatLng(initialPos);
+                map.invalidateSize(); // Recalcular tamanho
+                return;
+            }
+
+            // Criar mapa
+            map = L.map('map-container', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView(initialPos, 16);
+
+            // Tile layer baseado no tema (sempre escuro para fullscreen)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+            // Criar marker draggable
+            marker = L.marker(initialPos, {
+                draggable: true,
+                autoPan: true
+            }).addTo(map);
+
+            // Popup no marker
+            marker.bindPopup('<b>Arraste para ajustar</b><br>Toque para confirmar').openPopup();
+
+            // Evento de drag
+            marker.on('dragend', function () {
+                const pos = marker.getLatLng();
+                const statusEl = document.getElementById('map-status-modal');
+                if (statusEl) statusEl.textContent = 'Posicao ajustada - Clique em CONFIRMAR';
+                marker.openPopup();
+            });
+
+            // Evento de clique no mapa para mover marker
+            map.on('click', function (e) {
+                marker.setLatLng(e.latlng);
+                const statusEl = document.getElementById('map-status-modal');
+                if (statusEl) statusEl.textContent = 'Posicao selecionada - Clique em CONFIRMAR';
+            });
+        }
+
+        // Abrir modal de mapa
+        function openMapModal() {
+            document.getElementById('map-modal').classList.add('modal-active');
+            document.body.style.overflow = 'hidden';
+
+            // Inicializar mapa com coordenadas salvas ou Imbituva
+            const coordsField = document.getElementById('cust-coordinates');
+            let lat = IMBITUVA_LAT, lng = IMBITUVA_LNG;
+
+            if (coordsField && coordsField.value) {
+                try {
+                    const coords = JSON.parse(coordsField.value);
+                    lat = coords.lat || IMBITUVA_LAT;
+                    lng = coords.lng || IMBITUVA_LNG;
+                } catch (e) { }
+            }
+
+            setTimeout(() => {
+                initMap(lat, lng);
+                if (map) map.invalidateSize();
+            }, 100);
+        }
+
+        // Abrir modal com geolocalizacao
+        let isGeolocating = false;
+        function openMapModalWithGeolocation() {
+            if (isGeolocating) return;
+
+            const btn = document.getElementById('btn-geolocate');
+            const statusEl = document.getElementById('map-status');
+            const originalInner = btn.innerHTML;
+
+            isGeolocating = true;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> BUSCANDO...';
+            if (statusEl) statusEl.textContent = 'Obtendo localizacao...';
+
+            if (!navigator.geolocation) {
+                showToast('GEOLOCALIZACAO NAO SUPORTADA');
+                isGeolocating = false;
+                btn.disabled = false;
+                btn.innerHTML = originalInner;
+                openMapModal();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    isGeolocating = false;
+                    btn.disabled = false;
+                    btn.innerHTML = originalInner;
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    // Debug: mostrar coordenadas no console
+                    console.log(`[GPS] Lat: ${lat}, Lng: ${lng}, Precisao: ${accuracy}m`);
+
+                    // Salvar coordenadas
+                    document.getElementById('cust-coordinates').value = JSON.stringify({ lat, lng });
+                    customerLat = lat;
+                    customerLng = lng;
+                    calculateDeliveryFee();
+                    updateCheckoutSummary();
+                    if (statusEl) statusEl.textContent = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)} (~${Math.round(accuracy)}m)`;
+
+                    // Abrir modal com posicao do usuario
+                    document.getElementById('map-modal').classList.add('modal-active');
+                    document.body.style.overflow = 'hidden';
+
+                    setTimeout(() => {
+                        initMap(lat, lng);
+                        if (map) map.invalidateSize();
+                        showToast('LOCALIZADO!');
+                    }, 100);
+                },
+                (error) => {
+                    isGeolocating = false;
+                    btn.disabled = false;
+                    btn.innerHTML = originalInner;
+
+                    let msg = 'Erro ao obter localizacao';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED: msg = 'Permissao negada'; break;
+                        case error.POSITION_UNAVAILABLE: msg = 'Localizacao indisponivel'; break;
+                        case error.TIMEOUT: msg = 'Tempo esgotado'; break;
+                    }
+                    if (statusEl) statusEl.textContent = msg;
+                    showToast(msg.toUpperCase());
+
+                    // Abrir modal mesmo assim, mas verificar se ja nao esta aberto
+                    if (!document.getElementById('map-modal').classList.contains('modal-active')) {
+                        openMapModal();
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
+            );
+        }
+
+        // Fechar modal sem salvar
+        function closeMapModalWithoutSave() {
+            document.getElementById('map-modal').classList.remove('modal-active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Confirmar localizacao e buscar endereco
+        async function confirmMapLocation() {
+            if (!marker) {
+                showToast('SELECIONE NO MAPA');
+                return;
+            }
+
+            const pos = marker.getLatLng();
+            const btn = document.getElementById('btn-confirm-map');
+            const statusEl = document.getElementById('map-status-modal');
+
+            // Feedback
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> BUSCANDO...';
+            if (statusEl) statusEl.textContent = 'Buscando endereco...';
+
+            try {
+                const res = await fetch('/api/delivery/reverse-geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: pos.lat, longitude: pos.lng })
+                });
+                const data = await res.json();
+
+                if (data.success && data.address) {
+                    // Abrir popup de detalhes com os dados do geocode
+                    document.getElementById('modal-address-street').value = data.address.road || data.address.street || '';
+                    document.getElementById('modal-address-neighbor').value = data.address.neighborhood || data.address.suburb || '';
+                } else {
+                    console.warn('Geocode falhou, usando campos vazios:', data.error);
+                    document.getElementById('modal-address-street').value = '';
+                    document.getElementById('modal-address-neighbor').value = '';
+                }
+
+                // Sempre permitir prosseguir com coordenadas se o geocode falhar
+                document.getElementById('modal-address-number').value = '';
+                document.getElementById('modal-address-obs').value = '';
+
+                // Guardar coordenadas temporariamente e ja disparar calculo
+                tempCoords = { lat: pos.lat, lng: pos.lng };
+                customerLat = pos.lat;
+                customerLng = pos.lng;
+
+                calculateDeliveryFee();
+                updateCheckoutSummary();
+
+                openModal('address-details-modal');
+                closeMapModalWithoutSave();
+            } catch (e) {
+                console.error('Erro geocode:', e);
+                // Mesmo com erro de rede, permite prosseguir manualmente
+                document.getElementById('modal-address-street').value = '';
+                document.getElementById('modal-address-neighbor').value = '';
+                document.getElementById('modal-address-number').value = '';
+
+                tempCoords = { lat: pos.lat, lng: pos.lng };
+                customerLat = pos.lat;
+                customerLng = pos.lng;
+
+                calculateDeliveryFee();
+                updateCheckoutSummary();
+
+                openModal('address-details-modal');
+                closeMapModalWithoutSave();
+            }
+
+            // Restaurar botao
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> CONFIRMAR';
+        }
+
+        function saveAddressDetails() {
+            const street = document.getElementById('modal-address-street').value.trim();
+            const number = document.getElementById('modal-address-number').value.trim();
+            const neighbor = document.getElementById('modal-address-neighbor').value.trim();
+            const obs = document.getElementById('modal-address-obs').value.trim();
+
+            if (!number) {
+                showPopup('FALTA O NÚMERO', 'Por favor, informe o número da casa ou apto.', 'warning');
+                document.getElementById('modal-address-number').focus();
+                return;
+            }
+
+            // Preencher campos reais do checkout
+            const fullAddress = `${street}, ${number}`;
+            document.getElementById('cust-address').value = fullAddress;
+            document.getElementById('cust-neighbor').value = neighbor;
+            document.getElementById('cust-obs-address').value = obs;
+            document.getElementById('cust-coordinates').value = JSON.stringify(tempCoords);
+
+            // Ja atualizado no confirmMapLocation, mas garantindo consistencia
+            customerLat = tempCoords.lat;
+            customerLng = tempCoords.lng;
+
+            calculateDeliveryFee();
+            updateCheckoutSummary();
+
+            // Mostrar campos de endereco no checkout (visual)
+            document.getElementById('address-fields').classList.remove('hidden');
+
+            // Esconder preview do mapa e botao de geolocalizacao para evitar reabertura acidental
+            const mapPreview = document.getElementById('map-preview');
+            const geoBtn = document.getElementById('btn-geolocate');
+            if (mapPreview) mapPreview.style.display = 'none';
+            if (geoBtn) geoBtn.style.display = 'none';
+
+            // Status visual
+            const mainStatus = document.getElementById('map-status');
+            if (mainStatus) mainStatus.textContent = 'Endereco confirmado!';
+
+            closeModal('address-details-modal');
+            showToast('ENDEREÇO SALVO!');
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            document.querySelectorAll('.product-item').forEach(item => {
+                const title = item.getAttribute('data-title').toLowerCase();
+                const parent = item.closest('.grid');
+                if (parent) {
+                    item.style.display = title.includes(query) ? 'block' : 'none';
+                }
+            });
+        }
+
+        function filterCategory(cat) {
+            document.querySelectorAll('.category-section').forEach(s => {
+                s.style.display = (cat === 'all' || s.getAttribute('data-category') === cat) ? 'block' : 'none';
+            });
+            document.getElementById('main-menu').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleExtra(id, price, name) {
+            const idx = selectedExtras.findIndex(e => e.id === id);
+            if (idx > -1) selectedExtras.splice(idx, 1);
+            else selectedExtras.push({ id, price, name });
+            updateModalPrice();
+        }
+
+        function updateModalPrice() {
+            const basePrice = currentItem?.price || 0;
+            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
+            const total = (basePrice + extrasTotal) * qty;
+
+            // Tenta atualizar ambos os IDs posiveis
+            const priceEl = document.getElementById('modal-price');
+            const priceTotalEl = document.getElementById('modal-total-price');
+
+            if (priceEl) priceEl.innerText = `R$ ${total.toFixed(2)}`;
+            if (priceTotalEl) priceTotalEl.innerText = `R$ ${total.toFixed(2)}`;
+
+            productAddons.forEach(e => {
+                const check = document.getElementById(`check-${e.id}`);
+                if (!check) return;
+
+                const isSelected = selectedExtras.some(sel => sel.id === e.id);
+                const svg = check.querySelector('svg');
+
+                if (isSelected) {
+                    check.classList.remove('bg-card');
+                    check.classList.add('bg-brand', 'border-brand');
+                    if (svg) {
+                        svg.classList.remove('scale-0');
+                        svg.classList.add('scale-100');
+                        svg.style.color = 'white';
+                    }
+                } else {
+                    check.classList.add('bg-card');
+                    check.classList.remove('bg-brand', 'border-brand');
+                    if (svg) {
+                        svg.classList.remove('scale-100');
+                        svg.classList.add('scale-0');
+                        svg.style.color = 'var(--primary-red)';
+                    }
+                }
+            });
+        }
+
+        function changeQty(delta) {
+            qty = Math.max(1, qty + delta);
+            document.getElementById('modal-qty').innerText = qty;
+            updateModalPrice();
+        }
+
+        function addToOrder() {
+            // Verificar se loja esta aberta
+            if (!isStoreOpen) {
+                showToast("LOJA FECHADA!");
+                // Mostrar modal de loja fechada (reutilizando a funcao ja criada)
+                if (typeof showClosedModal === 'function') {
+                    showClosedModal();
+                }
+                closeModal('product-modal');
+                return;
+            }
+
+            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
+            cart.push({
+                ...currentItem,
+                qty,
+                obs: document.getElementById('modal-obs').value,
+                extras: [...selectedExtras],
+                totalPrice: (currentItem.price + extrasTotal) * qty
+            });
+            updateCartUI();
+            closeModal('product-modal');
+            showToast("ADICIONADO!");
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const list = document.getElementById('cart-list');
+            const totalEl = document.getElementById('cart-total');
+
+            // Atualizar FAB do carrinho
+            const fab = document.getElementById('cart-fab');
+            const fabCount = document.getElementById('cart-fab-count');
+            if (fab && fabCount) {
+                fabCount.innerText = cart.length;
+                if (cart.length > 0) {
+                    fab.classList.remove('opacity-0', 'pointer-events-none');
+                    fab.classList.add('opacity-100');
+                } else {
+                    fab.classList.add('opacity-0', 'pointer-events-none');
+                    fab.classList.remove('opacity-100');
+                }
+            }
+
+            if (cart.length === 0) {
+                list.innerHTML = '<p class="text-center py-20 opacity-30 italic bebas text-3xl uppercase">Vazio...</p>';
+                totalEl.innerText = 'R$ 0,00';
+                return;
+            }
+
+            let total = 0;
+            list.innerHTML = cart.map((item, index) => {
+                total += item.totalPrice;
+                const extrasSummary = item.extras.map(e => e.name).join(', ');
+                return `
+                    <div class="flex items-center gap-6 bg-zinc-500/5 p-6 rounded-custom border-2 border-dark">
+                        <img src="${item.img}" class="w-24 h-24 object-cover rounded-custom border-2 border-dark"
+                             onerror="this.src='https://via.placeholder.com/100'">
+                        <div class="flex-1 leading-none">
+                            <h4 class="bebas text-3xl uppercase tracking-tighter">${item.title}</h4>
+                            <p class="text-xs font-bold opacity-50 mb-2">${item.qty}X - R$ ${(item.totalPrice / item.qty).toFixed(2)}</p>
+                            ${extrasSummary ? `<p class="text-[10px] text-brand font-black uppercase tracking-widest">+ ${extrasSummary}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="bebas text-3xl">R$ ${item.totalPrice.toFixed(2)}</p>
+                            <button onclick="removeItem(${index})" class="text-xs font-black text-brand uppercase underline">Remover</button>
+                        </div>
+                    </div>`;
+            }).join('');
+            totalEl.innerText = `R$ ${total.toFixed(2)}`;
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function openCheckoutModal() {
+            if (cart.length === 0) return showToast("CARRINHO VAZIO!");
+
+            // Verificar se loja esta aberta
+            if (!isStoreOpen) {
+                showToast("LOJA FECHADA!");
+                // Mostrar modal de loja fechada
+                showClosedModal();
+                return;
+            }
+
+            closeModal('cart-modal');
+            openModal('checkout-modal');
+        }
+
+        // Modal de loja fechada
+        function showClosedModal() {
+            const modal = document.createElement('div');
+            modal.id = 'closed-modal';
+            modal.className = 'fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="neo-card rounded-3xl max-w-md w-full p-8 text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="bebas text-4xl text-brand mb-4">ESTAMOS FECHADOS</h2>
+                    <p class="opacity-70 mb-6">${storeClosedReason || 'Voltamos em breve!'}</p>
+                    <button onclick="document.getElementById('closed-modal').remove()" 
+                        class="neo-button w-full py-4 bebas text-2xl rounded-xl">
+                        OK, ENTENDI
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function setCheckoutType(type) {
+            checkoutType = type;
+            const btnE = document.getElementById('btn-entrega');
+            const btnR = document.getElementById('btn-retirada');
+            const fields = document.getElementById('delivery-fields');
+            if (type === 'entrega') {
+                btnE.classList.add('bg-dark', 'text-mainBg');
+                btnR.classList.remove('bg-dark', 'text-mainBg');
+                fields.classList.remove('hidden');
+                setTimeout(initMap, 100);
+            } else {
+                btnR.classList.add('bg-dark', 'text-mainBg');
+                btnE.classList.remove('bg-dark', 'text-mainBg');
+                fields.classList.add('hidden');
+            }
+        }
+
+        // ===== PAGAMENTO =====
+        let paymentMethod = 'pix';
+
+        function setPaymentMethod(method) {
+            paymentMethod = method;
+            const methods = ['pix', 'cartao', 'dinheiro'];
+            methods.forEach(m => {
+                const btn = document.getElementById(`pay-${m}`);
+                if (m === method) {
+                    btn.classList.add('bg-dark', 'text-mainBg');
+                } else {
+                    btn.classList.remove('bg-dark', 'text-mainBg');
+                }
+            });
+
+            // Mostrar/ocultar campo de troco
+            const changeField = document.getElementById('change-field');
+            if (method === 'dinheiro') {
+                changeField.classList.remove('hidden');
+            } else {
+                changeField.classList.add('hidden');
+            }
+        }
+
+        // ===== CHECKOUT SUMMARY =====
+        function updateCheckoutSummary() {
+            const summaryEl = document.getElementById('checkout-summary');
+            const totalEl = document.getElementById('checkout-total');
+
+            let subtotal = 0;
+            let itemsHtml = cart.map(item => {
+                subtotal += item.totalPrice;
+                const extrasSummary = item.extras.map(e => e.name).join(', ');
+                return `
+                    <div class="flex justify-between items-center py-2 border-b border-dark/20">
+                        <div>
+                            <span class="font-bold">${item.qty}x ${item.title}</span>
+                            ${extrasSummary ? `<span class="text-xs opacity-50 block">+ ${extrasSummary}</span>` : ''}
+                        </div>
+                        <span class="font-bold">R$ ${item.totalPrice.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Adicionar subtotal e taxa de entrega se for entrega
+            let deliveryHtml = '';
+            let grandTotal = subtotal;
+
+            if (checkoutType === 'entrega') {
+                // Recalcular taxa de entrega
+                calculateDeliveryFee();
+
+                if (!customerLat || !customerLng) {
+                    deliveryHtml = `
+                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
+                            <span class="font-bold">Taxa de Entrega</span>
+                            <span class="font-bold text-xs uppercase animate-pulse">Selecionar Localizacao</span>
+                        </div>
+                    `;
+                } else if (deliveryOutOfRange) {
+                    deliveryHtml = `
+                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-red-500">
+                            <div>
+                                <span class="font-bold">Taxa de Entrega</span>
+                                ${lastCalculatedDistance !== null ? `<span class="text-[10px] block opacity-50">${lastCalculatedDistance.toFixed(1)} km</span>` : ''}
+                            </div>
+                            <span class="font-bold">FORA DA AREA</span>
+                        </div>
+                    `;
+                } else {
+                    grandTotal += deliveryFee;
+                    deliveryHtml = `
+                        <div class="flex justify-between items-center py-2 border-b border-dark/20">
+                            <span>Subtotal</span>
+                            <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
+                            <div>
+                                <span class="font-bold">Taxa de Entrega</span>
+                                ${isUsingFixedFeeFallback ? '<span class="text-[10px] block opacity-50">TAXA FIXA</span>' : ''}
+                                ${lastCalculatedDistance !== null ? `<span class="text-[10px] block opacity-50">${lastCalculatedDistance.toFixed(1)} km</span>` : ''}
+                            </div>
+                            <span class="font-bold">R$ ${deliveryFee.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            summaryEl.innerHTML = itemsHtml + deliveryHtml;
+            totalEl.innerText = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
+        }
+
+        // ===== MODAL DE CONFIRMACAO =====
+        function openConfirmationModal() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+
+            if (!name) {
+                showToast('PREENCHA SEU NOME!');
+                document.getElementById('cust-name').focus();
+                return;
+            }
+            if (!phone) {
+                showToast('PREENCHA SEU TELEFONE!');
+                document.getElementById('cust-phone').focus();
+                return;
+            }
+
+            if (checkoutType === 'entrega') {
+                if (!customerLat || !customerLng) {
+                    showPopup('CADÊ VOCÊ?', 'Você precisa clicar no mapa ou usar sua localização para que possamos calcular a entrega.', 'warning');
+                    openMapModal();
+                    return;
+                }
+                const address = document.getElementById('cust-address').value.trim();
+                if (!address) {
+                    showPopup('ENDEREÇO VAZIO', 'Por favor, informe a rua e o número da sua casa para a entrega.', 'warning');
+                    document.getElementById('cust-address').focus();
+                    return;
+                }
+                if (deliveryOutOfRange) {
+                    showPopup('FORA DA ÁREA', 'Infelizmente seu endereço está fora da nossa zona de entrega atual.', 'error');
+                    return;
+                }
+            }
+
+            // Validar troco se for em dinheiro
+            if (paymentMethod === 'dinheiro') {
+                const changeFor = parseFloat(document.getElementById('cust-change').value || 0);
+                const subtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+                const totalWithDelivery = checkoutType === 'entrega' ? (subtotal + deliveryFee) : subtotal;
+
+                if (changeFor > 0 && changeFor < totalWithDelivery) {
+                    showPopup('TROCO INSUFICIENTE', `O valor para troco (R$ ${changeFor.toFixed(2)}) é menor que o total do pedido (R$ ${totalWithDelivery.toFixed(2)}).`, 'warning');
+                    document.getElementById('cust-change').focus();
+                    return;
+                }
+            }
+
+            // Montar resumo de confirmacao PREMIUM
+            let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+            const subtotal = total;
+            const finalTotal = checkoutType === 'entrega' ? (total + (deliveryOutOfRange ? 0 : deliveryFee)) : total;
+
+            const paymentLabels = { pix: 'PIX (Transferência)', cartao: 'Cartão (Maquininha)', dinheiro: 'Dinheiro (Espécie)' };
+            const paymentIcons = {
+                pix: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.32 21.97a6.92 6.92 0 01-4.71-1.89l-.11-.1-1.77 1.77a.5.5 0 01-.71 0 .5.5 0 010-.71l1.77-1.77-.1-.11a6.92 6.92 0 01-1.89-4.71c0-1.83.72-3.54 2.02-4.84l5.73-5.73a3.03 3.03 0 014.28 0l4.56 4.56a3.03 3.03 0 010 4.28l-5.73 5.73a6.82 6.82 0 01-4.84 2.02zm6.97-18.13a2.02 2.02 0 00-1.43.59l-5.73 5.73a5.9 5.9 0 00-1.73 4.54c.06 1.68.76 3.26 1.97 4.47s2.79 1.91 4.47 1.97a5.9 5.9 0 004.54-1.73l5.73-5.73a2.03 2.03 0 000-2.87l-4.56-4.56a2.02 2.02 0 00-1.43-.59l-.83.18z"/></svg>`,
+                cartao: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`,
+                dinheiro: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`
+            };
+
+            let html = `
+                <div class="space-y-4">
+                    <!-- Cliente -->
+                    <div class="flex items-start gap-4 p-3 bg-white/5 rounded-2xl border border-dark/10">
+                        <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-black opacity-40 tracking-widest leading-none mb-1">Cliente</p>
+                            <p class="font-bold text-lg leading-tight">${name.toUpperCase()}</p>
+                            <p class="text-xs opacity-60">${phone}</p>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Pedido -->
+                    <div class="flex items-start gap-4 p-3 bg-white/5 rounded-2xl border border-dark/10">
+                        <div class="w-10 h-10 rounded-xl bg-highlight/20 flex items-center justify-center text-dark flex-shrink-0">
+                            ${checkoutType === 'entrega' ?
+                    `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>` :
+                    `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>`
+                }
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[10px] uppercase font-black opacity-40 tracking-widest leading-none mb-1">Modalidade</p>
+                            <p class="font-bold text-lg leading-tight uppercase">${checkoutType === 'entrega' ? 'Delivery / Entrega' : 'Retirada no Balcão'}</p>
+                            ${checkoutType === 'entrega' ? `
+                                <div class="mt-2 pt-2 border-t border-dark/5">
+                                    <p class="text-xs font-bold leading-relaxed">${document.getElementById('cust-address').value}</p>
+                                    <p class="text-[10px] opacity-60">${document.getElementById('cust-neighbor').value || ''}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Pagamento -->
+                    <div class="flex items-start gap-4 p-3 bg-white/5 rounded-2xl border border-dark/10">
+                        <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand flex-shrink-0">
+                            ${paymentIcons[paymentMethod]}
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-black opacity-40 tracking-widest leading-none mb-1">Pagamento</p>
+                            <p class="font-bold text-lg leading-tight">${paymentLabels[paymentMethod]}</p>
+                            ${paymentMethod === 'dinheiro' && document.getElementById('cust-change').value ?
+                    `<p class="text-xs text-brand font-black mt-1">Troco para: R$ ${parseFloat(document.getElementById('cust-change').value).toFixed(2).replace('.', ',')}</p>` : ''
+                }
+                        </div>
+                    </div>
+
+                    <!-- Itens e Total -->
+                    <div class="bg-dark text-white rounded-[2rem] p-6 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand/20 blur-3xl -mr-16 -mt-16"></div>
+                        <div class="relative">
+                            <p class="bebas text-2xl text-highlight mb-4">Resumo Financeiro</p>
+                            <div class="space-y-2 mb-4 opacity-80 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Subtotal Itens</span>
+                                    <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                                ${checkoutType === 'entrega' ? `
+                                    <div class="flex justify-between ${deliveryOutOfRange ? 'text-red-400' : 'text-emerald-400'}">
+                                        <span>Taxa de Entrega</span>
+                                        <span>${deliveryOutOfRange ? 'FORA DA ÁREA' : `R$ ${deliveryFee.toFixed(2).replace('.', ',')}`}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex justify-between items-baseline pt-4 border-t border-white/10 text-highlight">
+                                <span class="bebas text-3xl">TOTAL BRUTAL:</span>
+                                <span class="bebas text-5xl">R$ ${finalTotal.toFixed(2).replace('.', ',')}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('confirm-summary').innerHTML = html;
+            // Estilizar container do resumo para nao ter bordas internas feias
+            document.getElementById('confirm-summary').className = "text-left p-2 rounded-2xl bg-zinc-500/5 mb-6";
+
+            closeModal('checkout-modal');
+            openModal('confirmation-modal');
+        }
+
+        // ===== ENVIAR WHATSAPP =====
+        async function sendFinalWhatsApp() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+
+            const storeName = storeData?.name || 'PEDIDO';
+            const paymentLabels = { pix: 'PIX', cartao: 'Cartao (Maquininha)', dinheiro: 'Dinheiro' };
+
+            // Preparar dados do pedido para a API
+            const items = cart.map(item => ({
+                productId: item.productId || item.id,
+                name: item.title,
+                price: item.price,
+                quantity: item.qty,
+                addons: item.extras.map(e => ({ name: e.name, price: e.price || 0 })),
+                observation: item.obs || ''
+            }));
+
+            const address = checkoutType === 'entrega' ? {
+                street: document.getElementById('cust-address').value,
+                neighbor: document.getElementById('cust-neighbor').value,
+                observation: document.getElementById('cust-obs-address').value,
+                coordinates: document.getElementById('cust-coordinates').value
+            } : null;
+
+            let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+
+            // Mapear metodo de pagamento para valores aceitos pelo DB
+            const paymentMethodMap = {
+                pix: 'PIX',
+                cartao: 'CREDIT_CARD',
+                dinheiro: 'CASH'
+            };
+
+            const orderData = {
+                tenantId: storeData?.id,
+                customerName: name,
+                customerPhone: phone,
+                whatsappId: whatsappFromUrl || null, // Incluir whatsappId se veio do bot
+                orderToken: sessionStorage.getItem('orderToken') || null, // Token JWT para validacao
+                items: items,
+                deliveryType: checkoutType === 'entrega' ? 'DELIVERY' : 'PICKUP',
+                deliveryFee: checkoutType === 'entrega' ? deliveryFee : 0, // Taxa de entrega
+                address: address,
+                paymentMethod: paymentMethodMap[paymentMethod] || 'CASH',
+                observation: ''
+            };
+
+            // Salvar pedido via API
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    console.log('Pedido salvo:', result.order);
+
+                    // Notificacao sera enviada automaticamente via backend (WhatsApp bot)
+                    // Nao precisa abrir link manualmente
+
+                    closeModal('confirmation-modal');
+                    openModal('success-modal');
+                } else {
+                    showToast('ERRO AO ENVIAR PEDIDO!');
+                    console.error('Erro:', result.error);
+                }
+            } catch (error) {
+                console.error('Erro ao enviar pedido:', error);
+                showToast('ERRO DE CONEXAO!');
+            }
+        }
+
+        function closeSuccessAndReset() {
+            closeModal('success-modal');
+            cart = [];
+            updateCartUI();
+
+            // Limpar campos
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            document.getElementById('cust-address').value = '';
+            document.getElementById('cust-neighbor').value = '';
+            document.getElementById('cust-obs-address').value = '';
+            document.getElementById('cust-change').value = '';
+
+            showToast('PEDIDO ENVIADO!');
+        }
+
+        // Atualizar resumo quando abrir checkout
+        const originalOpenCheckoutModal = openCheckoutModal;
+        openCheckoutModal = function () {
+            if (cart.length === 0) return showToast("CARRINHO VAZIO!");
+            closeModal('cart-modal');
+            updateCheckoutSummary();
+            openModal('checkout-modal');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.transform = 'translate(-50%, -10px)';
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translate(-50%, 0)';
+            }, 2000);
+        }
+
+        // Centralizador de alertas premium
+        function showPopup(title, message, type = 'warning') {
+            const modal = document.getElementById('popup-modal');
+            const titleEl = document.getElementById('popup-title');
+            const msgEl = document.getElementById('popup-message');
+            const iconEl = document.getElementById('popup-icon');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            const icons = {
+                warning: {
+                    bg: 'bg-amber-100',
+                    color: 'text-amber-600',
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`
+                },
+                error: {
+                    bg: 'bg-red-100',
+                    color: 'text-red-600',
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+                },
+                success: {
+                    bg: 'bg-green-100',
+                    color: 'text-green-600',
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`
+                }
+            };
+
+            const config = icons[type] || icons.warning;
+            iconEl.className = `w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center border-4 border-dark shadow-[4px_4px_0_var(--dark)] ${config.bg} ${config.color}`;
+            iconEl.innerHTML = config.svg;
+
+            openModal('popup-modal');
+        }
+
+        window.onclick = function (e) {
+            if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+        }
+
+        // Inicializar ao carregar
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cupons - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            border: 2px solid var(--dark);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .coupons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .coupon-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            box-shadow: 4px 4px 0 var(--dark);
+            transition: 0.2s;
+        }
+
+        .coupon-card.inactive {
+            opacity: 0.6;
+            box-shadow: none;
+            border-style: dashed;
+        }
+
+        .coupon-card.inactive:hover {
+            opacity: 1;
+        }
+
+        .coupon-code {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            border-bottom: 2px dashed var(--dark);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .coupon-discount {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .coupon-info {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 2px solid var(--dark);
+        }
+
+        .status-active {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-inactive {
+            background: var(--bg);
+            color: var(--text-muted);
+        }
+
+        .coupon-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            border-top: 2px solid var(--dark);
+            padding-top: 16px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Cupons</h1>
+                    <p>Gerencie promocoes e descontos</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <button onclick="openModal()" class="btn btn-primary"><i class="fas fa-plus"></i> NOVO CUPOM</button>
+            </div>
+
+            <div class="coupons-grid" id="couponsGrid"></div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="couponModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Novo Cupom</h2>
+            <form id="couponForm">
+                <input type="hidden" id="couponId">
+                <div class="form-group">
+                    <label>Codigo</label>
+                    <input type="text" id="code" required style="text-transform: uppercase;" placeholder="EX: VERAO10">
+                </div>
+                <div class="form-group">
+                    <label>Descricao</label>
+                    <input type="text" id="description" placeholder="Desconto de verao">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="discountType">
+                            <option value="PERCENTAGE">Porcentagem (%)</option>
+                            <option value="FIXED">Valor Fixo (R$)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor</label>
+                        <input type="number" id="discountValue" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pedido Minimo (R$)</label>
+                        <input type="number" id="minOrderValue" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Max. Usos</label>
+                        <input type="number" id="maxUses" placeholder="Ilimitado">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valido De</label>
+                        <input type="date" id="validFrom">
+                    </div>
+                    <div class="form-group">
+                        <label>Valido Ate</label>
+                        <input type="date" id="validUntil">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let coupons = [];
+
+        async function loadCoupons() {
+            try {
+                const res = await fetch('/api/coupons', { headers: API_HEADERS });
+                coupons = await res.json();
+                renderCoupons();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderCoupons() {
+            const grid = document.getElementById('couponsGrid');
+            if (!coupons.length) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Nenhum cupom encontrado.</div>';
+                return;
+            }
+
+            grid.innerHTML = coupons.map(c => `
+                <div class="coupon-card ${!c.is_active ? 'inactive' : ''}">
+                    <span class="status-badge ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'ATIVO' : 'INATIVO'}</span>
+                    <div class="coupon-code">${c.code}</div>
+                    <div class="coupon-discount">${c.discount_type === 'PERCENTAGE' ? c.discount_value + '%' : 'R$ ' + c.discount_value.toFixed(2)} OFF</div>
+                    <div class="coupon-info">
+                        ${c.description ? `<span>${c.description}</span>` : ''}
+                        ${c.min_order_value > 0 ? `<span>Minimo: R$ ${c.min_order_value.toFixed(2)}</span>` : ''}
+                        ${c.valid_until ? `<span>Valido ate: ${new Date(c.valid_until).toLocaleDateString()}</span>` : ''}
+                        <span>Usos: ${c.uses_count || 0}${c.max_uses ? '/' + c.max_uses : ''}</span>
+                    </div>
+                    <div class="coupon-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="editCoupon('${c.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-secondary" onclick="toggleCoupon('${c.id}', ${c.is_active})"><i class="fas fa-${c.is_active ? 'pause' : 'play'}"></i></button>
+                        <button class="btn btn-sm" style="background: var(--danger); color: white; border: none;" onclick="deleteCoupon('${c.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(coupon = null) {
+            document.getElementById('couponForm').reset();
+            document.getElementById('couponId').value = '';
+            document.getElementById('modalTitle').textContent = coupon ? 'Editar Cupom' : 'Novo Cupom';
+
+            if (coupon) {
+                document.getElementById('couponId').value = coupon.id;
+                document.getElementById('code').value = coupon.code;
+                document.getElementById('description').value = coupon.description || '';
+                document.getElementById('discountType').value = coupon.discount_type;
+                document.getElementById('discountValue').value = coupon.discount_value;
+                document.getElementById('minOrderValue').value = coupon.min_order_value || 0;
+                document.getElementById('maxUses').value = coupon.max_uses || '';
+                document.getElementById('validFrom').value = coupon.valid_from?.split('T')[0] || '';
+                document.getElementById('validUntil').value = coupon.valid_until?.split('T')[0] || '';
+            }
+            document.getElementById('couponModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('couponModal').classList.remove('active');
+        }
+
+        function editCoupon(id) {
+            const c = coupons.find(i => i.id === id);
+            if (c) openModal(c);
+        }
+
+        async function toggleCoupon(id, isActive) {
+            try {
+                await fetch(`/api/coupons/${id}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive: !isActive })
+                });
+                loadCoupons();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function deleteCoupon(id) {
+            if (!confirm('Excluir?')) return;
+            try {
+                await fetch(`/api/coupons/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadCoupons();
+            } catch (e) { alert('Erro'); }
+        }
+
+        document.getElementById('couponForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('couponId').value;
+            const body = {
+                code: document.getElementById('code').value,
+                description: document.getElementById('description').value,
+                discountType: document.getElementById('discountType').value,
+                discountValue: parseFloat(document.getElementById('discountValue').value),
+                minOrderValue: parseFloat(document.getElementById('minOrderValue').value) || 0,
+                maxUses: document.getElementById('maxUses').value ? parseInt(document.getElementById('maxUses').value) : null,
+                validFrom: document.getElementById('validFrom').value || null,
+                validUntil: document.getElementById('validUntil').value || null
+            };
+
+            try {
+                await fetch(`/api/coupons${id ? '/' + id : ''}`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                closeModal();
+                loadCoupons();
+            } catch (e) { alert('Erro'); }
+        });
+
+        loadCoupons();
+    </script>
+</body>
+
+</html>

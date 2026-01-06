@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorias - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .category-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 4px 4px 0 var(--dark);
+            transition: 0.2s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--dark);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-name {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .category-count {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid var(--dark);
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item active"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Categorias</h1>
+                    <p>Organize seus produtos</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> NOVA
+                    CATEGORIA</button>
+            </div>
+
+            <div id="categoriesList" class="categories-grid"></div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Nova Categoria</h2>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label>Nome da Categoria</label>
+                    <input type="text" id="categoryName" required placeholder="Ex: Bebidas">
+                </div>
+                <div class="form-group">
+                    <label>Icone (FontAwesome)</label>
+                    <input type="text" id="categoryIcon" placeholder="fas fa-beer">
+                    <small style="color: var(--text-muted);">Use classes do FontAwesome 6</small>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let categories = [];
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories', { headers: API_HEADERS });
+                if (res.ok) categories = await res.json();
+                render();
+            } catch (e) { console.error(e); }
+        }
+
+        function render() {
+            const list = document.getElementById('categoriesList');
+            if (!categories.length) {
+                list.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600;">Nenhuma categoria encontrada.</div>';
+                return;
+            }
+            list.innerHTML = categories.map(c => `
+                <div class="category-card">
+                    <div class="category-icon"><i class="${c.icon || 'fas fa-folder'}"></i></div>
+                    <div class="category-info">
+                        <div class="category-name">${c.name}</div>
+                        <div class="category-count">${c.product_count || 0} produtos</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn-icon" onclick="editCategory('${c.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon btn-delete" onclick="deleteCategory('${c.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal() {
+            document.getElementById('modalTitle').textContent = 'Nova Categoria';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('categoryModal').classList.remove('active');
+        }
+
+        function editCategory(id) {
+            const c = categories.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('modalTitle').textContent = 'Editar Categoria';
+            document.getElementById('categoryId').value = c.id;
+            document.getElementById('categoryName').value = c.name;
+            document.getElementById('categoryIcon').value = c.icon || '';
+            document.getElementById('categoryModal').classList.add('active');
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Deletar esta categoria?')) return;
+            try {
+                const res = await fetch(`/api/categories/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                if (!res.ok) { const d = await res.json(); alert(d.error || 'Erro ao deletar'); return; }
+                loadCategories();
+            } catch (e) { alert('Erro'); }
+        }
+
+        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('categoryId').value;
+            const data = { name: document.getElementById('categoryName').value, icon: document.getElementById('categoryIcon').value };
+            const url = id ? `/api/categories/${id}` : '/api/categories';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                await fetch(url, { method, headers: { ...API_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                closeModal();
+                loadCategories();
+            } catch (e) { alert('Erro'); }
+        });
+
+        loadCategories();
+    </script>
+</body>
+
+</html>

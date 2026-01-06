@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipe - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1000px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+            border-bottom: 3px solid var(--dark);
+            padding-bottom: 12px;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .member-card {
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .member-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            border: 2px solid var(--dark);
+        }
+
+        .member-avatar.owner {
+            background: var(--primary);
+        }
+
+        .member-avatar.manager {
+            background: var(--info);
+        }
+
+        .member-avatar.staff {
+            background: var(--success);
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .member-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .role-badge {
+            position: absolute;
+            top: -10px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 2px solid var(--dark);
+            background: var(--card);
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid var(--dark);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--danger);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .invite-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border: 2px dashed var(--dark);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .invite-link-box {
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Gerenciar Equipe</h1>
+                    <p>Controle quem tem acesso a sua loja</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="section-title" style="margin: 0; border: none;">Membros Ativos</div>
+                    <button class="btn btn-primary" onclick="openInviteModal()"><i class="fas fa-user-plus"></i>
+                        CONVIDAR</button>
+                </div>
+
+                <div class="members-grid" id="membersGrid"></div>
+            </div>
+
+            <div class="card" id="invitesSection" style="display: none;">
+                <div class="section-title">Convites Pendentes</div>
+                <div id="invitesList"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Invite -->
+    <div class="modal" id="inviteModal">
+        <div class="modal-content">
+            <h2>Novo Convite</h2>
+            <form id="inviteForm">
+                <div class="form-group">
+                    <label>Email do Membro</label>
+                    <input type="email" id="inviteEmail" required placeholder="email@exemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Funcao</label>
+                    <select id="inviteRole">
+                        <option value="STAFF">ATENDENTE (Pedidos e Produtos)</option>
+                        <option value="MANAGER">GERENTE (Acesso quase total)</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">ENVIAR CONVITE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Link -->
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <h2>Convite Criado!</h2>
+            <p>Envie este link para o novo membro:</p>
+            <div class="invite-link-box" id="inviteLinkDisplay"></div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn btn-secondary" onclick="copyLink()">COPIAR LINK</button>
+                <button class="btn btn-primary" onclick="closeLinkModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let teamData = { members: [], invites: [] };
+
+        async function loadTeam() {
+            try {
+                const res = await fetch('/api/team', { headers: API_HEADERS });
+                teamData = await res.json();
+                renderMembers();
+                renderInvites();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderMembers() {
+            const grid = document.getElementById('membersGrid');
+            if (!teamData.members.length) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Nenhum membro encontrado.</div>';
+                return;
+            }
+
+            grid.innerHTML = teamData.members.map(m => `
+                <div class="member-card">
+                    <span class="role-badge" style="color: ${getRoleColor(m.role)}">${formatRole(m.role)}</span>
+                    <div class="member-avatar ${m.role.toLowerCase()}">${m.name.charAt(0).toUpperCase()}</div>
+                    <div class="member-info">
+                        <div class="member-name">${m.name}</div>
+                        <div class="member-email">${m.email}</div>
+                    </div>
+                    ${m.role !== 'OWNER' ? `
+                        <button class="btn-icon" onclick="removeMember('${m.user_id}')" title="Remover"><i class="fas fa-trash"></i></button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderInvites() {
+            const section = document.getElementById('invitesSection');
+            const list = document.getElementById('invitesList');
+
+            if (!teamData.invites.length) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = teamData.invites.map(i => `
+                <div class="invite-item">
+                    <div>
+                        <div style="font-weight: 800;">${i.email}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Expira em ${new Date(i.expires_at).toLocaleDateString()}</div>
+                    </div>
+                    <button class="btn-icon" onclick="cancelInvite('${i.id}')"><i class="fas fa-times"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function formatRole(role) {
+            const map = { 'OWNER': 'Proprietario', 'MANAGER': 'Gerente', 'STAFF': 'Atendente' };
+            return map[role] || role;
+        }
+
+        function getRoleColor(role) {
+            const map = { 'OWNER': 'var(--primary)', 'MANAGER': 'var(--info)', 'STAFF': 'var(--success)' };
+            return map[role] || 'var(--text)';
+        }
+
+        function openInviteModal() {
+            document.getElementById('inviteForm').reset();
+            document.getElementById('inviteModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        function closeLinkModal() {
+            document.getElementById('linkModal').classList.remove('active');
+        }
+
+        async function removeMember(id) {
+            if (!confirm('Remover membro?')) return;
+            try {
+                await fetch(`/api/team/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadTeam();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function cancelInvite(id) {
+            if (!confirm('Cancelar convite?')) return;
+            try {
+                await fetch(`/api/team/invite/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadTeam();
+            } catch (e) { alert('Erro'); }
+        }
+
+        document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('inviteEmail').value;
+            const role = document.getElementById('inviteRole').value;
+
+            try {
+                const res = await fetch('/api/team/invite', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, role })
+                });
+                const data = await res.json();
+                if (data.inviteLink) {
+                    closeModal();
+                    document.getElementById('inviteLinkDisplay').textContent = window.location.origin + data.inviteLink;
+                    document.getElementById('linkModal').classList.add('active');
+                    loadTeam();
+                } else {
+                    alert('Erro ao convidar');
+                }
+            } catch (e) { alert('Erro'); }
+        });
+
+        function copyLink() {
+            const text = document.getElementById('inviteLinkDisplay').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Copiado!');
+        }
+
+        loadTeam();
+    </script>
+</body>
+
+</html>

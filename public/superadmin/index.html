@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .logo-sub {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 800;
+            margin-bottom: 32px;
+            background: var(--dark);
+            padding: 4px 12px;
+            display: inline-block;
+            border-radius: 4px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            padding-left: 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .user-info {
+            margin-top: auto;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 16px;
+            border: 3px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary);
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            font-weight: 700;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            border: 3px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .stat-icon.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .stat-icon.warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .stat-icon.info {
+            background: var(--info);
+            color: white;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            border: 2px solid var(--dark);
+        }
+
+        .stat-change.up {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .stat-change.down {
+            background: #fee2e2;
+            color: var(--primary);
+        }
+
+        /* Sections */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .section {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        /* Tenants Table */
+        .tenant-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tenant-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid var(--dark);
+            font-weight: 700;
+        }
+
+        .tenant-table td {
+            padding: 16px 12px;
+            border-bottom: 2px dashed var(--dark);
+        }
+
+        .tenant-table tr:hover td {
+            background: var(--bg);
+        }
+
+        .tenant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tenant-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--primary);
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+        }
+
+        .tenant-name {
+            font-weight: 700;
+        }
+
+        .tenant-slug {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid var(--dark);
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .status-trial,
+        .status-trialing {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .status-suspended {
+            background: #fee2e2;
+            color: var(--primary);
+        }
+
+        /* Activity List */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--bg);
+            border: 2px solid var(--dark);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .activity-icon.new {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .activity-icon.order {
+            background: #dbeafe;
+            color: var(--info);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 4px solid var(--dark);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">DeliveryHub</div>
+            <div class="logo-sub">Super Admin</div>
+
+            <nav class="nav-section">
+                <div class="nav-label">Visao Geral</div>
+                <a href="/superadmin" class="nav-item active">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="/superadmin/tenants" class="nav-item">
+                    <i class="fas fa-store"></i> Lojas
+                </a>
+            </nav>
+
+            <div class="user-info">
+                <div class="user-avatar">SA</div>
+                <div class="user-name" id="userName">Super Admin</div>
+                <div class="user-role">Administrador</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Dashboard da Plataforma</h1>
+                <button onclick="refreshData()" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary"><i class="fas fa-store"></i></div>
+                    <div class="stat-value" id="totalTenants">0</div>
+                    <div class="stat-label">Lojas Ativas</div>
+                    <div class="stat-change up" id="tenantsChange">
+                        <i class="fas fa-arrow-up"></i> +0 este mes
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-value" id="totalRevenue">R$ 0</div>
+                    <div class="stat-label">Receita Total</div>
+                    <div class="stat-change up" id="revenueChange">
+                        <i class="fas fa-arrow-up"></i> +0% vs mes
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Pedidos Hoje</div>
+                    <div class="stat-change up" id="ordersChange">
+                        <i class="fas fa-arrow-up"></i> +0 vs ontem
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info"><i class="fas fa-users"></i></div>
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Usuarios</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Lojas Recentes</div>
+                        <a href="/superadmin/tenants" class="btn btn-secondary">Ver Todas</a>
+                    </div>
+                    <table class="tenant-table">
+                        <thead>
+                            <tr>
+                                <th>Loja</th>
+                                <th>Plano</th>
+                                <th>Status</th>
+                                <th>Pedidos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tenantsTable">
+                            <tr>
+                                <td colspan="4" class="loading">
+                                    <div class="spinner"></div> Carregando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Atividade Recente</div>
+                    </div>
+                    <div class="activity-list" id="activityList">
+                        <div class="loading">
+                            <div class="spinner"></div> Carregando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        async function checkAuth() {
+            if (!token) { window.location.href = '/login'; return false; }
+            try {
+                const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) { window.location.href = '/login'; return false; }
+                const data = await res.json();
+                if (data.user?.role !== 'SUPER_ADMIN') {
+                    alert('Acesso negado. Apenas Super Admins podem acessar.');
+                    window.location.href = '/admin';
+                    return false;
+                }
+                document.getElementById('userName').textContent = data.user.name;
+                return true;
+            } catch (e) {
+                console.error('Auth error:', e);
+                window.location.href = '/login';
+                return false;
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/api/superadmin/dashboard', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) throw new Error('Erro ao carregar dashboard');
+                const data = await res.json();
+
+                document.getElementById('totalTenants').textContent = data.stats?.tenants || 0;
+                document.getElementById('totalRevenue').textContent = 'R$ ' + (data.stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                document.getElementById('totalOrders').textContent = data.stats?.ordersToday || 0;
+                document.getElementById('totalUsers').textContent = data.stats?.users || 0;
+
+                if (data.stats?.newTenantsMonth) {
+                    document.getElementById('tenantsChange').innerHTML = `<i class="fas fa-arrow-up"></i> +${data.stats.newTenantsMonth} este mes`;
+                }
+
+                renderTenants(data.recentTenants || []);
+                renderActivity(data.recentActivity || []);
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        function renderTenants(tenants) {
+            const tbody = document.getElementById('tenantsTable');
+            if (!tenants.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhuma loja cadastrada</td></tr>';
+                return;
+            }
+            tbody.innerHTML = tenants.map(t => `
+                <tr>
+                    <td>
+                        <div class="tenant-info">
+                            <div class="tenant-avatar">${t.name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="tenant-name">${t.name}</div>
+                                <div class="tenant-slug">/${t.slug}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${t.plan_name || 'Trial'}</td>
+                    <td><span class="status-badge status-${(t.subscription_status || 'trial').toLowerCase()}">${formatStatus(t.subscription_status)}</span></td>
+                    <td>${t.orders_count || 0}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderActivity(activities) {
+            const container = document.getElementById('activityList');
+            if (!activities.length) {
+                container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Nenhuma atividade recente</div>';
+                return;
+            }
+            container.innerHTML = activities.map(a => `
+                <div class="activity-item">
+                    <div class="activity-icon ${a.type === 'NEW_TENANT' ? 'new' : 'order'}">
+                        <i class="fas fa-${a.type === 'NEW_TENANT' ? 'store' : 'shopping-bag'}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">${a.message}</div>
+                        <div class="activity-time">${timeAgo(a.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatStatus(status) {
+            const map = { 'ACTIVE': 'Ativo', 'TRIALING': 'Trial', 'SUSPENDED': 'Suspenso', 'CANCELLED': 'Cancelado' };
+            return map[status] || status || 'Trial';
+        }
+
+        function timeAgo(date) {
+            const diff = Math.floor((new Date() - new Date(date)) / 1000);
+            if (diff < 60) return 'Agora mesmo';
+            if (diff < 3600) return `${Math.floor(diff / 60)}min atras`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h atras`;
+            return `${Math.floor(diff / 86400)}d atras`;
+        }
+
+        function refreshData() { loadDashboard(); }
+
+        (async () => { if (await checkAuth()) loadDashboard(); })();
+    </script>
+</body>
+
+</html>

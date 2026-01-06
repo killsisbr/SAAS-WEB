@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliacoes - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: var(--card);
+            border: 2px solid var(--dark);
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            background: var(--dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 var(--secondary);
+        }
+
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .review-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .review-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--secondary);
+            border: 2px solid var(--dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .review-stars {
+            color: var(--secondary);
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 0 var(--dark);
+        }
+
+        .review-product {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--text-muted);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .review-reply {
+            margin-top: 16px;
+            background: #e0f2fe;
+            border: 2px solid var(--dark);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .reply-input-area {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .reply-input-area textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            font-family: inherit;
+            margin-bottom: 8px;
+            resize: vertical;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Avaliacoes</h1>
+                    <p>O que os clientes estao dizendo</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="avgRating">0.0</div>
+                    <div id="avgStars" style="color: var(--secondary); margin-bottom: 8px;"></div>
+                    <div class="stat-label">Nota Media</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalReviews">0</div>
+                    <div class="stat-label">Total Avaliacoes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fiveStars">0</div>
+                    <div class="stat-label">5 Estrelas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pendingReviews">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="filterReviews('all')">Todas</div>
+                <div class="tab" onclick="filterReviews('pending')">Pendentes</div>
+                <div class="tab" onclick="filterReviews('approved')">Aprovadas</div>
+            </div>
+
+            <div class="reviews-list" id="reviewsList"></div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let reviews = [];
+        let currentFilter = 'all';
+
+        async function loadReviews() {
+            try {
+                const res = await fetch('/api/reviews', { headers: API_HEADERS });
+                reviews = await res.json();
+                loadStats();
+                renderReviews();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`/api/reviews/tenant/${tenantId}`);
+                const data = await res.json();
+                if (data.stats) {
+                    const avg = (data.stats.average || 0).toFixed(1);
+                    document.getElementById('avgRating').textContent = avg;
+                    document.getElementById('avgStars').innerHTML = renderStars(parseFloat(avg));
+                    document.getElementById('totalReviews').textContent = data.stats.total || 0;
+                    document.getElementById('fiveStars').textContent = data.stats.five_stars || 0;
+                }
+                document.getElementById('pendingReviews').textContent = reviews.filter(r => !r.is_approved).length;
+            } catch (e) { }
+        }
+
+        function renderStars(n) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= n) html += '<i class="fas fa-star"></i>';
+                else if (i - 0.5 <= n) html += '<i class="fas fa-star-half-alt"></i>';
+                else html += '<i class="far fa-star"></i>';
+            }
+            return html;
+        }
+
+        function filterReviews(f) {
+            currentFilter = f;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="filterReviews('${f}')"]`).classList.add('active');
+            renderReviews();
+        }
+
+        function renderReviews() {
+            let filtered = reviews;
+            if (currentFilter === 'pending') filtered = reviews.filter(r => !r.is_approved);
+            if (currentFilter === 'approved') filtered = reviews.filter(r => r.is_approved);
+
+            const list = document.getElementById('reviewsList');
+            if (!filtered.length) {
+                list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhuma avaliacao encontrada.</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(r => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <div style="display: flex; gap: 16px;">
+                            <div class="review-avatar">${r.customer_name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 1.1rem;">${r.customer_name}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">${new Date(r.created_at).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="review-stars">${renderStars(r.rating)}</div>
+                    </div>
+                    ${r.product_name ? `<div class="review-product"><i class="fas fa-utensils"></i> ${r.product_name}</div>` : ''}
+                    ${r.comment ? `<p style="line-height: 1.6;">${r.comment}</p>` : ''}
+                    
+                    ${r.reply ? `
+                        <div class="review-reply">
+                            <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: var(--primary);"><i class="fas fa-reply"></i> RESPOSTA DA LOJA</div>
+                            <div>${r.reply}</div>
+                        </div>
+                    ` : ''}
+
+                    <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                         ${!r.is_approved ? `
+                            <button class="btn btn-secondary" style="background: var(--success); color: white; border: none;" onclick="approveReview('${r.id}')"><i class="fas fa-check"></i> APROVAR</button>
+                        ` : ''}
+                         ${!r.reply ? `
+                            <button class="btn btn-secondary" onclick="showReply('${r.id}')"><i class="fas fa-comment"></i> RESPONDER</button>
+                        ` : ''}
+                         <button class="btn btn-secondary" onclick="deleteReview('${r.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+
+                    <div id="replyArea-${r.id}" class="reply-input-area">
+                        <textarea id="replyText-${r.id}" rows="3" placeholder="Sua resposta..."></textarea>
+                        <button class="btn btn-primary" onclick="sendReply('${r.id}')">ENVIAR</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showReply(id) {
+            document.getElementById(`replyArea-${id}`).style.display = 'block';
+        }
+
+        async function approveReview(id) {
+            try {
+                await fetch(`/api/reviews/${id}/approve`, { method: 'PUT', headers: API_HEADERS });
+                loadReviews();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function sendReply(id) {
+            const txt = document.getElementById(`replyText-${id}`).value;
+            if (!txt.trim()) return;
+            try {
+                await fetch(`/api/reviews/${id}/reply`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reply: txt })
+                });
+                loadReviews();
+            } catch (e) { alert('Erro'); }
+        }
+
+        async function deleteReview(id) {
+            if (!confirm('Excluir?')) return;
+            try {
+                await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadReviews();
+            } catch (e) { alert('Erro'); }
+        }
+
+        loadReviews();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fidelidade - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1000px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .toggle-switch {
+            width: 60px;
+            height: 32px;
+            background: var(--text-muted);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 12px;
+        }
+
+        .toggle-switch.active {
+            background: var(--success);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+        }
+
+        .toggle-switch.active::after {
+            left: 30px;
+        }
+
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .reward-card {
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            box-shadow: 4px 4px 0 var(--dark);
+            transition: 0.2s;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .reward-type {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 2px solid var(--dark);
+            background: white;
+        }
+
+        .reward-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: var(--dark);
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .reward-points {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin-top: 8px;
+        }
+
+        .btn-trash {
+            padding: 8px;
+            border: 2px solid var(--dark);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-trash:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item active"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Fidelidade</h1>
+                    <p>Recompense seus clientes fieis</p>
+                </div>
+                <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Configurar Programa</div>
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                        <div class="toggle-switch" id="enableToggle" onclick="toggleProgram()"></div>
+                        <label style="margin: 0; cursor: pointer;" onclick="toggleProgram()">ATIVAR PROGRAMA DE
+                            PONTOS</label>
+                    </div>
+                </div>
+
+                <form id="configForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div class="form-group">
+                            <label>Pontos por R$ 1,00</label>
+                            <input type="number" id="pointsPerReal" step="0.1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Minimo para Resgate</label>
+                            <input type="number" id="minPointsRedeem" value="100">
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> SALVAR OPCOES</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="card-title" style="margin: 0;">Recompensas</div>
+                    <button class="btn btn-primary" onclick="openRewardModal()"><i class="fas fa-plus"></i> NOVA
+                        RECOMPENSA</button>
+                </div>
+
+                <div id="rewardsGrid" class="rewards-grid"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="rewardModal">
+        <div class="modal-content">
+            <h2>Nova Recompensa</h2>
+            <form id="rewardForm">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="rewardName" required placeholder="Ex: Vale R$ 10,00">
+                </div>
+                <div class="form-group">
+                    <label>Descricao</label>
+                    <input type="text" id="rewardDesc" placeholder="Curta descricao">
+                </div>
+                <div class="form-group">
+                    <label>Pontos Necessarios</label>
+                    <input type="number" id="rewardPoints" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="rewardType">
+                        <option value="DISCOUNT">Desconto em Valor</option>
+                        <option value="DELIVERY_FREE">Frete Gratis</option>
+                        <option value="PRODUCT">Produto Gratis</option>
+                    </select>
+                </div>
+                <div class="form-group" id="rewardValueGroup">
+                    <label>Valor do Desconto (R$)</label>
+                    <input type="number" id="rewardValue" step="0.01">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let config = {};
+        let rewards = [];
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/loyalty/admin/config', { headers: API_HEADERS });
+                const data = await res.json();
+                config = data.config || {};
+                rewards = data.rewards || [];
+
+                const toggle = document.getElementById('enableToggle');
+                toggle.classList.toggle('active', !!config.is_enabled);
+
+                document.getElementById('pointsPerReal').value = config.points_per_real || 1;
+                document.getElementById('minPointsRedeem').value = config.min_points_redeem || 100;
+
+                renderRewards();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderRewards() {
+            const grid = document.getElementById('rewardsGrid');
+            if (!rewards.length) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Nenhuma recompensa cadastrada.</div>';
+                return;
+            }
+            grid.innerHTML = rewards.map(r => `
+                <div class="reward-card">
+                    <span class="reward-type">${formatType(r.reward_type)}</span>
+                    <div class="reward-icon"><i class="fas fa-${getIcon(r.reward_type)}"></i></div>
+                    <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 4px;">${r.name}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">${r.description || ''}</div>
+                    <div class="reward-points"><i class="fas fa-star" style="color: var(--secondary);"></i> ${r.points_required} PONTOS</div>
+                    <div style="margin-top: 16px; text-align: right;">
+                        <button class="btn-trash" onclick="deleteReward('${r.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatType(t) {
+            const map = { 'DISCOUNT': 'Desconto', 'DELIVERY_FREE': 'Frete Gratis', 'PRODUCT': 'Produto' };
+            return map[t] || t;
+        }
+
+        function getIcon(t) {
+            const map = { 'DISCOUNT': 'money-bill-wave', 'DELIVERY_FREE': 'motorcycle', 'PRODUCT': 'hamburger' };
+            return map[t] || 'gift';
+        }
+
+        async function toggleProgram() {
+            const toggle = document.getElementById('enableToggle');
+            const isEnabled = !toggle.classList.contains('active');
+            try {
+                await fetch('/api/loyalty/admin/config', {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isEnabled })
+                });
+                toggle.classList.toggle('active', isEnabled);
+            } catch (e) { alert('Erro'); }
+        }
+
+        document.getElementById('configForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await fetch('/api/loyalty/admin/config', {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pointsPerReal: parseFloat(document.getElementById('pointsPerReal').value),
+                        minPointsRedeem: parseInt(document.getElementById('minPointsRedeem').value)
+                    })
+                });
+                alert('Salvo!');
+            } catch (e) { alert('Erro'); }
+        });
+
+        function openRewardModal() {
+            document.getElementById('rewardForm').reset();
+            document.getElementById('rewardModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('rewardModal').classList.remove('active');
+        }
+
+        document.getElementById('rewardType').addEventListener('change', (e) => {
+            const grp = document.getElementById('rewardValueGroup');
+            if (e.target.value === 'DELIVERY_FREE') grp.style.display = 'none';
+            else {
+                grp.style.display = 'block';
+                document.querySelector('#rewardValueGroup label').textContent =
+                    e.target.value === 'DISCOUNT' ? 'Valor do Desconto (R$)' : 'ID do Produto';
+            }
+        });
+
+        document.getElementById('rewardForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await fetch('/api/loyalty/admin/rewards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        name: document.getElementById('rewardName').value,
+                        description: document.getElementById('rewardDesc').value,
+                        pointsRequired: parseInt(document.getElementById('rewardPoints').value),
+                        rewardType: document.getElementById('rewardType').value,
+                        rewardValue: parseFloat(document.getElementById('rewardValue').value) || 0
+                    })
+                });
+                closeModal();
+                loadConfig();
+            } catch (e) { alert('Erro'); }
+        });
+
+        async function deleteReward(id) {
+            if (!confirm('Excluir?')) return;
+            try {
+                await fetch(`/api/loyalty/admin/rewards/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadConfig();
+            } catch (e) { alert('Erro'); }
+        }
+
+        loadConfig();
+    </script>
+</body>
+
+</html>

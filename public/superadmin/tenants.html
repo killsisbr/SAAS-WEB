@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lojas - SuperAdmin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .logo-sub {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 800;
+            margin-bottom: 32px;
+            background: var(--dark);
+            padding: 4px 12px;
+            display: inline-block;
+            border-radius: 4px;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            padding-left: 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .user-info {
+            margin-top: auto;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 16px;
+            border: 3px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary);
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            font-weight: 700;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.75rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 14px 20px;
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            box-shadow: 4px 4px 0 var(--primary);
+        }
+
+        .search-bar select {
+            padding: 14px 20px;
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        .section {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .tenant-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tenant-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid var(--dark);
+            font-weight: 700;
+        }
+
+        .tenant-table td {
+            padding: 16px 12px;
+            border-bottom: 2px dashed var(--dark);
+        }
+
+        .tenant-table tr:hover td {
+            background: var(--bg);
+        }
+
+        .tenant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tenant-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary);
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .tenant-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .tenant-slug {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid var(--dark);
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .status-trial,
+        .status-trialing {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .status-suspended {
+            background: #fee2e2;
+            color: var(--primary);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 4px solid var(--dark);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .search-bar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">DeliveryHub</div>
+            <div class="logo-sub">Super Admin</div>
+
+            <nav class="nav-section">
+                <div class="nav-label">Visao Geral</div>
+                <a href="/superadmin" class="nav-item">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="/superadmin/tenants" class="nav-item active">
+                    <i class="fas fa-store"></i> Lojas
+                </a>
+            </nav>
+
+            <div class="user-info">
+                <div class="user-avatar">SA</div>
+                <div class="user-name" id="userName">Super Admin</div>
+                <div class="user-role">Administrador</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Gerenciar Lojas</h1>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar por nome ou slug...">
+                <select id="statusFilter">
+                    <option value="">Todos os Status</option>
+                    <option value="ACTIVE">Ativos</option>
+                    <option value="TRIALING">Trial</option>
+                    <option value="SUSPENDED">Suspensos</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <table class="tenant-table">
+                    <thead>
+                        <tr>
+                            <th>Loja</th>
+                            <th>Plano</th>
+                            <th>Status</th>
+                            <th>Pedidos</th>
+                            <th>Produtos</th>
+                            <th>Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tenantsTable">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <div class="spinner"></div> Carregando lojas...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        let allTenants = [];
+
+        async function checkAuth() {
+            if (!token) { window.location.href = '/login'; return false; }
+            try {
+                const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) { window.location.href = '/login'; return false; }
+                const data = await res.json();
+                if (data.user?.role !== 'SUPER_ADMIN') {
+                    alert('Acesso negado.');
+                    window.location.href = '/admin';
+                    return false;
+                }
+                document.getElementById('userName').textContent = data.user.name;
+                return true;
+            } catch (e) {
+                window.location.href = '/login';
+                return false;
+            }
+        }
+
+        async function loadTenants() {
+            try {
+                const res = await fetch('/api/superadmin/tenants', { headers: { 'Authorization': `Bearer ${token}` } });
+                allTenants = await res.json();
+                renderTenants(allTenants);
+            } catch (e) {
+                console.error('Erro:', e);
+            }
+        }
+
+        function renderTenants(tenants) {
+            const tbody = document.getElementById('tenantsTable');
+
+            if (!tenants.length) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="empty-state">
+                        <i class="fas fa-store"></i><br>Nenhuma loja encontrada
+                    </td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = tenants.map(t => `
+                <tr>
+                    <td>
+                        <div class="tenant-info">
+                            <div class="tenant-avatar">${t.name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="tenant-name">${t.name}</div>
+                                <div class="tenant-slug">/${t.slug}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><strong>${t.plan_name || 'Trial'}</strong></td>
+                    <td><span class="status-badge status-${(t.subscription_status || 'trial').toLowerCase()}">${formatStatus(t.subscription_status)}</span></td>
+                    <td><strong>${t.orders_count || 0}</strong></td>
+                    <td>${t.products_count || 0}</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="/loja/${t.slug}" target="_blank" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            ${t.status === 'SUSPENDED' ?
+                    `<button class="btn btn-success btn-sm" onclick="activateTenant('${t.id}')"><i class="fas fa-check"></i></button>` :
+                    `<button class="btn btn-primary btn-sm" onclick="suspendTenant('${t.id}')"><i class="fas fa-ban"></i></button>`
+                }
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatStatus(status) {
+            const map = { 'ACTIVE': 'Ativo', 'TRIALING': 'Trial', 'SUSPENDED': 'Suspenso' };
+            return map[status] || status || 'Trial';
+        }
+
+        async function suspendTenant(id) {
+            if (!confirm('Suspender esta loja?')) return;
+            await fetch(`/api/superadmin/tenants/${id}/suspend`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadTenants();
+        }
+
+        async function activateTenant(id) {
+            await fetch(`/api/superadmin/tenants/${id}/activate`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadTenants();
+        }
+
+        // Filtros
+        document.getElementById('searchInput').addEventListener('input', filterTenants);
+        document.getElementById('statusFilter').addEventListener('change', filterTenants);
+
+        function filterTenants() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+
+            let filtered = allTenants;
+
+            if (search) {
+                filtered = filtered.filter(t =>
+                    t.name.toLowerCase().includes(search) ||
+                    t.slug.toLowerCase().includes(search)
+                );
+            }
+
+            if (status) {
+                filtered = filtered.filter(t => t.subscription_status === status || t.status === status);
+            }
+
+            renderTenants(filtered);
+        }
+
+        (async () => { if (await checkAuth()) loadTenants(); })();
+    </script>
+</body>
+
+</html>

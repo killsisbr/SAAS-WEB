@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionais por Categoria - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.75rem;
+        }
+
+        .btn-delete {
+            background: var(--bg);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .category-selector {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .category-tab {
+            padding: 12px 24px;
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .category-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .category-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .addon-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .addon-group-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--dark);
+            color: white;
+        }
+
+        .group-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .group-badge {
+            background: var(--secondary);
+            color: var(--dark);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .group-actions button {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .group-actions button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .addon-items {
+            padding: 20px;
+        }
+
+        .addon-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .addon-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .addon-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .addon-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .addon-price {
+            color: var(--primary);
+            font-weight: 800;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .addon-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .addon-actions button {
+            padding: 8px 12px;
+            border: 2px solid var(--dark);
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--card);
+            transition: all 0.2s;
+        }
+
+        .addon-actions button:hover {
+            background: var(--bg);
+        }
+
+        .add-item-row {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: var(--card);
+            border-top: 2px dashed var(--dark);
+        }
+
+        .add-item-row input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--dark);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+        }
+
+        .add-item-row input[type="number"] {
+            width: 100px;
+            flex: none;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: var(--card);
+            border: 3px dashed var(--dark);
+            border-radius: 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: var(--dark);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item active"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1>Adicionais por Categoria</h1>
+                    <p style="color: var(--text-muted);">Configure adicionais que aparecem para todos os produtos de uma
+                        categoria</p>
+                </div>
+            </div>
+
+            <!-- Seletor de Categoria -->
+            <div class="category-selector" id="categorySelector">
+                <div style="padding: 20px; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Carregando categorias...
+                </div>
+            </div>
+
+            <!-- Container de Grupos -->
+            <div id="groupsContainer">
+                <div class="empty-state">
+                    <i class="fas fa-hand-pointer"></i>
+                    <h3>Selecione uma categoria</h3>
+                    <p>Escolha uma categoria acima para gerenciar seus adicionais</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Novo Grupo -->
+    <div class="modal" id="groupModal">
+        <div class="modal-content">
+            <h2 id="groupModalTitle">Novo Grupo de Adicionais</h2>
+            <form id="groupForm">
+                <input type="hidden" id="groupId">
+                <div class="form-group">
+                    <label>Nome do Grupo</label>
+                    <input type="text" id="groupName" required placeholder="Ex: Adicionais, Complementos...">
+                </div>
+                <div class="form-group">
+                    <label>Selecao Minima</label>
+                    <input type="number" id="groupMin" value="0" min="0" placeholder="0 = opcional">
+                </div>
+                <div class="form-group">
+                    <label>Selecao Maxima</label>
+                    <input type="number" id="groupMax" value="10" min="1" placeholder="Maximo de itens">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeGroupModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let categories = [];
+        let currentCategoryId = null;
+        let currentGroups = [];
+
+        async function init() {
+            await loadCategories();
+        }
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories', { headers: API_HEADERS });
+                if (res.ok) {
+                    categories = await res.json();
+                    renderCategorySelector();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+                showToast('Erro ao carregar categorias', 'error');
+            }
+        }
+
+        function renderCategorySelector() {
+            const container = document.getElementById('categorySelector');
+            if (!categories.length) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <p>Nenhuma categoria encontrada. <a href="categorias">Crie uma categoria primeiro</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = categories.map(cat => `
+                <div class="category-tab ${currentCategoryId === cat.id ? 'active' : ''}" 
+                     onclick="selectCategory('${cat.id}')">
+                    ${cat.name}
+                </div>
+            `).join('');
+        }
+
+        async function selectCategory(categoryId) {
+            console.log('Selecionando categoria:', categoryId);
+            currentCategoryId = categoryId;
+            renderCategorySelector();
+
+            // Mostrar loading
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 16px;">Carregando adicionais...</p></div>';
+
+            await loadGroups();
+        }
+
+        async function loadGroups() {
+            if (!currentCategoryId) return;
+
+            console.log('Carregando grupos para categoria:', currentCategoryId);
+
+            try {
+                const url = `/api/category-addons/category/${currentCategoryId}`;
+                console.log('Fazendo fetch para:', url);
+
+                const res = await fetch(url, { headers: API_HEADERS });
+                console.log('Response status:', res.status);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('Dados recebidos:', data);
+                    currentGroups = data.groups || [];
+                    renderGroups();
+                } else {
+                    const errorText = await res.text();
+                    console.error('Erro na resposta:', res.status, errorText);
+                    showToast('Erro ao carregar: ' + res.status, 'error');
+                    document.getElementById('groupsContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Erro ao carregar</h3><p>Tente novamente</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar grupos:', error);
+                showToast('Erro ao carregar adicionais: ' + error.message, 'error');
+                document.getElementById('groupsContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Erro de conexao</h3><p>' + error.message + '</p></div>';
+            }
+        }
+
+        function isBuffetCategory() {
+            if (!currentCategoryId) return false;
+            const cat = categories.find(c => c.id === currentCategoryId);
+            if (!cat) return false;
+            const name = cat.name.toLowerCase();
+            return name.includes('buffet') || name.includes('marmita');
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groupsContainer');
+            const isBuffet = isBuffetCategory();
+            const importBtnText = isBuffet ? 'Importar do Buffet' : 'Importar dos Produtos';
+            const importFn = isBuffet ? 'importBuffetItems()' : 'previewProductAddons()';
+
+            if (!currentGroups.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-puzzle-piece"></i>
+                        <h3>Nenhum grupo de adicionais</h3>
+                        <p>Crie grupos de adicionais para esta categoria</p>
+                        <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="openGroupModal()">
+                                <i class="fas fa-plus"></i> Criar Grupo
+                            </button>
+                            <button class="btn" style="background: var(--warning); color: white;" onclick="${importFn}">
+                                <i class="fas fa-download"></i> ${importBtnText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="openGroupModal()">
+                        <i class="fas fa-plus"></i> Novo Grupo
+                    </button>
+                    <button class="btn" style="background: var(--warning); color: white;" onclick="${importFn}">
+                        <i class="fas fa-download"></i> ${importBtnText}
+                    </button>
+                </div>
+                <div class="addon-groups">
+                    ${currentGroups.map(group => renderGroupCard(group)).join('')}
+                </div>
+            `;
+        }
+
+        // ===== MIGRACAO DE ADICIONAIS =====
+        async function previewProductAddons() {
+            if (!currentCategoryId) {
+                showToast('Selecione uma categoria primeiro', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/category-addons/products/${currentCategoryId}`, { headers: API_HEADERS });
+                if (!res.ok) throw new Error('Erro ao buscar');
+
+                const data = await res.json();
+
+                if (!data.products || data.products.length === 0) {
+                    showToast('Nenhum adicional encontrado nos produtos desta categoria', 'info');
+                    return;
+                }
+
+                // Montar lista de adicionais unicos
+                const uniqueAddons = new Map();
+                for (const prod of data.products) {
+                    for (const addon of prod.addons) {
+                        if (!uniqueAddons.has(addon.name.toLowerCase())) {
+                            uniqueAddons.set(addon.name.toLowerCase(), addon);
+                        }
+                    }
+                }
+
+                const addonList = Array.from(uniqueAddons.values())
+                    .map(a => `${a.name} (R$ ${a.price.toFixed(2).replace('.', ',')})`).join('\n');
+
+                const confirmMsg = `Adicionais encontrados nos produtos:\n\n${addonList}\n\nDeseja importar ${uniqueAddons.size} adicional(is) para esta categoria?`;
+
+                if (confirm(confirmMsg)) {
+                    await migrateAddons();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar adicionais:', error);
+                showToast('Erro ao buscar adicionais dos produtos', 'error');
+            }
+        }
+
+        async function migrateAddons() {
+            if (!currentCategoryId) return;
+
+            try {
+                const res = await fetch(`/api/category-addons/migrate/${currentCategoryId}`, {
+                    method: 'POST',
+                    headers: API_HEADERS
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message || 'Adicionais importados!', 'success');
+                    await loadGroups();
+                } else {
+                    showToast(data.error || 'Erro ao importar', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao migrar:', error);
+                showToast('Erro ao importar adicionais', 'error');
+            }
+        }
+
+        // ===== IMPORTAR ITENS DO BUFFET =====
+        async function importBuffetItems() {
+            if (!currentCategoryId) {
+                showToast('Selecione uma categoria primeiro', 'error');
+                return;
+            }
+
+            try {
+                // Primeiro, verificar se ha itens de buffet
+                const resCheck = await fetch(`/api/category-addons/buffet`, { headers: API_HEADERS });
+                if (!resCheck.ok) throw new Error('Erro ao buscar');
+
+                const dataCheck = await resCheck.json();
+
+                if (!dataCheck.items || dataCheck.items.length === 0) {
+                    showToast('Nenhum item de buffet cadastrado. Cadastre itens em Produtos > Buffet do Dia', 'info');
+                    return;
+                }
+
+                const itemsList = dataCheck.items.map(i => i.nome).join('\n');
+                const confirmMsg = `Itens de buffet encontrados:\n\n${itemsList}\n\nDeseja importar ${dataCheck.items.length} item(s) para esta categoria?`;
+
+                if (confirm(confirmMsg)) {
+                    const res = await fetch(`/api/category-addons/migrate-buffet/${currentCategoryId}`, {
+                        method: 'POST',
+                        headers: API_HEADERS
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast(data.message || 'Itens de buffet importados!', 'success');
+                        await loadGroups();
+                    } else {
+                        showToast(data.error || 'Erro ao importar', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao importar buffet:', error);
+                showToast('Erro ao importar itens do buffet', 'error');
+            }
+        }
+
+        function renderGroupCard(group) {
+            const itemsHtml = (group.items || []).map(item => `
+                <div class="addon-item">
+                    <div class="addon-info">
+                        <span class="addon-name">${item.name}</span>
+                        <span class="addon-price">+ R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="addon-actions">
+                        <button onclick="editItem('${item.id}', '${item.name}', ${item.price})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteItem('${item.id}')" title="Remover" style="color: var(--danger);">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="addon-group-card">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <i class="fas fa-layer-group"></i>
+                            ${group.name}
+                            <span class="group-badge">${group.min_selection || 0} - ${group.max_selection || 10} itens</span>
+                        </div>
+                        <div class="group-actions">
+                            <button onclick="editGroup('${group.id}', '${group.name}', ${group.min_selection || 0}, ${group.max_selection || 10})" title="Editar Grupo">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteGroup('${group.id}')" title="Remover Grupo" style="color: #ff6b6b;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="addon-items">
+                        ${itemsHtml || '<p style="color: var(--text-muted); text-align: center;">Nenhum item adicionado</p>'}
+                    </div>
+                    <div class="add-item-row">
+                        <input type="text" id="newItemName-${group.id}" placeholder="Nome do adicional">
+                        <input type="number" id="newItemPrice-${group.id}" placeholder="Preco" step="0.50" min="0">
+                        <button class="btn btn-success btn-sm" onclick="addItem('${group.id}')">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== GRUPO CRUD =====
+        function openGroupModal() {
+            document.getElementById('groupModalTitle').textContent = 'Novo Grupo de Adicionais';
+            document.getElementById('groupForm').reset();
+            document.getElementById('groupId').value = '';
+            document.getElementById('groupMax').value = '10';
+            document.getElementById('groupModal').classList.add('active');
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').classList.remove('active');
+        }
+
+        function editGroup(id, name, min, max) {
+            document.getElementById('groupModalTitle').textContent = 'Editar Grupo';
+            document.getElementById('groupId').value = id;
+            document.getElementById('groupName').value = name;
+            document.getElementById('groupMin').value = min;
+            document.getElementById('groupMax').value = max;
+            document.getElementById('groupModal').classList.add('active');
+        }
+
+        document.getElementById('groupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('groupId').value;
+            const name = document.getElementById('groupName').value;
+            const minSelection = parseInt(document.getElementById('groupMin').value) || 0;
+            const maxSelection = parseInt(document.getElementById('groupMax').value) || 10;
+
+            try {
+                if (id) {
+                    // Editar
+                    await fetch(`/api/category-addons/groups/${id}`, {
+                        method: 'PUT',
+                        headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, minSelection, maxSelection })
+                    });
+                } else {
+                    // Criar
+                    await fetch('/api/category-addons/groups', {
+                        method: 'POST',
+                        headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ categoryId: currentCategoryId, name, minSelection, maxSelection })
+                    });
+                }
+                closeGroupModal();
+                await loadGroups();
+                showToast('Grupo salvo com sucesso!', 'success');
+            } catch (error) {
+                console.error(error);
+                showToast('Erro ao salvar grupo', 'error');
+            }
+        });
+
+        async function deleteGroup(groupId) {
+            if (!confirm('Remover este grupo e todos os seus itens?')) return;
+            try {
+                await fetch(`/api/category-addons/groups/${groupId}`, {
+                    method: 'DELETE',
+                    headers: API_HEADERS
+                });
+                await loadGroups();
+                showToast('Grupo removido!', 'success');
+            } catch (error) {
+                showToast('Erro ao remover grupo', 'error');
+            }
+        }
+
+        // ===== ITEM CRUD =====
+        async function addItem(groupId) {
+            const nameInput = document.getElementById(`newItemName-${groupId}`);
+            const priceInput = document.getElementById(`newItemPrice-${groupId}`);
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value) || 0;
+
+            if (!name) {
+                showToast('Digite o nome do adicional', 'error');
+                return;
+            }
+
+            try {
+                await fetch(`/api/category-addons/groups/${groupId}/items`, {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price })
+                });
+                nameInput.value = '';
+                priceInput.value = '';
+                await loadGroups();
+                showToast('Adicional criado!', 'success');
+            } catch (error) {
+                showToast('Erro ao criar adicional', 'error');
+            }
+        }
+
+        async function editItem(itemId, currentName, currentPrice) {
+            const newName = prompt('Nome do adicional:', currentName);
+            if (!newName) return;
+            const newPrice = parseFloat(prompt('Preco:', currentPrice)) || 0;
+
+            try {
+                await fetch(`/api/category-addons/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName, price: newPrice, isAvailable: true })
+                });
+                await loadGroups();
+                showToast('Adicional atualizado!', 'success');
+            } catch (error) {
+                showToast('Erro ao atualizar', 'error');
+            }
+        }
+
+        async function deleteItem(itemId) {
+            if (!confirm('Remover este adicional?')) return;
+            try {
+                await fetch(`/api/category-addons/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: API_HEADERS
+                });
+                await loadGroups();
+                showToast('Adicional removido!', 'success');
+            } catch (error) {
+                showToast('Erro ao remover', 'error');
+            }
+        }
+
+        // ===== TOAST =====
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast visible ' + type;
+            setTimeout(() => toast.className = 'toast', 3000);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

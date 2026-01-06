@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Dashboard - Carregando...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .store-info {
+            margin-top: auto;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 16px;
+            border: 3px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .store-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .store-plan {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            border: 3px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .stat-icon.warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .stat-icon.info {
+            background: var(--info);
+            color: white;
+        }
+
+        .stat-icon.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            background: var(--bg);
+            transition: all 0.2s;
+        }
+
+        .order-item:hover {
+            transform: translateX(4px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .order-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .order-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            background: var(--card);
+            padding: 4px 8px;
+            border: 2px solid var(--dark);
+            border-radius: 6px;
+        }
+
+        .order-customer {
+            font-weight: 700;
+        }
+
+        .order-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid var(--dark);
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .status-confirmed,
+        .status-preparing {
+            background: #cffafe;
+            color: var(--info);
+        }
+
+        .status-ready,
+        .status-delivered {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .order-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .quick-action {
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+            font-weight: 700;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 6px 6px 0 var(--dark);
+            border-color: var(--primary);
+        }
+
+        .quick-action i {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo" id="sidebarLogo">Carregando...</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item active"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+                <a href="follow-up" class="nav-item"><i class="fas fa-chart-line"></i> Follow-up</a>
+                <div class="nav-label">Configuracoes</div>
+                <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
+            </nav>
+            <div style="margin-top: auto; padding-top: 20px; border-top: 2px dashed #ddd;">
+                <button onclick="logout()" class="nav-item"
+                    style="width: 100%; border: none; cursor: pointer; background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                    <i class="fas fa-sign-out-alt"></i> Sair da Conta
+                </button>
+            </div>
+            <div class="store-info">
+                <div class="store-name" id="storeName">Carregando...</div>
+                <div class="store-plan" id="storePlan">Trial</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <a href="#" id="viewStoreLink" target="_blank" class="btn btn-secondary">
+                        <i class="fas fa-eye"></i> Ver Loja
+                    </a>
+                    <a href="quadro" class="btn btn-primary">
+                        <i class="fas fa-columns"></i> Abrir Quadro
+                    </a>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon success"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-value" id="revenueToday">R$ 0</div>
+                    <div class="stat-label">Faturamento Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="stat-value" id="ordersToday">0</div>
+                    <div class="stat-label">Pedidos Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon primary"><i class="fas fa-box"></i></div>
+                    <div class="stat-value" id="productsCount">0</div>
+                    <div class="stat-label">Produtos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info"><i class="fas fa-users"></i></div>
+                    <div class="stat-value" id="customersCount">0</div>
+                    <div class="stat-label">Clientes</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">Ultimos Pedidos</div>
+                    <a href="quadro" class="btn btn-secondary">Ver Todos</a>
+                </div>
+                <div class="orders-list" id="ordersList">
+                    <div style="text-align: center; color: var(--text-muted); padding: 40px;">
+                        Carregando...
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">Acoes Rapidas</div>
+                </div>
+                <div class="quick-actions">
+                    <a href="produtos" class="quick-action">
+                        <i class="fas fa-plus"></i>
+                        <div>Novo Produto</div>
+                    </a>
+                    <a href="categorias" class="quick-action">
+                        <i class="fas fa-tags"></i>
+                        <div>Categorias</div>
+                    </a>
+                    <a href="whatsapp" class="quick-action">
+                        <i class="fab fa-whatsapp"></i>
+                        <div>Config WhatsApp</div>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Funcao de logout
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('tenantId');
+                localStorage.removeItem('tenantSlug');
+                window.location.href = '/login';
+            }
+        }
+
+        // Verificacao imediata de autenticacao
+        (async function checkAuth() {
+            const token = localStorage.getItem('token');
+
+            // Se nao tem token, redirecionar para login
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Extrair slug da URL para contexto do tenant
+            const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+
+            // Validar token com API
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Tenant-Slug': TENANT_SLUG
+                    }
+                });
+
+                if (!res.ok) {
+                    console.error('Token invalido');
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Token valido, continuar carregando
+                window.AUTH_DATA = await res.json();
+                window.API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+                loadDashboard();
+            } catch (error) {
+                console.error('Erro de autenticacao:', error);
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+        })();
+
+        const API_HEADERS = window.API_HEADERS || {};
+
+        async function loadDashboard() {
+            try {
+                // Usar dados ja carregados pelo checkAuth
+                const meData = window.AUTH_DATA;
+
+                if (!meData || !meData.tenant) {
+                    console.error('Dados do tenant nao disponiveis');
+                    return;
+                }
+
+                // Atualizar titulo da pagina e sidebar com nome da loja
+                document.getElementById('pageTitle').textContent = `Dashboard - ${meData.tenant.name}`;
+                document.getElementById('sidebarLogo').textContent = meData.tenant.name;
+
+                document.getElementById('storeName').textContent = meData.tenant.name;
+                document.getElementById('storePlan').textContent = meData.tenant.subscription?.plan || 'Trial';
+                document.getElementById('viewStoreLink').href = `/loja/${meData.tenant.slug}`;
+
+                const dashRes = await fetch(`/api/tenants/${meData.tenant.id}/dashboard`, { headers: window.API_HEADERS });
+                if (dashRes.ok) {
+                    const data = await dashRes.json();
+                    document.getElementById('revenueToday').textContent = 'R$ ' + (data.today?.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    document.getElementById('ordersToday').textContent = data.today?.orders || 0;
+                    document.getElementById('productsCount').textContent = data.counts?.products || 0;
+                    document.getElementById('customersCount').textContent = data.counts?.customers || 0;
+                }
+
+                const ordersRes = await fetch('/api/orders?limit=5', { headers: window.API_HEADERS });
+                if (ordersRes.ok) renderOrders(await ordersRes.json());
+
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                // NAO redirecionar para login aqui - apenas log erro
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersList');
+            if (!orders.length) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhum pedido ainda</div>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-item">
+                    <div class="order-info">
+                        <span class="order-number">#${order.order_number}</span>
+                        <div>
+                            <div class="order-customer">${order.customer_name}</div>
+                            <div class="order-time">${new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                    </div>
+                    <span class="order-status status-${order.status.toLowerCase()}">${formatStatus(order.status)}</span>
+                    <span class="order-total">R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+                </div>
+            `).join('');
+        }
+
+        function formatStatus(status) {
+            const map = { 'PENDING': 'Pendente', 'CONFIRMED': 'Confirmado', 'PREPARING': 'Preparando', 'READY': 'Pronto', 'DELIVERED': 'Entregue' };
+            return map[status] || status;
+        }
+
+        // loadDashboard() agora e chamado apos validacao de token em checkAuth()
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Quadro - Carregando...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d9432e;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --done: #a3a3a3;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(217, 67, 46, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+            padding: 24px;
+        }
+
+        .header {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+            border-left: 2px solid var(--text-muted);
+            padding-left: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .status-badge {
+            background: var(--card);
+            border: 2px solid var(--dark);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Header Status Popup */
+        .header-status-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-header-wa {
+            width: 42px;
+            height: 42px;
+            background: #25d366;
+            color: white;
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--dark);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-header-wa:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 var(--dark);
+        }
+
+        .status-badge {
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .status-badge:active {
+            transform: scale(0.95);
+        }
+
+        .status-popup {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            width: 260px;
+            background: white;
+            border: 3px solid var(--dark);
+            border-radius: 18px;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+            overflow: hidden;
+            animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .status-popup.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .popup-header {
+            background: var(--dark);
+            color: white;
+            padding: 12px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .popup-item {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-item:hover {
+            background: #f8f8f8;
+        }
+
+        .store-status-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .store-status-info span {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .store-status-info small {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .status-switch {
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            position: relative;
+            border: 2px solid var(--dark);
+            transition: 0.3s;
+        }
+
+        .status-switch.active {
+            background: var(--success);
+        }
+
+        .status-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 2px solid var(--dark);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+        }
+
+        .status-switch.active::after {
+            left: 22px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .btn-back {
+            background: var(--card);
+            color: var(--text);
+            border: 3px solid var(--dark);
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 4px 4px 0 var(--dark);
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-info div:first-child {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .stat-info div:last-child {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Kanban */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            align-items: start;
+            height: calc(100vh - 250px);
+            overflow-x: auto;
+        }
+
+        .column {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .column-header {
+            padding: 16px;
+            border-bottom: 3px solid var(--dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .column-count {
+            background: var(--dark);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+
+        .column.pending .column-header {
+            background: #fffbeb;
+            color: var(--warning);
+        }
+
+        .column.preparing .column-header {
+            background: #ecfeff;
+            color: var(--info);
+        }
+
+        .column.ready .column-header {
+            background: #f0fdf4;
+            color: var(--success);
+        }
+
+        .column.delivered .column-header {
+            background: #f5f5f5;
+            color: var(--done);
+        }
+
+        .column-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .order-card {
+            background: white;
+            border: 2px solid var(--dark);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 3px 3px 0 var(--dark);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0 var(--dark);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .order-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .order-time {
+            font-size: 0.75rem;
+            font-weight: 700;
+            opacity: 0.6;
+        }
+
+        .customer-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .order-items {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+
+        .order-total {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .btn-action {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-col {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 32px;
+            opacity: 0.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: var(--card);
+            border: 3px solid var(--dark);
+            padding: 16px 24px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 0 var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 1000;
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 1200px) {
+            .kanban-board {
+                grid-template-columns: repeat(2, 1fr);
+                height: auto;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                display: none;
+            }
+        }
+
+        /* Premium Dark Modal Style */
+        .modal-premium {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-premium.active {
+            display: flex;
+        }
+
+        .modal-premium-content {
+            background: #121212;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-premium-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-premium-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-premium-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .premium-section-title {
+            font-size: 0.9rem;
+            color: #4ade80;
+            /* emerald-400 equivalent for icons/titles */
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .premium-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .premium-card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .premium-card label {
+            display: block;
+            font-size: 0.7rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .premium-card div,
+        .premium-card span {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .premium-items-list {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .premium-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px dashed #333;
+        }
+
+        .premium-item-row:last-child {
+            border-bottom: none;
+        }
+
+        .premium-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-premium-mini {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-premium-add {
+            width: 100%;
+            background: #22c55e;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .premium-totals {
+            padding: 16px;
+            border-top: 1px solid #333;
+            margin-top: 20px;
+        }
+
+        .premium-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #999;
+        }
+
+        .premium-total-final {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #333;
+        }
+
+        .modal-premium-footer {
+            padding: 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-premium {
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-premium:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <a href="./" class="logo" id="storeLogo">Carregando...</a>
+            <span class="page-title">Quadro de Pedidos</span>
+        </div>
+        <div class="header-actions">
+            <button onclick="openProfileModal()" class="btn-header" title="Perfil da Loja"
+                style="background: #3b82f6; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-store"></i> Perfil
+            </button>
+            <a href="./adicionais" class="btn-header" title="Gerenciar Adicionais por Categoria"
+                style="background: #f59e0b; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none;">
+                <i class="fas fa-utensils"></i> Buffet
+            </a>
+            <a href="./adicionais" class="btn-header" title="Gerenciar Adicionais por Categoria"
+                style="background: #8b5cf6; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none;">
+                <i class="fas fa-leaf"></i> Acai
+            </a>
+            <div class="header-status-container">
+                <a href="whatsapp" class="btn-header-wa" title="Ir para WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <div class="status-badge" onclick="toggleStatusPopup(event)">
+                    <div class="pulse-dot"></div>
+                    <span id="sseStatus">Aberta</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; opacity: 0.6;"></i>
+                </div>
+
+                <!-- Status Popup -->
+                <div id="statusPopup" class="status-popup">
+                    <div class="popup-header">CONTROLE DA LOJA</div>
+                    <div class="popup-item" onclick="toggleStoreOpen(event)">
+                        <div class="store-status-info">
+                            <span id="storeStatusLabel">Loja Aberta</span>
+                            <small id="storeStatusDesc">Clientes podem pedir</small>
+                        </div>
+                        <div class="status-switch" id="storeStatusSwitch"></div>
+                    </div>
+                </div>
+            </div>
+            <a href="./" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <div id="statPending">0</div>
+                <div>Pendentes</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #ecfeff; color: var(--info);"><i class="fas fa-fire"></i></div>
+            <div class="stat-info">
+                <div id="statPreparing">0</div>
+                <div>Preparando</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: var(--success);"><i class="fas fa-check"></i>
+            </div>
+            <div class="stat-info">
+                <div id="statReady">0</div>
+                <div>Prontos</div>
+            </div>
+        </div>
+        <div class="stat-card" style="cursor: pointer;" onclick="showRevenuePopup()" title="Clique para ver detalhes">
+            <div class="stat-icon" style="background: var(--bg); color: var(--primary);"><i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+                <div id="statTotal">R$ 0</div>
+                <div>Faturado Total <i class="fas fa-chart-line" style="font-size: 0.7rem; opacity: 0.5;"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban -->
+    <div class="kanban-board">
+        <!-- Pendentes -->
+        <div class="column pending">
+            <div class="column-header">
+                <span>Pendentes</span>
+                <span class="column-count" id="countPending">0</span>
+            </div>
+            <div class="column-body" id="colPending"></div>
+        </div>
+
+        <!-- Preparando -->
+        <div class="column preparing">
+            <div class="column-header">
+                <span>Preparando</span>
+                <span class="column-count" id="countPreparing">0</span>
+            </div>
+            <div class="column-body" id="colPreparing"></div>
+        </div>
+
+        <!-- Prontos -->
+        <div class="column ready">
+            <div class="column-header">
+                <span>Prontos</span>
+                <span class="column-count" id="countReady">0</span>
+            </div>
+            <div class="column-body" id="colReady"></div>
+        </div>
+
+        <!-- Entregues -->
+        <div class="column delivered">
+            <div class="column-header">
+                <span>Entregues</span>
+                <span class="column-count" id="countDelivered">0</span>
+            </div>
+            <div class="column-body" id="colDelivered"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div
+            style="background: var(--success); color: white; width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--dark); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div>
+            <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;">Novo Pedido!</div>
+            <div id="toastMessage" style="font-size: 0.9rem; color: var(--text-muted);">Pedido recebido</div>
+        </div>
+    </div>
+
+    <!-- Audio -->
+    <audio id="notificationSound" preload="auto">
+        <source
+            src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleVtCxdiEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+            type="audio/wav">
+    </audio>
+
+    <!-- Revenue Dashboard Popup -->
+    <div id="revenuePopupModal" class="modal-premium">
+        <div class="modal-premium-content" style="max-width: 650px;">
+            <div class="modal-premium-header">
+                <h2>
+                    <i class="fas fa-chart-line" style="color: #4ade80;"></i>
+                    Dashboard de Faturamento
+                </h2>
+                <button onclick="closeRevenuePopup()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: #666;">&times;</button>
+            </div>
+            <div class="modal-premium-body" id="revenuePopupContent">
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #4ade80;"></i>
+                    <p style="margin-top: 12px; color: #666;">Carregando dados...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes do Pedido - Premium Dark -->
+    <div id="orderDetailModal" class="modal-premium">
+        <div class="modal-premium-content">
+            <div class="modal-premium-header">
+                <h2>
+                    <i class="fas fa-file-alt" style="color: #60a5fa; margin-right: 10px;"></i>
+                    <span id="orderModalTitle">Pedido #0</span>
+                </h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btnEditOrderTrigger" class="btn-premium-mini"
+                        style="background: rgba(255,255,255,0.1); color: #fff; width: 32px; height: 32px; border-radius: 8px; border:none; cursor:pointer;"
+                        onclick="toggleEditMode()" title="Editar Pedido">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button onclick="closeOrderModal()" class="text-gray-500 hover:text-white"
+                        style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                </div>
+            </div>
+
+            <div class="modal-premium-body" id="orderDetailContent">
+                <!-- Data populated via JS -->
+            </div>
+
+            <div class="modal-premium-footer" id="modalFooter">
+                <!-- Action buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buffet do Dia -->
+    <div id="buffetModal" class="modal-premium">
+        <div class="modal-premium-content" style="max-width: 600px;">
+            <div class="modal-premium-header" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <h2><i class="fas fa-utensils"></i> Buffet do Dia</h2>
+                <button onclick="closeBuffetModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: white;">&times;</button>
+            </div>
+            <div class="modal-premium-body" style="padding: 20px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="newBuffetItem" placeholder="Nome do item (Ex: Frango Grelhado)"
+                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem;">
+                    <button onclick="addBuffetItem()"
+                        style="background: #22c55e; color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 700; cursor: pointer;">
+                        <i class="fas fa-plus"></i> Adicionar
+                    </button>
+                </div>
+                <div id="buffetItemsList"
+                    style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                        <p>Carregando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-premium-footer"
+                style="padding: 16px; background: rgba(0,0,0,0.05); border-top: 1px solid #eee;">
+                <p style="margin: 0; font-size: 0.85rem; color: #666;">
+                    <i class="fas fa-info-circle"></i> Itens ativos aparecem como opcoes para clientes que compram
+                    marmitas
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionais de Acai -->
+    <div id="acaiModal" class="modal-premium">
+        <div class="modal-premium-content" style="max-width: 600px;">
+            <div class="modal-premium-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <h2><i class="fas fa-leaf"></i> Adicionais de Acai</h2>
+                <button onclick="closeAcaiModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: white;">&times;</button>
+            </div>
+            <div class="modal-premium-body" style="padding: 20px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="newAcaiName" placeholder="Nome (Ex: Granola)"
+                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem;">
+                    <input type="number" id="newAcaiPrice" placeholder="Preco" step="0.50" min="0"
+                        style="width: 100px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem;">
+                    <button onclick="addAcaiItem()"
+                        style="background: #22c55e; color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 700; cursor: pointer;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="acaiItemsList"
+                    style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                        <p>Carregando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-premium-footer"
+                style="padding: 16px; background: rgba(0,0,0,0.05); border-top: 1px solid #eee;">
+                <p style="margin: 0; font-size: 0.85rem; color: #666;">
+                    <i class="fas fa-info-circle"></i> Adicionais aparecem como opcoes para produtos de acai
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Perfil da Loja -->
+    <div id="profileModal" class="modal-premium">
+        <div class="modal-premium-content" style="max-width: 600px;">
+            <div class="modal-premium-header" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                <h2><i class="fas fa-store"></i> Perfil da Loja</h2>
+                <button onclick="closeProfileModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: white;">&times;</button>
+            </div>
+            <div class="modal-premium-body" style="padding: 20px;">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #fff;">Nome da
+                        Loja</label>
+                    <input type="text" id="profileStoreName" placeholder="Nome da sua loja"
+                        style="width: 100%; padding: 12px; border: 1px solid #333; border-radius: 10px; background: #1e1e1e; color: #fff;">
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="font-weight: 600; margin-bottom: 12px; display: block; color: #4ade80;">
+                        <i class="fas fa-clock"></i> Horario de Funcionamento
+                    </label>
+                    <div style="display: grid; gap: 10px;">
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Segunda</span>
+                            <input type="time" id="seg-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="seg-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Terca</span>
+                            <input type="time" id="ter-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="ter-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Quarta</span>
+                            <input type="time" id="qua-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="qua-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Quinta</span>
+                            <input type="time" id="qui-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="qui-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Sexta</span>
+                            <input type="time" id="sex-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="sex-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Sabado</span>
+                            <input type="time" id="sab-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="sab-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                        <div class="schedule-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; font-size: 0.9rem; color: #ccc;">Domingo</span>
+                            <input type="time" id="dom-open"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                            <span style="color: #666;">ate</span>
+                            <input type="time" id="dom-close"
+                                style="flex: 1; padding: 8px; border: 1px solid #333; border-radius: 6px; background: #1e1e1e; color: #fff;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-premium-footer" style="padding: 16px; display: flex; gap: 12px;">
+                <button onclick="saveProfileData()" class="btn-premium"
+                    style="flex: 1; background: #22c55e; color: white;">
+                    <i class="fas fa-save"></i> Salvar Alteracoes
+                </button>
+                <button onclick="closeProfileModal()" class="btn-premium" style="background: #444; color: white;">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        let tenantId = null;
+        let tenantName = 'Restaurante'; // Nome do restaurante para impressoes
+        let orders = [];
+        let eventSource = null;
+        let isEditing = false;
+        let currentOrderId = null;
+        let currentSettings = {};
+
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            const btn = document.getElementById('btnEditOrderTrigger');
+            if (btn) btn.style.background = isEditing ? '#4ade80' : 'rgba(255,255,255,0.1)';
+            showOrderDetails(currentOrderId);
+        }
+
+        // Extrair slug da URL para contexto do tenant
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        if (!token) window.location.href = '/login';
+
+        async function init() {
+            try {
+                const meRes = await fetch('/api/auth/me', { headers: API_HEADERS });
+                if (!meRes.ok) { window.location.href = '/login'; return; }
+                const meData = await meRes.json();
+                if (meData.tenant) {
+                    tenantId = meData.tenant.id;
+                    currentSettings = meData.tenant.settings || {};
+                    const isOpen = currentSettings.isOpen !== false;
+                    updateStatusUI(isOpen);
+
+                    // Atualizar titulo e logo com nome da loja
+                    if (meData.tenant.name) {
+                        tenantName = meData.tenant.name;
+                        document.getElementById('pageTitle').textContent = `Quadro - ${meData.tenant.name}`;
+                        document.getElementById('storeLogo').textContent = meData.tenant.name;
+                        document.getElementById('profileStoreName').value = meData.tenant.name;
+                    }
+
+                    // Preencher horarios no modal
+                    const schedule = currentSettings.schedule || {};
+                    const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                    days.forEach(day => {
+                        const daySchedule = schedule[day] || {};
+                        if (document.getElementById(`${day}-open`)) {
+                            document.getElementById(`${day}-open`).value = daySchedule.open || '';
+                            document.getElementById(`${day}-close`).value = daySchedule.close || '';
+                        }
+                    });
+                }
+
+                // Se nao tem tenantId mas tem slug na URL, buscar tenant pelo slug
+                if (!tenantId && TENANT_SLUG) {
+                    const tenantRes = await fetch(`/api/tenants/slug/${TENANT_SLUG}`, { headers: API_HEADERS });
+                    if (tenantRes.ok) {
+                        const tenantData = await tenantRes.json();
+                        tenantId = tenantData.id;
+                        // Atualizar titulo e logo com nome do tenant buscado
+                        if (tenantData.name) {
+                            tenantName = tenantData.name;
+                            document.getElementById('pageTitle').textContent = `Quadro - ${tenantData.name}`;
+                            document.getElementById('storeLogo').textContent = tenantData.name;
+                        }
+                    }
+                }
+
+                if (!tenantId) { window.location.href = '/onboarding'; return; }
+
+                await loadOrders();
+                connectSSE();
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadOrders() {
+            try {
+                // Carregar todos os pedidos (sem filtro de data para nao perder pedidos pendentes)
+                const res = await fetch('/api/orders', { headers: API_HEADERS });
+                if (res.ok) {
+                    orders = await res.json();
+                    renderOrders();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function connectSSE() {
+            if (!tenantId) return;
+            eventSource = new EventSource(`/api/events/${tenantId}`);
+
+            eventSource.addEventListener('open', () => {
+                // SSE conectado - nao altera o texto do status da loja
+                console.log('SSE conectado');
+            });
+
+            eventSource.addEventListener('new-order', (e) => {
+                const order = JSON.parse(e.data);
+                orders.unshift(order);
+                renderOrders();
+                showToast('Pedido #' + order.order_number);
+                playNotification();
+            });
+
+            eventSource.addEventListener('order-updated', (e) => {
+                const data = JSON.parse(e.data);
+                const order = orders.find(o => o.id === data.id);
+                if (order) {
+                    order.status = data.status;
+                    renderOrders();
+                }
+            });
+
+            eventSource.onerror = () => {
+                console.log('SSE reconectando...');
+                eventSource.close();
+                setTimeout(connectSSE, 5000);
+            };
+        }
+
+        function renderOrders() {
+            const pending = orders.filter(o => o.status === 'PENDING');
+            const preparing = orders.filter(o => o.status === 'PREPARING' || o.status === 'CONFIRMED');
+            const ready = orders.filter(o => o.status === 'READY' || o.status === 'OUT_FOR_DELIVERY');
+            const delivered = orders.filter(o => o.status === 'DELIVERED');
+
+            document.getElementById('colPending').innerHTML = renderColumn(pending, 'PENDING');
+            document.getElementById('colPreparing').innerHTML = renderColumn(preparing, 'PREPARING');
+            document.getElementById('colReady').innerHTML = renderColumn(ready, 'READY');
+            document.getElementById('colDelivered').innerHTML = renderColumn(delivered, 'DELIVERED');
+
+            updateCounts(pending.length, preparing.length, ready.length, delivered.length);
+            updateStats(pending.length, preparing.length, ready.length);
+        }
+
+        function updateCounts(p, pr, r, d) {
+            document.getElementById('countPending').textContent = p;
+            document.getElementById('countPreparing').textContent = pr;
+            document.getElementById('countReady').textContent = r;
+            document.getElementById('countDelivered').textContent = d;
+        }
+
+        function updateStats(p, pr, r) {
+            document.getElementById('statPending').textContent = p;
+            document.getElementById('statPreparing').textContent = pr;
+            document.getElementById('statReady').textContent = r;
+            const total = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+            document.getElementById('statTotal').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+
+        function renderColumn(items, status) {
+            if (items.length === 0) return '<div class="empty-col"><i class="fas fa-inbox fa-2x"></i><p>Vazio</p></div>';
+
+            return items.map(order => {
+                const orderId = order.id;
+                const isBlacklisted = order.isBlacklisted || false;
+                return `
+                <div class="order-card ${isBlacklisted ? 'blacklisted' : ''}" onclick="showOrderDetails('${orderId}')" style="${isBlacklisted ? 'border-color: #ef4444; background: rgba(239,68,68,0.05);' : ''}">
+                    <div class="order-header">
+                        <span class="order-number">#${order.order_number}</span>
+                        <span class="order-time">${new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="customer-name" style="display: flex; align-items: center; gap: 8px;">
+                        ${order.customer_name}
+                        ${isBlacklisted ? '<span style="background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">GOLPISTA</span>' : ''}
+                    </div>
+                    <div class="order-items">${formatItems(order.items)}</div>
+                    <div class="order-footer">
+                        <span class="order-total">R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+                        ${status !== 'DELIVERED' ? `
+                            <button class="btn-action" onclick="event.stopPropagation(); advanceOrder('${orderId}', '${status}')">
+                                ${getNextStatusLabel(status)} <i class="fas fa-chevron-right"></i>
+                            </button>
+                        ` : '<i class="fas fa-check-circle" style="color: var(--success)"></i>'}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function toggleStatusPopup(e) {
+            e.stopPropagation();
+            document.getElementById('statusPopup').classList.toggle('active');
+        }
+
+        // Fechar popup ao clicar fora
+        window.addEventListener('click', () => {
+            document.getElementById('statusPopup')?.classList.remove('active');
+        });
+
+        function updateStatusUI(isOpen) {
+            const label = document.getElementById('storeStatusLabel');
+            const desc = document.getElementById('storeStatusDesc');
+            const sw = document.getElementById('storeStatusSwitch');
+            const pulse = document.querySelector('.pulse-dot');
+            const sseStatus = document.getElementById('sseStatus');
+
+            if (isOpen) {
+                label.textContent = 'Loja Aberta';
+                label.style.color = 'var(--success)';
+                desc.textContent = 'Clientes podem fazer pedidos';
+                sw.classList.add('active');
+                pulse.style.background = 'var(--success)';
+                sseStatus.textContent = 'Aberta';
+            } else {
+                label.textContent = 'Loja Fechada';
+                label.style.color = 'var(--danger)';
+                desc.textContent = 'Pedidos suspensos no momento';
+                sw.classList.remove('active');
+                pulse.style.background = 'var(--danger)';
+                sseStatus.textContent = 'Fechada';
+            }
+        }
+
+        async function toggleStoreOpen(e) {
+            e.stopPropagation();
+            const sw = document.getElementById('storeStatusSwitch');
+            const newStatus = !sw.classList.contains('active');
+
+            try {
+                // Primeiro buscar settings atuais
+                const resMe = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                const dataMe = await resMe.json();
+                const settings = dataMe.settings || {};
+                settings.isOpen = newStatus;
+
+                const res = await fetch(`/api/tenants/${tenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings })
+                });
+
+                if (res.ok) {
+                    updateStatusUI(newStatus);
+                    showToast(newStatus ? 'Loja aberta!' : 'Loja fechada!', 'success');
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Erro ao atualizar status');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(e.message, 'error');
+            }
+        }
+
+        function formatItems(items) {
+            if (!Array.isArray(items)) return '';
+            return items.slice(0, 2).map(i => `${i.quantity}x ${i.name}`).join(', ') +
+                (items.length > 2 ? ` +${items.length - 2}` : '');
+        }
+
+        function getNextStatusLabel(current) {
+            const labels = { 'PENDING': 'ACEITAR', 'PREPARING': 'PRONTO', 'CONFIRMED': 'PREPARAR', 'READY': 'ENTREGAR', 'OUT_FOR_DELIVERY': 'ENTREGUE' };
+            return labels[current] || 'AVANCAR';
+        }
+
+        async function advanceOrder(orderId, currentStatus) {
+            const flow = { 'PENDING': 'PREPARING', 'PREPARING': 'READY', 'CONFIRMED': 'PREPARING', 'READY': 'DELIVERED', 'OUT_FOR_DELIVERY': 'DELIVERED' };
+            const nextStatus = flow[currentStatus];
+            if (!nextStatus) return;
+
+            try {
+                const res = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: nextStatus })
+                });
+                if (res.ok) {
+                    const order = orders.find(o => o.id === orderId);
+                    if (order) { order.status = nextStatus; renderOrders(); }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function printOrder(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // Show thermal preview modal
+            const address = order.address ? (typeof order.address === 'string' ? JSON.parse(order.address) : order.address) : null;
+            const addressStr = address ? (address.street || address.formatted || '-') : '';
+
+            const previewHtml = `
+                <div id="thermalPreviewModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px;">
+                    <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="color: #fff; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-print" style="color: #4ade80;"></i> Preview - Impressora 80mm
+                            </h3>
+                            <button onclick="closeThermalPreview()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;">&times;</button>
+                        </div>
+                        
+                        <!-- Thermal Receipt Simulation -->
+                        <div id="thermalReceiptPreview" style="background: #fff; color: #000; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; padding: 15px; border-radius: 4px; width: 100%; max-width: 280px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                            <div style="text-align: center; font-weight: bold; font-size: 14px; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+                                ${tenantName.toUpperCase()}
+                            </div>
+                            <div style="text-align: center; font-weight: bold; margin-bottom: 8px;">
+                                PEDIDO #${order.order_number}
+                            </div>
+                            <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px;">
+                                Data: ${new Date(order.created_at).toLocaleString('pt-BR')}
+                            </div>
+                            <div style="margin: 8px 0;">
+                                Cliente: ${order.customer_name}<br>
+                                Tel: ${order.customer_phone}
+                            </div>
+                            ${order.delivery_type === 'DELIVERY' && addressStr ? `
+                                <div style="border-top: 1px dashed #000; padding-top: 8px;">
+                                    <strong>ENTREGA:</strong><br>
+                                    ${addressStr}
+                                    ${order.observation ? `<br><strong>Obs:</strong> ${order.observation}` : ''}
+                                </div>
+                            ` : '<div style="text-align: center; font-weight: bold; margin: 8px 0;">*** RETIRADA ***</div>'}
+                            <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px;">
+                                <strong>ITENS:</strong>
+                            </div>
+                            ${order.items.map(i => {
+                const iAddons = i.addons || i.extras || [];
+                return `
+                                <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                                    <span>${i.quantity}x ${i.name}</span>
+                                    <span>R$ ${(i.price * i.quantity).toFixed(2)}</span>
+                                </div>
+                                ${iAddons.length > 0 ? iAddons.map(e => `
+                                    <div style="font-size: 10px; color: #666; padding-left: 10px;">+ ${e.name || e}</div>
+                                `).join('') : ''}
+                                ${i.observation ? `<div style="font-size: 10px; font-style: italic; padding-left: 10px;">Obs: ${i.observation}</div>` : ''}
+                            `}).join('')}
+                            <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between;">
+                                <span>TOTAL:</span>
+                                <span>R$ ${order.total.toFixed(2)}</span>
+                            </div>
+                            <div style="text-align: center; margin-top: 12px; font-size: 10px; color: #666;">
+                                Obrigado pela preferencia!
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <button onclick="closeThermalPreview()" style="flex: 1; padding: 12px; background: #333; color: #ccc; border: none; border-radius: 8px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="executePrint('${orderId}')" style="flex: 1; padding: 12px; background: #4ade80; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                        <div style="text-align: center; margin-top: 12px; font-size: 0.75rem; color: #666;">
+                            Largura: 80mm (48 caracteres)
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', previewHtml);
+        }
+
+        function closeThermalPreview() {
+            const modal = document.getElementById('thermalPreviewModal');
+            if (modal) modal.remove();
+        }
+
+        function executePrint(orderId) {
+            closeThermalPreview();
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Pedido #${order.order_number}</title>
+                    <style>
+                        @page { size: 80mm auto; margin: 0; }
+                        body { font-family: 'Courier New', monospace; font-size: 20px; padding: 5mm; width: 80mm; margin: 0; }
+                        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
+                        .item { display: flex; justify-content: space-between; margin: 3px 0; }
+                        .total { font-size: 22px; font-weight: bold; border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px; }
+                        .line { border-top: 1px dashed #000; margin: 8px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div style="font-weight:bold;font-size:14px;">${tenantName.toUpperCase()}</div>
+                        <div>PEDIDO #${order.order_number}</div>
+                    </div>
+                    <div>Data: ${new Date(order.created_at).toLocaleString('pt-BR')}</div>
+                    <div class="line"></div>
+                    <div>Cliente: ${order.customer_name}</div>
+                    <div>Tel: ${order.customer_phone}</div>
+                    ${order.delivery_type === 'DELIVERY' ? `<div class="line"></div><div><strong>ENTREGA:</strong></div><div>${order.delivery_address || '-'}</div>${order.observation ? `<div><strong>Obs:</strong> ${order.observation}</div>` : ''}` : '<div style="text-align:center;font-weight:bold;margin:8px 0">*** RETIRADA ***</div>'}
+                    <div class="line"></div>
+                    <div style="font-weight:bold">ITENS:</div>
+                    ${order.items.map(i => {
+                const iAddons = i.addons || i.extras || [];
+                return `
+                        <div class="item"><span>${i.quantity}x ${i.name}</span><span>R$ ${(i.price * i.quantity).toFixed(2)}</span></div>
+                        ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:18px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
+                        ${i.observation ? `<div style="font-size:16px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
+                    `}).join('')}
+                    <div class="total">
+                        <div class="item"><span>TOTAL:</span><span>R$ ${order.total.toFixed(2)}</span></div>
+                    </div>
+                    <div style="text-align:center;margin-top:12px;font-size:10px">Obrigado!</div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 4000);
+        }
+
+        function playNotification() {
+            const audio = document.getElementById('notificationSound');
+            if (audio) audio.play().catch(e => { });
+        }
+
+        // Modal de detalhes do pedido - Premium Dark
+        function showOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            currentOrderId = orderId;
+
+            const modal = document.getElementById('orderDetailModal');
+            const content = document.getElementById('orderDetailContent');
+            const title = document.getElementById('orderModalTitle');
+            const footer = document.getElementById('modalFooter');
+
+            title.textContent = `Pedido #${order.order_number}`;
+
+            if (isEditing) {
+                renderEditMode(order, content, footer);
+            } else {
+                renderViewMode(order, content, footer);
+            }
+
+            modal.classList.add('active');
+        }
+
+        function renderViewMode(order, content, footer) {
+            // Processar endereco (pode ser JSON ou string)
+            let addressStr = order.delivery_address || '';
+            let addressObs = order.observation || '';
+
+            if (order.address) {
+                try {
+                    const addr = typeof order.address === 'string' ? JSON.parse(order.address) : order.address;
+                    if (addr.street) {
+                        addressStr = addr.street;
+                        if (addr.neighbor) addressStr += ' - ' + addr.neighbor;
+                    }
+                    if (addr.observation && !addressObs) {
+                        addressObs = addr.observation;
+                    }
+                } catch (e) {
+                    console.log('Erro parsing address:', e);
+                }
+            }
+
+            let itemsHtml = (order.items || []).map(item => {
+                // Renderizar adicionais/extras do item (pode estar como addons ou extras)
+                const itemAddons = item.addons || item.extras || [];
+                let extrasHtml = '';
+                if (Array.isArray(itemAddons) && itemAddons.length > 0) {
+                    extrasHtml = `<div style="margin-top: 6px; padding-left: 8px; border-left: 2px solid rgba(255,255,255,0.1);">
+                        ${itemAddons.map(e => `
+                            <div style="font-size: 0.8rem; color: #888; display: flex; justify-content: space-between; padding: 2px 0;">
+                                <span>+ ${e.name || e}</span>
+                                ${e.price ? `<span style="color: #666;">R$ ${parseFloat(e.price).toFixed(2).replace('.', ',')}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>`;
+                }
+
+                // Observacao do item
+                let obsHtml = '';
+                if (item.observation) {
+                    obsHtml = `<div style="margin-top: 6px; font-size: 0.8rem; color: #f59e0b; font-style: italic;">
+                        <i class="fas fa-comment-dots"></i> ${item.observation}
+                    </div>`;
+                }
+
+                return `
+                <div class="premium-item-row" style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 1rem; color: #fff;">${item.name} <span style="color: #666; font-size: 0.85rem; font-weight: 400; margin-left: 8px;">x${item.quantity}</span></div>
+                        ${extrasHtml}
+                        ${obsHtml}
+                    </div>
+                    <div style="color: #4ade80; font-weight: 700;">R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}</div>
+                </div>
+            `}).join('');
+
+            content.innerHTML = `
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <div style="background: #2563eb; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-map-marker-alt"></i> ${order.delivery_type === 'PICKUP' ? 'RETIRADA' : 'ENTREGA'}
+                    </div>
+                </div>
+
+                <div class="premium-section-title" style="margin-top: 0;"><i class="fas fa-user"></i> Cliente</div>
+                <div class="premium-info-grid">
+                    <div class="premium-card">
+                        <label>Nome</label>
+                        <div style="font-weight: 700; color: #fff;">${order.customer_name || 'Nao informado'}</div>
+                    </div>
+                    <div class="premium-card">
+                        <label>WhatsApp</label>
+                        <div style="color: #4ade80; display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                            <i class="fab fa-whatsapp"></i> ${order.customer_phone || '-'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="premium-card" style="margin-bottom: 20px;">
+                    <label>Endereco</label>
+                    <div style="font-size: 0.95rem; font-weight: 600; color: #fff; line-height: 1.4;">
+                        ${addressStr || (order.delivery_type === 'PICKUP' ? 'Retirada no Local' : 'Endereco nao informado')}
+                    </div>
+                </div>
+
+                ${addressObs ? `
+                <div class="premium-card" style="margin-bottom: 20px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+                    <label style="color: #f59e0b;"><i class="fas fa-comment-dots"></i> Observacao do Local</label>
+                    <div style="font-size: 0.9rem; color: #eee; line-height: 1.4;">${addressObs}</div>
+                </div>
+                ` : ''}
+
+                <div class="premium-section-title"><i class="fas fa-credit-card"></i> Pagamento</div>
+                <div class="premium-info-grid">
+                    <div class="premium-card">
+                        <label>Forma de Pagamento</label>
+                        <div style="text-transform: uppercase; font-weight: 700; color: #f59e0b;">${order.payment_method || 'dinheiro'}</div>
+                    </div>
+                    <div class="premium-card">
+                        <label>Data/Hora</label>
+                        <div style="font-weight: 700; color: #fff;">${new Date(order.created_at).toLocaleString('pt-BR')}</div>
+                    </div>
+                </div>
+
+                <div class="premium-section-title"><i class="fas fa-list-ul"></i> Itens do Pedido</div>
+                <div class="premium-items-list" style="margin-bottom: 24px;">
+                    ${itemsHtml || '<div style="padding: 12px; color: #666;">Sem itens.</div>'}
+                </div>
+
+                <div class="premium-totals" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="premium-total-row" style="margin-bottom: 12px;">
+                        <span style="color: #999;">Subtotal</span>
+                        <span style="color: #fff; font-weight: 600;">R$ ${(order.subtotal || 0).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="premium-total-row" style="margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                        <span style="color: #999;">Taxa de Entrega</span>
+                        <span style="color: #4ade80; font-weight: 600;">R$ ${(order.delivery_fee || 0).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="premium-total-final">
+                        <span style="font-size: 1.2rem; font-weight: 800; letter-spacing: 1px;">TOTAL</span>
+                        <span style="color: #10b981; font-size: 1.4rem; font-weight: 800;">R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                </div>
+            `;
+
+            const waLink = order.customer_phone ? `https://wa.me/55${order.customer_phone.replace(/\D/g, '')}` : '#';
+            footer.innerHTML = `
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <button class="btn-premium" style="flex: 1; background: #3b82f6; color: white; padding: 14px;" onclick="printOrder('${order.id}')">
+                        <i class="fas fa-print"></i> IMPRIMIR
+                    </button>
+                    ${order.status !== 'DELIVERED' ? `
+                    <button class="btn-premium" style="flex: 1; background: #10b981; color: white; padding: 14px;" onclick="advanceOrder('${order.id}', '${order.status}'); closeOrderModal();">
+                        <i class="fas fa-check"></i> ${getNextStatusLabel(order.status)}
+                    </button>
+                    ` : ''}
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <a href="${waLink}" target="_blank" class="btn-premium" style="flex: 1; background: #059669; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 12px;">
+                        <i class="fab fa-whatsapp"></i> CONVERSAR
+                    </a>
+                    <button class="btn-premium" style="flex: 1; background: #dc2626; color: white; padding: 12px;" onclick="toggleBlacklist()">
+                        <i class="fas fa-ban"></i> MARCAR GOLPISTA
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderEditMode(order, content, footer) {
+            let itemsHtml = (order.items || []).map((item, idx) => `
+                <div class="premium-item-row" style="background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 10px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="flex: 1;">
+                        <input type="text" value="${item.name}" onchange="updateOrderItem(${idx}, 'name', this.value)" style="background:transparent; border:none; color:white; font-weight:700; width: 100%; font-size: 1rem;" placeholder="Nome do item">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="color: #666; font-size: 0.75rem;">Qtd:</span>
+                                <input type="number" value="${item.quantity}" onchange="updateOrderItem(${idx}, 'quantity', this.value)" style="background:#1a1a1a; border:1px solid #333; color:white; width: 50px; border-radius:6px; padding: 4px 6px; text-align: center;">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="color: #666; font-size: 0.75rem;">Preco Un:</span>
+                                <input type="number" step="0.01" value="${item.price}" onchange="updateOrderItem(${idx}, 'price', this.value)" style="background:#1a1a1a; border:1px solid #333; color:#4ade80; width: 70px; border-radius:6px; padding: 4px 6px; text-align: right;">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-premium-mini" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; width: 36px; height: 36px; border-radius: 10px; border:none; cursor:pointer;" onclick="removeOrderItem(${idx})"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="premium-info-grid">
+                    <div class="premium-card">
+                        <label>Nome do Cliente</label>
+                        <input type="text" id="editCustomerName" value="${order.customer_name}" class="edit-input" style="width:100%; background:transparent; border:none; color:white; font-weight:700; outline:none;" placeholder="Nome">
+                    </div>
+                    <div class="premium-card">
+                        <label>WhatsApp</label>
+                        <input type="text" id="editCustomerPhone" value="${order.customer_phone}" class="edit-input" style="width:100%; background:transparent; border:none; color:#4ade80; font-weight:700; outline:none;" placeholder="Fone">
+                    </div>
+                </div>
+
+                <div class="premium-card" style="margin-bottom: 20px;">
+                    <label>Endereco de Entrega</label>
+                    <textarea id="editAddress" style="width:100%; background:transparent; border:none; color:white; font-size: 0.95rem; resize:none; outline:none; height: 60px;" placeholder="Endereco completo">${order.delivery_address || ''}</textarea>
+                </div>
+
+                <div class="premium-card" style="margin-bottom: 20px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+                    <label style="color: #f59e0b;"><i class="fas fa-comment-dots"></i> Observacao do Local</label>
+                    <textarea id="editObservation" style="width:100%; background:transparent; border:none; color:#eee; font-size: 0.9rem; resize:none; outline:none; height: 60px;" placeholder="Ex: Casa verde, proximo ao mercado...">${order.observation || ''}</textarea>
+                </div>
+
+                <div class="premium-section-title"><i class="fas fa-credit-card"></i> Pagamento</div>
+                <div class="premium-info-grid">
+                    <div class="premium-card">
+                        <label>Metodo</label>
+                        <select id="editPaymentMethod" style="width:100%; background:#1a1a1a; border:1px solid #333; color:white; font-weight:700; border-radius: 8px; padding: 8px; outline:none;">
+                            <option value="PIX" ${order.payment_method === 'PIX' ? 'selected' : ''}>PIX</option>
+                            <option value="CASH" ${order.payment_method === 'CASH' ? 'selected' : ''}>DINHEIRO</option>
+                            <option value="CREDIT_CARD" ${order.payment_method === 'CREDIT_CARD' ? 'selected' : ''}>CARTAO CREDITO</option>
+                            <option value="DEBIT_CARD" ${order.payment_method === 'DEBIT_CARD' ? 'selected' : ''}>CARTAO DEBITO</option>
+                        </select>
+                    </div>
+                    <div class="premium-card">
+                        <label>Troco para</label>
+                        <input type="number" id="editPaymentChange" value="${order.payment_change || 0}" style="width:100%; background:transparent; border:none; color:white; font-weight:700; outline:none;" placeholder="0,00">
+                    </div>
+                </div>
+
+                <div class="premium-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fas fa-list-ul"></i> Itens do Pedido</span>
+                </div>
+                
+                <div class="premium-items-list" style="margin-bottom: 12px;">
+                    ${itemsHtml || '<div style="padding: 12px; color: #666; text-align: center;">Vazio</div>'}
+                </div>
+                
+                <button class="btn-premium-add" style="width: 100%; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px dashed #10b981; border-radius: 10px; padding: 12px; margin-bottom: 24px; cursor: pointer; transition: 0.2s;" onclick="addCustomItem()">
+                    <i class="fas fa-plus"></i> ADICIONAR ITEM MANUAL
+                </button>
+
+                <div class="premium-totals" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="premium-total-row">
+                        <span style="color: #999;">Taxa de Entrega</span>
+                        <input type="number" id="editDeliveryFee" step="0.01" value="${order.delivery_fee || 0}" onchange="recalculateTotal()" style="background:#1a1a1a; border:1px solid #333; color:#f59e0b; width: 100px; text-align:right; border-radius:8px; padding: 6px; font-weight: 700;">
+                    </div>
+                    <div class="premium-total-final" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size: 1.1rem; font-weight: 800;">TOTAL</span>
+                        <span style="color: #10b981; font-size: 1.3rem; font-weight: 800;" id="editDisplayTotal">R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                </div>
+            `;
+
+            footer.innerHTML = `
+                <button class="btn-premium" style="background: #10b981; color: white; width: 100%; padding: 16px; font-weight: 800; border-radius: 12px; border:none; cursor:pointer;" onclick="saveOrderChanges()">
+                    <i class="fas fa-save"></i> SALVAR ALTERACOES
+                </button>
+                <button class="btn-premium" style="background: transparent; border: 1px solid #333; color: #666; width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; cursor:pointer;" onclick="toggleEditMode()">
+                    CANCELAR
+                </button>
+            `;
+        }
+
+        function updateOrderItem(idx, field, value) {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+            if (field === 'quantity') value = parseInt(value) || 0;
+            if (field === 'price') value = parseFloat(value) || 0;
+            order.items[idx][field] = value;
+            recalculateTotal();
+            showOrderDetails(currentOrderId);
+        }
+
+        function removeOrderItem(idx) {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+            order.items.splice(idx, 1);
+            recalculateTotal();
+            showOrderDetails(currentOrderId);
+        }
+
+        function addCustomItem() {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+            order.items.push({ name: 'Novo Item', quantity: 1, price: 0 });
+            showOrderDetails(currentOrderId);
+        }
+
+        function recalculateTotal() {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+
+            const subtotal = order.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            const feeInput = document.getElementById('editDeliveryFee');
+            const deliveryFee = feeInput ? parseFloat(feeInput.value) || 0 : (order.delivery_fee || 0);
+
+            order.subtotal = subtotal;
+            order.delivery_fee = deliveryFee;
+            order.total = subtotal + deliveryFee;
+
+            const totalDisplay = document.getElementById('editDisplayTotal');
+            if (totalDisplay) totalDisplay.textContent = `R$ ${order.total.toFixed(2).replace('.', ',')}`;
+        }
+
+        async function saveOrderChanges() {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+
+            // Coletar dados dos inputs
+            const updatedData = {
+                customer_name: document.getElementById('editCustomerName').value,
+                customer_phone: document.getElementById('editCustomerPhone').value,
+                address: document.getElementById('editAddress').value,
+                payment_method: document.getElementById('editPaymentMethod').value,
+                payment_change: parseFloat(document.getElementById('editPaymentChange').value) || 0,
+                observation: document.getElementById('editObservation').value,
+                delivery_fee: parseFloat(document.getElementById('editDeliveryFee').value) || 0,
+                items: order.items,
+                subtotal: order.subtotal,
+                total: order.total
+            };
+
+            try {
+                const res = await fetch(`/api/orders/${order.id}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (res.ok) {
+                    showToast('Pedido atualizado com sucesso!');
+                    isEditing = false;
+                    const btn = document.getElementById('btnEditOrderTrigger');
+                    if (btn) btn.style.background = 'rgba(255,255,255,0.1)';
+                    await loadOrders();
+                    showOrderDetails(order.id);
+                } else {
+                    const err = await res.json();
+                    showToast('Erro: ' + (err.error || 'Nao foi possivel salvar'));
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Erro de conexao ao salvar');
+            }
+        }
+
+        function closeOrderModal() {
+            isEditing = false;
+            const btn = document.getElementById('btnEditOrderTrigger');
+            if (btn) btn.style.background = 'rgba(255,255,255,0.1)';
+            document.getElementById('orderDetailModal').classList.remove('active');
+        }
+
+        function toggleBlacklist() {
+            const order = orders.find(o => o.id === currentOrderId);
+            if (!order) return;
+
+            const phone = order.customer_phone;
+            const name = order.customer_name;
+
+            // Create confirmation modal
+            const confirmHtml = `
+                <div id="blacklistConfirmModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px;">
+                    <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%;">
+                        <h3 style="color: #ef4444; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-exclamation-triangle"></i> Marcar como Golpista
+                        </h3>
+                        <p style="color: #ccc; margin-bottom: 16px;">
+                            Tem certeza que deseja bloquear <strong style="color: #fff;">${name}</strong> (${phone})?
+                        </p>
+                        <p style="color: #999; font-size: 0.85rem; margin-bottom: 20px;">
+                            Este telefone nao podera fazer novos pedidos.
+                        </p>
+                        <div style="margin-bottom: 20px;">
+                            <label style="color: #666; font-size: 0.8rem; display: block; margin-bottom: 6px;">Motivo (opcional)</label>
+                            <input type="text" id="blacklistReason" placeholder="Ex: Pagamento nao concluido, trote..." style="width: 100%; background: #121212; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="closeBlacklistModal()" style="flex: 1; padding: 12px; background: #333; color: #ccc; border: none; border-radius: 8px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="confirmBlacklist('${phone}')" style="flex: 1; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                <i class="fas fa-ban"></i> Bloquear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', confirmHtml);
+        }
+
+        function closeBlacklistModal() {
+            const modal = document.getElementById('blacklistConfirmModal');
+            if (modal) modal.remove();
+        }
+
+        async function confirmBlacklist(phone) {
+            const reason = document.getElementById('blacklistReason')?.value || '';
+
+            try {
+                const res = await fetch('/api/blacklist', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, reason })
+                });
+
+                if (res.ok) {
+                    showToast('Telefone adicionado a blacklist!');
+                    closeBlacklistModal();
+                    closeOrderModal();
+                    await loadOrders();
+                } else {
+                    const err = await res.json();
+                    showToast('Erro: ' + (err.error || 'Nao foi possivel bloquear'));
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Erro de conexao');
+            }
+        }
+
+        // Check if customer is blacklisted when rendering order card
+        async function checkBlacklist(phone) {
+            try {
+                const res = await fetch(`/api/blacklist/check/${encodeURIComponent(phone)}`, {
+                    headers: API_HEADERS
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    return data.isBlacklisted;
+                }
+            } catch (e) {
+                console.error('Blacklist check failed:', e);
+            }
+            return false;
+        }
+
+        // ========================================
+        // Revenue Dashboard Popup
+        // ========================================
+        async function showRevenuePopup() {
+            document.getElementById('revenuePopupModal').classList.add('active');
+
+            try {
+                // Calculate 7 days ago
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 6);
+
+                const startStr = startDate.toISOString().split('T')[0];
+                const endStr = endDate.toISOString().split('T')[0];
+
+                const res = await fetch(`/api/reports/sales?startDate=${startStr}&endDate=${endStr}`, {
+                    headers: API_HEADERS
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    renderRevenuePopup(data, startDate, endDate);
+                } else {
+                    document.getElementById('revenuePopupContent').innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #ef4444;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                            <p>Erro ao carregar dados</p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error('Revenue popup error:', e);
+                document.getElementById('revenuePopupContent').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                        <p>Erro de conexao</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderRevenuePopup(data, startDate, endDate) {
+            // Calculate daily revenue from orders
+            const dailyData = {};
+            const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+
+            // Initialize 7 days
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                const key = d.toISOString().split('T')[0];
+                dailyData[key] = { date: d, total: 0, orders: 0, dayName: days[d.getDay()] };
+            }
+
+            // Popular com dados da API (salesByPeriod) - prioridade
+            const hasApiData = data.salesByPeriod && Array.isArray(data.salesByPeriod) && data.salesByPeriod.length > 0;
+
+            if (hasApiData) {
+                // Usar dados da API
+                for (const period of data.salesByPeriod) {
+                    if (dailyData[period.period]) {
+                        dailyData[period.period].total = period.revenue || 0;
+                        dailyData[period.period].orders = period.orders || 0;
+                    }
+                }
+            } else {
+                // Fallback: usar dados locais do orders array
+                for (const order of orders) {
+                    const orderDate = new Date(order.created_at).toISOString().split('T')[0];
+                    if (dailyData[orderDate]) {
+                        dailyData[orderDate].total += order.total || 0;
+                        dailyData[orderDate].orders += 1;
+                    }
+                }
+            }
+
+            // Sum from orders data (using today's calculated totals)
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayTotal = dailyData[todayStr]?.total || 0;
+            const todayOrders = dailyData[todayStr]?.orders || 0;
+
+            // Get summary stats - usar campos corretos da API (data.totals)
+            const weekTotal = data.totals?.total_revenue || Object.values(dailyData).reduce((sum, d) => sum + d.total, 0);
+            const weekOrders = data.totals?.total_orders || Object.values(dailyData).reduce((sum, d) => sum + d.orders, 0);
+            const avgTicket = weekOrders > 0 ? weekTotal / weekOrders : 0;
+
+            // Find max for bar chart scale
+            const maxDaily = Math.max(...Object.values(dailyData).map(d => d.total), todayTotal) || 1;
+
+            // Build bar chart HTML
+            let barsHtml = Object.entries(dailyData).map(([key, d], idx) => {
+                const isToday = key === new Date().toISOString().split('T')[0];
+                const value = d.total;
+                const height = Math.max((value / maxDaily) * 100, 5);
+                const hasValue = value > 0;
+                return `
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div style="width: 100%; height: 120px; display: flex; align-items: flex-end; justify-content: center;">
+                            <div style="width: 70%; background: ${isToday ? '#4ade80' : (hasValue ? 'rgba(74, 222, 128, 0.6)' : 'rgba(74, 222, 128, 0.2)')}; height: ${height}%; border-radius: 6px 6px 0 0; transition: 0.3s;"></div>
+                        </div>
+                        <div style="font-size: 0.7rem; color: ${isToday ? '#4ade80' : '#666'}; margin-top: 6px; font-weight: ${isToday ? '700' : '400'};">${d.dayName}</div>
+                        <div style="font-size: 0.65rem; color: ${hasValue ? '#4ade80' : '#444'};">R$${value.toFixed(0)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('revenuePopupContent').innerHTML = `
+                <!-- Summary Cards -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;">
+                    <div style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #4ade80;">R$ ${weekTotal.toFixed(2).replace('.', ',')}</div>
+                        <div style="font-size: 0.75rem; color: #666; text-transform: uppercase;">Ultimos 7 Dias</div>
+                    </div>
+                    <div style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #60a5fa;">${weekOrders}</div>
+                        <div style="font-size: 0.75rem; color: #666; text-transform: uppercase;">Pedidos</div>
+                    </div>
+                    <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #fbbf24;">R$ ${avgTicket.toFixed(2).replace('.', ',')}</div>
+                        <div style="font-size: 0.75rem; color: #666; text-transform: uppercase;">Ticket Medio</div>
+                    </div>
+                </div>
+
+                <!-- Today Highlight -->
+                <div style="background: linear-gradient(135deg, #0a3d1d, #0d4b24); border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid #4ade80;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 4px;">Faturado Hoje</div>
+                            <div style="font-size: 2.5rem; font-weight: 800; color: #4ade80;">R$ ${todayTotal.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 2rem; font-weight: 800; color: white;">${todayOrders}</div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">pedidos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7-Day Bar Chart -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 20px;">
+                    <div style="font-size: 0.8rem; color: #4ade80; font-weight: 700; margin-bottom: 16px; text-transform: uppercase;">
+                        <i class="fas fa-chart-bar"></i> Ultimos 7 Dias
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: space-between;">
+                        ${barsHtml}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <a href="relatorios" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 10px; color: #fff; text-decoration: none; font-weight: 600;">
+                        <i class="fas fa-chart-pie"></i> Ver Relatorios Completos
+                    </a>
+                </div>
+            `;
+        }
+
+        function closeRevenuePopup() {
+            document.getElementById('revenuePopupModal').classList.remove('active');
+        }
+
+        // ========================================
+        // BUFFET DO DIA - Gerenciamento
+        // ========================================
+        let buffetItems = [];
+
+        function openBuffetModal() {
+            document.getElementById('buffetModal').classList.add('active');
+            loadBuffetItems();
+        }
+
+        function closeBuffetModal() {
+            document.getElementById('buffetModal').classList.remove('active');
+        }
+
+        async function loadBuffetItems() {
+            try {
+                const res = await fetch(`/api/buffet/tenant/${tenantId}/todos`, { headers: API_HEADERS });
+                if (res.ok) {
+                    const data = await res.json();
+                    buffetItems = data.itens || data || [];
+                    renderBuffetItems();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar buffet:', e);
+            }
+        }
+
+        function renderBuffetItems() {
+            const container = document.getElementById('buffetItemsList');
+            if (buffetItems.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-utensils" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <p>Nenhum item cadastrado</p>
+                        <p style="font-size: 0.85rem;">Adicione itens do buffet acima</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = buffetItems.map(item => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: ${item.ativo ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border: 2px solid ${item.ativo ? '#22c55e' : '#ef4444'}; border-radius: 10px;">
+                    <div style="flex: 1; font-weight: 600;">${item.nome}</div>
+                    <button onclick="toggleBuffetItem('${item.id}')" style="background: ${item.ativo ? '#22c55e' : '#666'}; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 0.8rem;">
+                        ${item.ativo ? '<i class="fas fa-check"></i> Ativo' : '<i class="fas fa-times"></i> Inativo'}
+                    </button>
+                    <button onclick="deleteBuffetItem('${item.id}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function addBuffetItem() {
+            const input = document.getElementById('newBuffetItem');
+            const nome = input.value.trim();
+            if (!nome) return;
+
+            try {
+                const res = await fetch('/api/buffet', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tenantId, nome })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    loadBuffetItems();
+                    showToast('Item adicionado ao buffet!');
+                }
+            } catch (e) {
+                console.error('Erro ao adicionar item:', e);
+            }
+        }
+
+        async function toggleBuffetItem(id) {
+            try {
+                await fetch(`/api/buffet/${id}/toggle`, { method: 'PATCH', headers: API_HEADERS });
+                loadBuffetItems();
+            } catch (e) {
+                console.error('Erro ao toggle item:', e);
+            }
+        }
+
+        async function deleteBuffetItem(id) {
+            if (!confirm('Remover este item do buffet?')) return;
+            try {
+                await fetch(`/api/buffet/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadBuffetItems();
+                showToast('Item removido!');
+            } catch (e) {
+                console.error('Erro ao remover item:', e);
+            }
+        }
+
+        // ========================================
+        // ADICIONAIS DE ACAI - Gerenciamento
+        // ========================================
+        let acaiItems = [];
+
+        function openAcaiModal() {
+            document.getElementById('acaiModal').classList.add('active');
+            loadAcaiItems();
+        }
+
+        function closeAcaiModal() {
+            document.getElementById('acaiModal').classList.remove('active');
+        }
+
+        async function loadAcaiItems() {
+            try {
+                const res = await fetch(`/api/acai/adicionais/tenant/${tenantId}/todos`, { headers: API_HEADERS });
+                if (res.ok) {
+                    const data = await res.json();
+                    acaiItems = data.adicionais || data || [];
+                    renderAcaiItems();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar acai:', e);
+            }
+        }
+
+        function renderAcaiItems() {
+            const container = document.getElementById('acaiItemsList');
+            if (acaiItems.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-leaf" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <p>Nenhum adicional cadastrado</p>
+                        <p style="font-size: 0.85rem;">Adicione adicionais de acai acima</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = acaiItems.map(item => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: ${item.ativo ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border: 2px solid ${item.ativo ? '#8b5cf6' : '#ef4444'}; border-radius: 10px;">
+                    <div style="flex: 1; font-weight: 600;">${item.nome}</div>
+                    <div style="font-weight: 700; color: #22c55e;">R$ ${(item.preco || 0).toFixed(2).replace('.', ',')}</div>
+                    <button onclick="toggleAcaiItem('${item.id}')" style="background: ${item.ativo ? '#8b5cf6' : '#666'}; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 0.8rem;">
+                        ${item.ativo ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
+                    </button>
+                    <button onclick="deleteAcaiItem('${item.id}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function addAcaiItem() {
+            const nameInput = document.getElementById('newAcaiName');
+            const priceInput = document.getElementById('newAcaiPrice');
+            const nome = nameInput.value.trim();
+            const preco = parseFloat(priceInput.value) || 0;
+            if (!nome) return;
+
+            try {
+                const res = await fetch('/api/acai/adicionais', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tenantId, nome, preco })
+                });
+                if (res.ok) {
+                    nameInput.value = '';
+                    priceInput.value = '';
+                    loadAcaiItems();
+                    showToast('Adicional cadastrado!');
+                }
+            } catch (e) {
+                console.error('Erro ao adicionar adicional:', e);
+            }
+        }
+
+        async function toggleAcaiItem(id) {
+            try {
+                await fetch(`/api/acai/adicionais/${id}/toggle`, { method: 'PATCH', headers: API_HEADERS });
+                loadAcaiItems();
+            } catch (e) {
+                console.error('Erro ao toggle adicional:', e);
+            }
+        }
+
+        async function deleteAcaiItem(id) {
+            if (!confirm('Remover este adicional?')) return;
+            try {
+                await fetch(`/api/acai/adicionais/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                loadAcaiItems();
+                showToast('Adicional removido!');
+            } catch (e) {
+                console.error('Erro ao remover adicional:', e);
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.textContent = msg;
+            toast.className = 'toast visible ' + type;
+
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        async function saveProfileData() {
+            if (!tenantId) return;
+
+            const name = document.getElementById('profileStoreName').value;
+            const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+            const schedule = {};
+            days.forEach(day => {
+                schedule[day] = {
+                    open: document.getElementById(`${day}-open`)?.value || '',
+                    close: document.getElementById(`${day}-close`)?.value || ''
+                };
+            });
+
+            const newSettings = {
+                ...currentSettings,
+                schedule: schedule
+            };
+
+            try {
+                const res = await fetch(`/api/tenants/${tenantId}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, settings: newSettings })
+                });
+
+                if (res.ok) {
+                    currentSettings = newSettings;
+                    tenantName = name;
+                    document.getElementById('storeLogo').textContent = name;
+                    document.getElementById('pageTitle').textContent = `Quadro - ${name}`;
+                    showToast('Perfil atualizado!');
+                    closeProfileModal();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Erro ao salvar perfil');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao salvar perfil');
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
