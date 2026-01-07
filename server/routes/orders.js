@@ -243,10 +243,13 @@ export default function (db, broadcast) {
                     order_number: orderNumber,
                     items: itemsWithDetails,
                     total,
+                    delivery_fee: deliveryFee,
                     customer_name: customerName,
                     customer_phone: customerPhone,
-                    address: address ? (typeof address === 'string' ? address : address.street) : 'Retirada',
-                    payment_method: paymentMethod
+                    address: address || null, // Objeto completo com lat, lng, street, number, etc.
+                    payment_method: paymentMethod,
+                    change_for: req.body.payment_change || null,
+                    observation: observation || null
                 });
             } catch (err) {
                 console.error('Erro ao enviar para grupo WhatsApp:', err.message);

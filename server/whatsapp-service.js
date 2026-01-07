@@ -502,25 +502,18 @@ class WhatsAppService {
             summaryLines.push('');
 
             // Adicionar dados do PIX se for o caso
-            if (orderData.payment_method === 'PIX' && settings.pixKey) {
-                const { generatePixPayload } = await import('./utils/pix.js');
-                const pixPayload = generatePixPayload({
-                    pixKey: settings.pixKey,
-                    pixKeyType: settings.pixKeyType || 'PHONE',
-                    merchantName: restaurantName,
-                    merchantCity: settings.city || 'SAO PAULO',
-                    amount: total,
-                    txId: `ORD${orderData.order_number}`,
-                    description: `Pedido ${orderData.order_number}`
-                });
-
+            const paymentMethodLower = (orderData.payment_method || '').toLowerCase();
+            if (paymentMethodLower.includes('pix') && settings.pixKey) {
+                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
                 summaryLines.push('*DADOS PARA PAGAMENTO PIX*');
-                summaryLines.push(`Chave PIX: ${settings.pixKey}`);
                 summaryLines.push('');
-                summaryLines.push('Copia e Cola:');
-                summaryLines.push('```' + pixPayload + '```');
+                summaryLines.push(`Chave PIX: ${settings.pixKey}`);
+                if (settings.pixName) {
+                    summaryLines.push(`Titular: ${settings.pixName}`);
+                }
                 summaryLines.push('');
                 summaryLines.push('_Pague agora para agilizar o preparo!_');
+                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
                 summaryLines.push('');
             }
 
