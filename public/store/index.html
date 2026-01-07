@@ -2690,11 +2690,20 @@
                 observation: item.obs || ''
             }));
 
+            // Parsear coordenadas salvas como string
+            let parsedCoords = null;
+            const coordsValue = document.getElementById('cust-coordinates')?.value;
+            if (coordsValue) {
+                try { parsedCoords = JSON.parse(coordsValue); } catch (e) {}
+            }
+
             const address = checkoutType === 'entrega' ? {
                 street: document.getElementById('cust-address').value,
-                neighbor: document.getElementById('cust-neighbor').value,
-                observation: document.getElementById('cust-obs-address').value,
-                coordinates: document.getElementById('cust-coordinates').value
+                number: '', // Numero ja esta incluido em street
+                neighborhood: document.getElementById('cust-neighbor').value,
+                reference: document.getElementById('cust-obs-address').value,
+                lat: parsedCoords?.lat || customerLat || null,
+                lng: parsedCoords?.lng || customerLng || null
             } : null;
 
             let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);

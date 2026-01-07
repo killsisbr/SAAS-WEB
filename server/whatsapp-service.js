@@ -555,6 +555,10 @@ class WhatsAppService {
 
             const groupChat = await client.getChatById(formattedGroupId);
 
+            // DEBUG: Log dos dados recebidos
+            console.log(`[WhatsApp Group] Pedido #${orderData.order_number} - Address:`, JSON.stringify(orderData.address));
+            console.log(`[WhatsApp Group] Observation:`, orderData.observation);
+
             // Montar mensagem do grupo (FORMATO PREMIUM)
             let itemsList = '';
             let subtotal = 0;
@@ -609,23 +613,32 @@ class WhatsAppService {
 
             let addressText = '';
             let mapsLink = '';
+            let addressObservation = '';
 
             if (orderData.address) {
                 if (typeof orderData.address === 'string') {
                     addressText = orderData.address;
                 } else {
                     const { street, number, neighborhood, city, complement, reference, lat, lng } = orderData.address;
-                    addressText = `${street}, ${number}`;
+
+                    // Montar endereco sem undefined
+                    let parts = [];
+                    if (street) parts.push(street);
+                    if (number) parts.push(number);
+                    addressText = parts.join(', ');
+
                     if (neighborhood) addressText += ` - ${neighborhood}`;
                     if (city) addressText += ` - ${city}`;
                     if (complement) addressText += `\nComplemento: ${complement}`;
-                    if (reference) addressText += `\nReferência: ${reference}`;
+
+                    // Guardar reference para usar como observacao
+                    if (reference) addressObservation = reference;
 
                     if (lat && lng) {
                         mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
                     }
                 }
-                groupLines.push(`Endereço: ${addressText}`);
+                groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
             }
 
             groupLines.push(`Pagamento: ${orderData.payment_method || 'Não informado'}`);
@@ -654,9 +667,10 @@ class WhatsAppService {
                 groupLines.push(`📍 *Localização*: ${mapsLink}`);
             }
 
-            // Observações do local
-            if (orderData.observation) {
-                groupLines.push(`📝 Observações do local: ${orderData.observation}`);
+            // Observações do local (usar orderData.observation ou address.reference)
+            const obsLocal = orderData.observation || addressObservation;
+            if (obsLocal) {
+                groupLines.push(`📝 Observações do local: ${obsLocal}`);
             }
 
             groupLines.push(''); // Final newline
