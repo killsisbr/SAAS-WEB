@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brutus Burger | Multiverse Themes</title>
+    <title>Carregando...</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;700&display=swap"
@@ -301,7 +301,7 @@
         onclick="toggleSidebar()"></div>
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 z-[151] p-8 flex flex-col shadow-2xl">
         <div class="flex justify-between items-center mb-12">
-            <h2 class="bebas text-4xl text-brand tracking-widest">MENU BRUTAL</h2>
+            <h2 class="bebas text-4xl text-brand tracking-widest">MENU <span id="menu-store-name"></span></h2>
             <button onclick="toggleSidebar()" class="neo-card p-2 rounded-custom">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
@@ -439,7 +439,7 @@
             <div class="w-24 h-2 bg-zinc-300 rounded-full mx-auto mb-10 cursor-pointer"
                 onclick="closeModal('cart-modal')"></div>
             <div class="bebas text-6xl mb-10 flex justify-between items-baseline leading-none">
-                PEDIDO <span class="text-brand">#BRUTUS</span>
+                PEDIDO <span class="text-brand" id="cart-store-name">#</span>
             </div>
             <div id="cart-list" class="flex-1 overflow-y-auto space-y-6 no-scrollbar mb-10 px-2"></div>
             <div class="border-t-4 border-dark pt-10">
@@ -1154,6 +1154,12 @@
         function renderStore() {
             // Atualizar titulo e nome da loja
             document.title = `${storeData.name} | DeliveryHub`;
+
+            // Atualizar nomes dinamicos no menu e carrinho
+            const menuNameEl = document.getElementById('menu-store-name');
+            const cartNameEl = document.getElementById('cart-store-name');
+            if (menuNameEl) menuNameEl.textContent = storeData.name;
+            if (cartNameEl) cartNameEl.textContent = '#' + storeData.name;
 
             // Logo ou nome em texto
             const logoImg = document.getElementById('store-logo-img');

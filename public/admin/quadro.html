@@ -2295,6 +2295,23 @@
 
         function openProfileModal() {
             document.getElementById('profileModal').classList.add('active');
+
+            // Populate fields
+            const nameInput = document.getElementById('profileStoreName');
+            if (nameInput && tenantName) nameInput.value = tenantName;
+
+            if (currentSettings && currentSettings.schedule) {
+                const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                days.forEach(day => {
+                    const sch = currentSettings.schedule[day];
+                    if (sch) {
+                        const openEl = document.getElementById(`${day}-open`);
+                        const closeEl = document.getElementById(`${day}-close`);
+                        if (openEl) openEl.value = sch.open || '';
+                        if (closeEl) closeEl.value = sch.close || '';
+                    }
+                });
+            }
         }
 
         function closeProfileModal() {

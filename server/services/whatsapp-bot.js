@@ -380,8 +380,15 @@ export class WhatsAppBot {
         }
 
         // Link simples com telefone (mais curto e limpo)
+        // Link simples com telefone (mais curto e limpo)
         const cleanPhone = phone.replace(/\D/g, '');
-        const orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+
+        let orderLink;
+        if (this.settings.storeLink) {
+            orderLink = `${this.settings.storeLink}?p=${cleanPhone}`;
+        } else {
+            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+        }
 
         const message = `Ola! Bem-vindo ao ${this.restaurantName}!\n\n` +
             `Faca seu pedido pelo link:\n${orderLink}\n\n` +
@@ -395,7 +402,13 @@ export class WhatsAppBot {
      */
     async sendOrderLink(chat, phone) {
         const cleanPhone = phone.replace(/\D/g, '');
-        const orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+
+        let orderLink;
+        if (this.settings.storeLink) {
+            orderLink = `${this.settings.storeLink}?p=${cleanPhone}`;
+        } else {
+            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+        }
 
         const message = `Clique no link para fazer seu pedido:\n${orderLink}`;
         await chat.sendMessage(message);
