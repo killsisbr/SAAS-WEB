@@ -562,7 +562,7 @@ class WhatsAppService {
 
             const groupChat = await client.getChatById(formattedGroupId);
 
-            // Montar mensagem do grupo
+            // Montar mensagem do grupo (FORMATO PREMIUM)
             let itemsList = '';
             let subtotal = 0;
 
@@ -570,31 +570,89 @@ class WhatsAppService {
             items.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 subtotal += itemTotal;
-                itemsList += `- ${item.quantity}x ${item.name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+                itemsList += `• ${item.quantity}x ${item.name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+
+                if (item.addons && item.addons.length > 0) {
+                    item.addons.forEach(addon => {
+                        const addonTotal = (addon.price || 0) * item.quantity;
+                        subtotal += addonTotal;
+                        itemsList += `  + ${addon.name} - R$ ${addonTotal.toFixed(2).replace('.', ',')}\n`;
+                    });
+                }
+
+                if (item.observation) {
+                    itemsList += `  📝 Obs: ${item.observation}\n`;
+                }
             });
 
-            const total = orderData.total || subtotal;
+            const deliveryFee = orderData.delivery_fee || 0;
+            const total = parseFloat(orderData.total || 0);
+            const calculatedTotal = subtotal + deliveryFee;
+            // Usar o maior valor (caso orderData.total ja venha com taxa) ou recalcular se necessario
+            const finalTotal = total > 0 ? total : calculatedTotal;
 
             const groupLines = [];
-            groupLines.push(`*NOVO PEDIDO #${orderData.order_number}*`);
+            groupLines.push(`🍔 *NOVO PEDIDO #${orderData.order_number}*`);
+            groupLines.push('__________________________________');
             groupLines.push('');
-            groupLines.push('*ITENS:*');
+            groupLines.push('📦 *ITENS DO PEDIDO*');
             groupLines.push(itemsList.trim());
+            groupLines.push('__________________________________');
             groupLines.push('');
-            groupLines.push(`*TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*`);
+            groupLines.push('💰 *VALORES*');
+            groupLines.push(`Subtotal dos itens: R$ ${subtotal.toFixed(2).replace('.', ',')}`);
+            if (deliveryFee > 0) {
+                groupLines.push(`Taxa de entrega: R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+            }
+            groupLines.push(`*TOTAL DO PEDIDO: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
+            groupLines.push('__________________________________');
             groupLines.push('');
-            groupLines.push('*CLIENTE:*');
+            groupLines.push('👤 *DADOS DO CLIENTE*');
             groupLines.push(`Nome: ${orderData.customer_name}`);
-            groupLines.push(`Telefone: ${orderData.customer_phone}`);
+
+            let addressText = '';
+            let mapsLink = '';
 
             if (orderData.address) {
-                const addr = typeof orderData.address === 'string'
-                    ? orderData.address
-                    : orderData.address.street || '';
-                groupLines.push(`Endereco: ${addr}`);
+                if (typeof orderData.address === 'string') {
+                    addressText = orderData.address;
+                } else {
+                    const { street, number, neighborhood, city, complement, reference, lat, lng } = orderData.address;
+                    addressText = `${street}, ${number}`;
+                    if (neighborhood) addressText += ` - ${neighborhood}`;
+                    if (city) addressText += ` - ${city}`;
+                    if (complement) addressText += `\nComplemento: ${complement}`;
+                    if (reference) addressText += `\nReferência: ${reference}`;
+
+                    if (lat && lng) {
+                        mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                    }
+                }
+                groupLines.push(`Endereço: ${addressText}`);
             }
 
-            groupLines.push(`Pagamento: ${orderData.payment_method || 'Nao informado'}`);
+            groupLines.push(`Pagamento: ${orderData.payment_method || 'Não informado'}`);
+            if (orderData.change_for) {
+                groupLines.push(`Troco para: R$ ${parseFloat(orderData.change_for).toFixed(2).replace('.', ',')}`);
+            }
+
+            const cleanPhone = orderData.customer_phone?.replace(/\D/g, '');
+            if (cleanPhone) {
+                groupLines.push(`📱 *WhatsApp do Cliente:*`);
+                groupLines.push(`https://wa.me/${cleanPhone}`);
+            }
+
+            if (mapsLink) {
+                groupLines.push(`📍 *Localização:*`);
+                groupLines.push(mapsLink);
+            }
+
+            if (orderData.observation) {
+                groupLines.push(`📝 *Observações do local:*`);
+                groupLines.push(orderData.observation);
+            }
+
+            groupLines.push(''); // Final newline
 
             const message = groupLines.join('\n');
 
