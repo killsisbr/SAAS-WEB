@@ -2673,99 +2673,130 @@
         }
 
         // ===== ENVIAR WHATSAPP =====
+        let isSendingOrder = false; // Flag para evitar duplo clique
+
         async function sendFinalWhatsApp() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
+            // Evitar duplo clique
+            if (isSendingOrder) {
+                console.log('Pedido já está sendo enviado...');
+                return;
+            }
+            isSendingOrder = true;
 
-            const storeName = storeData?.name || 'PEDIDO';
-            const paymentLabels = { pix: 'PIX', cartao: 'Cartao (Maquininha)', dinheiro: 'Dinheiro' };
-
-            // Preparar dados do pedido para a API
-            const items = cart.map(item => ({
-                productId: item.productId || item.id,
-                name: item.title,
-                price: item.price,
-                quantity: item.qty,
-                addons: item.extras.map(e => ({ name: e.name, price: e.price || 0 })),
-                observation: item.obs || ''
-            }));
-
-            // Parsear coordenadas salvas como string
-            let parsedCoords = null;
-            const coordsValue = document.getElementById('cust-coordinates')?.value;
-            if (coordsValue) {
-                try { parsedCoords = JSON.parse(coordsValue); } catch (e) {}
+            // Desabilitar botão e mostrar loading
+            const sendBtn = document.querySelector('#confirmation-modal button[onclick="sendFinalWhatsApp()"]');
+            const originalBtnText = sendBtn?.innerHTML || '';
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<span class="animate-pulse">ENVIANDO...</span>';
+                sendBtn.style.opacity = '0.7';
             }
 
-            const address = checkoutType === 'entrega' ? {
-                street: document.getElementById('cust-address').value,
-                number: '', // Numero ja esta incluido em street
-                neighborhood: document.getElementById('cust-neighbor').value,
-                reference: document.getElementById('cust-obs-address').value,
-                lat: parsedCoords?.lat || customerLat || null,
-                lng: parsedCoords?.lng || customerLng || null
-            } : null;
-
-            let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);
-
-            // Mapear metodo de pagamento para valores aceitos pelo DB
-            const paymentMethodMap = {
-                pix: 'PIX',
-                cartao: 'CREDIT_CARD',
-                dinheiro: 'CASH'
-            };
-
-            const orderData = {
-                tenantId: storeData?.id,
-                customerName: name,
-                customerPhone: phone,
-                whatsappId: whatsappFromUrl || null, // Incluir whatsappId se veio do bot
-                orderToken: sessionStorage.getItem('orderToken') || null, // Token JWT para validacao
-                items: items,
-                deliveryType: checkoutType === 'entrega' ? 'DELIVERY' : 'PICKUP',
-                deliveryFee: checkoutType === 'entrega' ? deliveryFee : 0, // Taxa de entrega
-                address: address,
-                paymentMethod: paymentMethodMap[paymentMethod] || 'CASH',
-                observation: ''
-            };
-
-            // Salvar pedido via API
             try {
-                const res = await fetch('/api/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
+                const name = document.getElementById('cust-name').value.trim();
+                const phone = document.getElementById('cust-phone').value.trim();
 
-                const result = await res.json();
+                const storeName = storeData?.name || 'PEDIDO';
+                const paymentLabels = { pix: 'PIX', cartao: 'Cartao (Maquininha)', dinheiro: 'Dinheiro' };
 
-                if (result.success) {
-                    console.log('Pedido salvo:', result.order);
+                // Preparar dados do pedido para a API
+                const items = cart.map(item => ({
+                    productId: item.productId || item.id,
+                    name: item.title,
+                    price: item.price,
+                    quantity: item.qty,
+                    addons: item.extras.map(e => ({ name: e.name, price: e.price || 0 })),
+                    observation: item.obs || ''
+                }));
 
-                    // Salvar dados do cliente no cache para proximas visitas
-                    customerCache.save({
-                        name: name,
-                        phone: phone,
-                        address: address?.street || '',
-                        neighbor: address?.neighbor || '',
-                        obsAddress: address?.observation || '',
-                        coordinates: address?.coordinates ? JSON.parse(address.coordinates) : null,
-                        lastDeliveryFee: checkoutType === 'entrega' ? deliveryFee : null
-                    });
-                    console.log('Cache do cliente salvo');
-
-                    // Notificacao sera enviada automaticamente via backend (WhatsApp bot)
-                    // Nao precisa abrir link manualmente
-
-                    closeModal('confirmation-modal');
-                    openModal('success-modal');
-                } else {
-                    showToast('ERRO AO ENVIAR PEDIDO!');
-                    console.error('Erro:', result.error);
+                // Parsear coordenadas salvas como string
+                let parsedCoords = null;
+                const coordsValue = document.getElementById('cust-coordinates')?.value;
+                if (coordsValue) {
+                    try { parsedCoords = JSON.parse(coordsValue); } catch (e) { }
                 }
-            } catch (error) {
-                console.error('Erro ao enviar pedido:', error);
-                showToast('ERRO DE CONEXAO!');
+
+                const address = checkoutType === 'entrega' ? {
+                    street: document.getElementById('cust-address').value,
+                    number: '', // Numero ja esta incluido em street
+                    neighborhood: document.getElementById('cust-neighbor').value,
+                    reference: document.getElementById('cust-obs-address').value,
+                    lat: parsedCoords?.lat || customerLat || null,
+                    lng: parsedCoords?.lng || customerLng || null
+                } : null;
+
+                let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+
+                // Mapear metodo de pagamento para valores aceitos pelo DB
+                const paymentMethodMap = {
+                    pix: 'PIX',
+                    cartao: 'CREDIT_CARD',
+                    dinheiro: 'CASH'
+                };
+
+                const orderData = {
+                    tenantId: storeData?.id,
+                    customerName: name,
+                    customerPhone: phone,
+                    whatsappId: whatsappFromUrl || null, // Incluir whatsappId se veio do bot
+                    orderToken: sessionStorage.getItem('orderToken') || null, // Token JWT para validacao
+                    items: items,
+                    deliveryType: checkoutType === 'entrega' ? 'DELIVERY' : 'PICKUP',
+                    deliveryFee: checkoutType === 'entrega' ? deliveryFee : 0, // Taxa de entrega
+                    address: address,
+                    paymentMethod: paymentMethodMap[paymentMethod] || 'CASH',
+                    observation: ''
+                };
+
+                // Salvar pedido via API
+                try {
+                    const res = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    const result = await res.json();
+
+                    if (result.success) {
+                        console.log('Pedido salvo:', result.order);
+
+                        // Salvar dados do cliente no cache para proximas visitas
+                        customerCache.save({
+                            name: name,
+                            phone: phone,
+                            address: address?.street || '',
+                            neighbor: address?.neighbor || '',
+                            obsAddress: address?.observation || '',
+                            coordinates: address?.coordinates ? JSON.parse(address.coordinates) : null,
+                            lastDeliveryFee: checkoutType === 'entrega' ? deliveryFee : null
+                        });
+                        console.log('Cache do cliente salvo');
+
+                        // Notificacao sera enviada automaticamente via backend (WhatsApp bot)
+                        // Nao precisa abrir link manualmente
+
+                        closeModal('confirmation-modal');
+                        openModal('success-modal');
+                    } else {
+                        showToast('ERRO AO ENVIAR PEDIDO!');
+                        console.error('Erro:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Erro ao enviar pedido:', error);
+                    showToast('ERRO DE CONEXAO!');
+                } finally {
+                    // Resetar flag e restaurar botão
+                    isSendingOrder = false;
+                    if (sendBtn) {
+                        sendBtn.disabled = false;
+                        sendBtn.innerHTML = originalBtnText;
+                        sendBtn.style.opacity = '1';
+                    }
+                }
+            } catch (outerError) {
+                console.error('Erro inesperado:', outerError);
+                isSendingOrder = false;
             }
         }
 
