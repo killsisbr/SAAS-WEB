@@ -322,24 +322,26 @@
 
     <!-- Header -->
     <header class="px-6 py-10 flex flex-col items-center relative">
-        <div class="flex justify-between w-full items-start mb-8">
-            <button onclick="toggleSidebar()" class="neo-card p-4 rounded-custom">
+        <div class="flex justify-between w-full items-center mb-8">
+            <button onclick="toggleSidebar()" class="neo-card p-4 rounded-custom flex-shrink-0">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-            <div class="text-center">
+            <div class="flex-1 flex justify-center">
                 <!-- Logo container - shows either image or text -->
-                <div id="store-logo-container" style="background-color: transparent !important;">
+                <div id="store-logo-container" class="text-center" style="background-color: transparent !important;">
                     <img id="store-logo-img" src="" alt="Logo"
                         style="display: none; max-height: 70px; max-width: 180px; margin: 0 auto; object-fit: contain; border-radius: 8px; background-color: transparent !important;">
                     <h1 id="store-name"
                         class="bebas text-7xl leading-none text-brand transition-all drop-shadow-[4px_4px_0_var(--dark)]">
                         CARREGANDO...</h1>
+                    <p id="store-type" class="bebas text-xl tracking-[0.3em] uppercase opacity-50 font-bold">Delivery
+                    </p>
                 </div>
-                <p id="store-type" class="bebas text-xl tracking-[0.3em] uppercase opacity-50 font-bold">Delivery</p>
             </div>
-            <button onclick="openModal('cart-modal')" class="neo-card p-4 rounded-custom bg-highlight relative">
+            <button onclick="openModal('cart-modal')"
+                class="neo-card p-4 rounded-custom bg-highlight relative flex-shrink-0">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                         d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -788,6 +790,44 @@
         let storeWhatsApp = '5511999999999'; // Fallback
         let whatsappFromUrl = null; // Telefone vindo do link do WhatsApp
 
+        // ===== SISTEMA DE CACHE DO CLIENTE =====
+        const customerCache = {
+            KEY: 'deliveryhub_customer_cache',
+
+            save(data) {
+                const cacheData = {
+                    ...this.load(),
+                    ...data,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(this.KEY, JSON.stringify(cacheData));
+            },
+
+            load() {
+                try {
+                    const data = localStorage.getItem(this.KEY);
+                    if (!data) return null;
+                    return JSON.parse(data);
+                } catch (e) {
+                    console.warn('Erro ao carregar cache do cliente:', e);
+                    return null;
+                }
+            },
+
+            clear() {
+                localStorage.removeItem(this.KEY);
+            },
+
+            hasAddress() {
+                const data = this.load();
+                return data && data.address && data.coordinates;
+            }
+        };
+
+        // Telefone pre-preenchido pela URL
+        let phoneFromUrl = null;
+        let customerCacheData = null;
+
         // Configuracao de entrega
         let deliveryFee = 0;
         let customerLat = null;
@@ -995,6 +1035,12 @@
                 }
             } else if (whatsappLegacy) {
                 whatsappFromUrl = whatsappLegacy.replace(/\D/g, '');
+            }
+
+            // Carregar cache do cliente
+            customerCacheData = customerCache.load();
+            if (customerCacheData) {
+                console.log('Cache do cliente carregado:', customerCacheData);
             }
 
             // === CARREGAMENTO DA LOJA ===
@@ -2192,6 +2238,161 @@
 
             closeModal('cart-modal');
             openModal('checkout-modal');
+
+            // Pre-preencher dados do cliente
+            const phoneInput = document.getElementById('cust-phone');
+            const nameInput = document.getElementById('cust-name');
+            const phoneContainer = phoneInput?.parentElement;
+
+            // 1. Telefone da URL (prioridade maxima)
+            if (whatsappFromUrl) {
+                phoneInput.value = whatsappFromUrl;
+                // Esconder campo de telefone e mostrar badge
+                if (phoneContainer) {
+                    phoneContainer.innerHTML = `
+                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu Telemovel</label>
+                        <div class="flex items-center gap-2 bg-emerald-500/20 border-2 border-emerald-500 p-4 rounded-2xl">
+                            <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                            </svg>
+                            <span class="font-bold text-emerald-700">${formatPhone(whatsappFromUrl)}</span>
+                            <input type="hidden" id="cust-phone" value="${whatsappFromUrl}">
+                        </div>
+                    `;
+                }
+            }
+
+            // 2. Dados do cache
+            const cached = customerCache.load();
+            if (cached) {
+                // Pre-preencher nome se nao estiver preenchido
+                if (nameInput && !nameInput.value && cached.name) {
+                    nameInput.value = cached.name;
+                }
+
+                // Pre-preencher telefone se nao veio da URL
+                if (phoneInput && !whatsappFromUrl && cached.phone) {
+                    phoneInput.value = cached.phone;
+                }
+
+                // Se tem endereco em cache, mostrar opcao de reutilizar
+                if (cached.address && checkoutType === 'entrega') {
+                    showPreviousAddressOption(cached);
+                }
+            }
+        }
+
+        // Formatar telefone para exibicao
+        function formatPhone(phone) {
+            if (!phone) return '';
+            const cleaned = phone.replace(/\D/g, '');
+            if (cleaned.length === 11) {
+                return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+            } else if (cleaned.length === 10) {
+                return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+            }
+            return phone;
+        }
+
+        // Mostrar opcao de usar endereco anterior
+        function showPreviousAddressOption(cached) {
+            const deliveryFields = document.getElementById('delivery-fields');
+            if (!deliveryFields) return;
+
+            // Verificar se ja existe a opcao
+            if (document.getElementById('previous-address-option')) return;
+
+            const optionDiv = document.createElement('div');
+            optionDiv.id = 'previous-address-option';
+            optionDiv.className = 'mb-4 p-4 bg-blue-500/10 border-2 border-blue-500 rounded-3xl';
+            optionDiv.innerHTML = `
+                <div class="flex items-start gap-3 mb-3">
+                    <input type="checkbox" id="use-previous-address" checked 
+                        class="w-5 h-5 mt-1 accent-blue-600" onchange="togglePreviousAddress(this.checked)">
+                    <div class="flex-1">
+                        <label for="use-previous-address" class="bebas text-lg text-blue-700 cursor-pointer">
+                            Usar endereco anterior
+                        </label>
+                        <p class="text-sm opacity-70 mt-1">${cached.address}</p>
+                        ${cached.neighbor ? `<p class="text-xs opacity-50">${cached.neighbor}</p>` : ''}
+                        ${cached.lastDeliveryFee !== undefined ? `
+                            <p class="text-sm font-bold text-emerald-600 mt-2">
+                                Taxa de entrega: R$ ${cached.lastDeliveryFee.toFixed(2)}
+                            </p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            deliveryFields.insertBefore(optionDiv, deliveryFields.firstChild);
+
+            // Aplicar endereco automaticamente
+            if (cached.address) {
+                document.getElementById('cust-address').value = cached.address;
+                document.getElementById('cust-neighbor').value = cached.neighbor || '';
+                document.getElementById('cust-obs-address').value = cached.obsAddress || '';
+
+                if (cached.coordinates) {
+                    customerLat = cached.coordinates.lat;
+                    customerLng = cached.coordinates.lng;
+                    document.getElementById('cust-coordinates').value = JSON.stringify(cached.coordinates);
+                }
+
+                if (cached.lastDeliveryFee !== undefined) {
+                    deliveryFee = cached.lastDeliveryFee;
+                }
+
+                // Mostrar campos de endereco
+                document.getElementById('address-fields').classList.remove('hidden');
+
+                // Esconder botao de geolocalizacao
+                const geoBtn = document.getElementById('btn-geolocate');
+                if (geoBtn) geoBtn.style.display = 'none';
+
+                updateCheckoutSummary();
+            }
+        }
+
+        // Toggle entre usar endereco anterior ou novo
+        function togglePreviousAddress(usePrevious) {
+            const cached = customerCache.load();
+            const geoBtn = document.getElementById('btn-geolocate');
+            const mapPreview = document.getElementById('map-preview');
+
+            if (usePrevious && cached) {
+                // Restaurar endereco do cache
+                document.getElementById('cust-address').value = cached.address || '';
+                document.getElementById('cust-neighbor').value = cached.neighbor || '';
+                document.getElementById('cust-obs-address').value = cached.obsAddress || '';
+
+                if (cached.coordinates) {
+                    customerLat = cached.coordinates.lat;
+                    customerLng = cached.coordinates.lng;
+                }
+
+                if (cached.lastDeliveryFee !== undefined) {
+                    deliveryFee = cached.lastDeliveryFee;
+                    deliveryOutOfRange = false;
+                }
+
+                document.getElementById('address-fields').classList.remove('hidden');
+                if (geoBtn) geoBtn.style.display = 'none';
+                if (mapPreview) mapPreview.style.display = 'none';
+            } else {
+                // Limpar para buscar novo endereco
+                document.getElementById('cust-address').value = '';
+                document.getElementById('cust-neighbor').value = '';
+                document.getElementById('cust-obs-address').value = '';
+                customerLat = null;
+                customerLng = null;
+                deliveryFee = 0;
+
+                document.getElementById('address-fields').classList.add('hidden');
+                if (geoBtn) geoBtn.style.display = '';
+                if (mapPreview) mapPreview.style.display = '';
+            }
+
+            updateCheckoutSummary();
         }
 
         // Modal de loja fechada
@@ -2527,6 +2728,18 @@
 
                 if (result.success) {
                     console.log('Pedido salvo:', result.order);
+
+                    // Salvar dados do cliente no cache para proximas visitas
+                    customerCache.save({
+                        name: name,
+                        phone: phone,
+                        address: address?.street || '',
+                        neighbor: address?.neighbor || '',
+                        obsAddress: address?.observation || '',
+                        coordinates: address?.coordinates ? JSON.parse(address.coordinates) : null,
+                        lastDeliveryFee: checkoutType === 'entrega' ? deliveryFee : null
+                    });
+                    console.log('Cache do cliente salvo');
 
                     // Notificacao sera enviada automaticamente via backend (WhatsApp bot)
                     // Nao precisa abrir link manualmente
