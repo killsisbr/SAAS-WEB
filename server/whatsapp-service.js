@@ -416,14 +416,27 @@ class WhatsAppService {
         }
     }
 
-    // Enviar mensagem de boas-vindas com link da loja
     async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings) {
         const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         if (!tenant) return;
 
-        const appDomain = process.env.APP_DOMAIN || 'localhost:3000';
-        const protocol = appDomain.includes('localhost') ? 'http' : 'https';
-        const orderLink = `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+        // Tentar buscar domínio customizado
+        const customDomain = await this.db.get('SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1', [tenantId]);
+
+        let orderLink;
+        if (customDomain) {
+            orderLink = `https://${customDomain.domain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+        } else {
+            // Fallback para APP_DOMAIN ou HOST configurado
+            let appDomain = process.env.APP_DOMAIN;
+            if (!appDomain && process.env.HOST) {
+                appDomain = process.env.HOST.replace(/^https?:\/\//, '');
+            }
+            if (!appDomain) appDomain = 'localhost:3000';
+
+            const protocol = appDomain.includes('localhost') ? 'http' : 'https';
+            orderLink = `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+        }
 
         const restaurantName = tenant.name || 'Restaurante';
 
