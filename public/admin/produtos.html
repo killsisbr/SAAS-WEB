@@ -397,11 +397,12 @@
                         <p style="font-weight: 600;">Clique para enviar imagem</p>
                         <p style="font-size: 0.8rem; color: var(--text-muted);">JPG, PNG ou WebP (max 5MB)</p>
                     </div>
-                    onchange="handleImageUpload(event)">
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event)">
 
                     <!-- Ajustes de Imagem -->
                     <div id="imageSettingsContainer"
-                        style="display: none; margin-top: 16px; pading: 12px; background: var(--bg); border: 2px solid var(--dark); border-radius: 12px;">
+                        style="display: none; margin-top: 16px; padding: 12px; background: var(--bg); border: 2px solid var(--dark); border-radius: 12px;">
                         <label
                             style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; display: block;">AJUSTE
                             DE VISUALIZAÇÃO</label>
