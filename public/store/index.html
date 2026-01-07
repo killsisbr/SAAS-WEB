@@ -492,8 +492,12 @@
 
                     <div id="delivery-fields" class="space-y-6">
                         <!-- Secao do Mapa (abre modal fullscreen) -->
-                        <div class="p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
-                            <div class="flex items-center justify-between mb-4">
+                        <div id="address-choice-section" class="p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
+
+                            <!-- Opcao de usar endereco anterior (injetado via JS se existir) -->
+                            <div id="previous-address-option-container"></div>
+
+                            <div class="flex items-center justify-between mb-4 mt-4">
                                 <label class="bebas text-xl">Localizar Endereco</label>
                                 <span id="map-status" class="text-xs opacity-50"></span>
                             </div>
@@ -2068,6 +2072,10 @@
             document.getElementById('address-fields').classList.remove('hidden');
 
             // Esconder preview do mapa e botao de geolocalizacao para evitar reabertura acidental
+            // Agora escondemos a secao principal de escolha
+            const addressChoiceSection = document.getElementById('address-choice-section');
+            if (addressChoiceSection) addressChoiceSection.classList.add('hidden');
+
             const mapPreview = document.getElementById('map-preview');
             const geoBtn = document.getElementById('btn-geolocate');
             if (mapPreview) mapPreview.style.display = 'none';
@@ -2078,7 +2086,7 @@
             if (mainStatus) mainStatus.textContent = 'Endereco confirmado!';
 
             closeModal('address-details-modal');
-            showToast('ENDEREÇO SALVO!');
+            showToast('LOJA ENCONTRADA COM SUCESSO!');
         }
 
         function handleSearch() {
@@ -2283,6 +2291,21 @@
                     showPreviousAddressOption(cached);
                 }
             }
+
+
+            // Auto-salvar nome ao digitar
+            if (nameInput) {
+                nameInput.addEventListener('blur', () => {
+                    if (nameInput.value.trim()) {
+                        const currentPhone = whatsappFromUrl || (phoneInput ? phoneInput.value.replace(/\D/g, '') : '');
+                        if (currentPhone) {
+                            localStorage.setItem(`customer_name_${currentPhone}`, nameInput.value.trim());
+                        }
+                        // Tambem salvar no cache geral
+                        /* customerCache.save({ name: nameInput.value.trim() }); */ // Nao, melhor nao mexer no cache globa parcial agora
+                    }
+                });
+            }
         }
 
         // Formatar telefone para exibicao
@@ -2299,61 +2322,31 @@
 
         // Mostrar opcao de usar endereco anterior
         function showPreviousAddressOption(cached) {
-            const deliveryFields = document.getElementById('delivery-fields');
-            if (!deliveryFields) return;
+            const container = document.getElementById('previous-address-option-container');
+            if (!container) return;
 
-            // Verificar se ja existe a opcao
-            if (document.getElementById('previous-address-option')) return;
-
-            const optionDiv = document.createElement('div');
-            optionDiv.id = 'previous-address-option';
-            optionDiv.className = 'mb-4 p-4 bg-blue-500/10 border-2 border-blue-500 rounded-3xl';
-            optionDiv.innerHTML = `
-                <div class="flex items-start gap-3 mb-3">
-                    <input type="checkbox" id="use-previous-address" checked 
-                        class="w-5 h-5 mt-1 accent-blue-600" onchange="togglePreviousAddress(this.checked)">
-                    <div class="flex-1">
-                        <label for="use-previous-address" class="bebas text-lg text-blue-700 cursor-pointer">
-                            Usar endereco anterior
-                        </label>
-                        <p class="text-sm opacity-70 mt-1">${cached.address}</p>
-                        ${cached.neighbor ? `<p class="text-xs opacity-50">${cached.neighbor}</p>` : ''}
-                        ${cached.lastDeliveryFee !== undefined ? `
-                            <p class="text-sm font-bold text-emerald-600 mt-2">
-                                Taxa de entrega: R$ ${cached.lastDeliveryFee.toFixed(2)}
-                            </p>
-                        ` : ''}
-                    </div>
+            container.innerHTML = `
+                <div class="mb-6 p-4 bg-blue-500/10 border-2 border-blue-500 rounded-2xl">
+                    <p class="bebas text-lg text-blue-400 mb-2">ENDEREÇO ANTERIOR:</p>
+                    <p class="font-bold text-white mb-1">${cached.address}</p>
+                    ${cached.neighbor ? `<p class="text-sm opacity-50 mb-4">${cached.neighbor}</p>` : ''}
+                    
+                    <button onclick="togglePreviousAddress(true)" 
+                        class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors mb-2">
+                        USAR ESTE ENDEREÇO
+                    </button>
+                    <button onclick="togglePreviousAddress(false)" 
+                        class="w-full py-3 bg-transparent border border-white/20 hover:bg-white/5 text-white font-bold rounded-xl transition-colors">
+                        USAR OUTRO ENDEREÇO
+                    </button>
                 </div>
+                <div class="w-full h-px bg-white/10 my-6"></div>
             `;
 
-            deliveryFields.insertBefore(optionDiv, deliveryFields.firstChild);
+            // Se ja temos um endereco previo e ele esta "marcado", esconder a selecao de novo endereco inicialmente
+            // togglePreviousAddress(true); // Opcional: auto-selecionar
+        }
 
-            // Aplicar endereco automaticamente
-            if (cached.address) {
-                document.getElementById('cust-address').value = cached.address;
-                document.getElementById('cust-neighbor').value = cached.neighbor || '';
-                document.getElementById('cust-obs-address').value = cached.obsAddress || '';
-
-                if (cached.coordinates) {
-                    customerLat = cached.coordinates.lat;
-                    customerLng = cached.coordinates.lng;
-                    document.getElementById('cust-coordinates').value = JSON.stringify(cached.coordinates);
-                }
-
-                if (cached.lastDeliveryFee !== undefined) {
-                    deliveryFee = cached.lastDeliveryFee;
-                }
-
-                // Mostrar campos de endereco
-                document.getElementById('address-fields').classList.remove('hidden');
-
-                // Esconder botao de geolocalizacao
-                const geoBtn = document.getElementById('btn-geolocate');
-                if (geoBtn) geoBtn.style.display = 'none';
-
-                updateCheckoutSummary();
-            }
         }
 
         // Toggle entre usar endereco anterior ou novo
@@ -2379,6 +2372,10 @@
                 }
 
                 document.getElementById('address-fields').classList.remove('hidden');
+                // Esconder opcoes de escolha de endereco
+                const addressChoiceSection = document.getElementById('address-choice-section');
+                if (addressChoiceSection) addressChoiceSection.classList.add('hidden');
+
                 if (geoBtn) geoBtn.style.display = 'none';
                 if (mapPreview) mapPreview.style.display = 'none';
             } else {
@@ -2389,6 +2386,10 @@
                 customerLat = null;
                 customerLng = null;
                 deliveryFee = 0;
+
+                // Mostrar opcoes de escolha de endereco
+                const addressChoiceSection = document.getElementById('address-choice-section');
+                if (addressChoiceSection) addressChoiceSection.classList.remove('hidden');
 
                 document.getElementById('address-fields').classList.add('hidden');
                 if (geoBtn) geoBtn.style.display = '';
