@@ -535,13 +535,16 @@ class WhatsAppService {
 
             // Adicionar dados do PIX se for o caso
             const paymentMethodLower = (orderData.payment_method || '').toLowerCase();
-            if (paymentMethodLower.includes('pix') && settings.pixKey) {
+            const pixKey = settings.pixKey || settings.pix_key || '';
+            const pixName = settings.pixName || settings.pix_holder_name || '';
+            console.log(`[PIX Debug] payment_method: "${orderData.payment_method}", pixKey: "${pixKey || 'NAO CONFIGURADO'}"`);
+            if (paymentMethodLower.includes('pix') && pixKey) {
                 summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
                 summaryLines.push('*DADOS PARA PAGAMENTO PIX*');
                 summaryLines.push('');
-                summaryLines.push(`Chave PIX: ${settings.pixKey}`);
-                if (settings.pixName) {
-                    summaryLines.push(`Titular: ${settings.pixName}`);
+                summaryLines.push(`Chave PIX: ${pixKey}`);
+                if (pixName) {
+                    summaryLines.push(`Titular: ${pixName}`);
                 }
                 summaryLines.push('');
                 summaryLines.push('_Pague agora para agilizar o preparo!_');
