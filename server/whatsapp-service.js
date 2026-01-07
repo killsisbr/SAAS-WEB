@@ -593,20 +593,24 @@ class WhatsAppService {
 
             const groupLines = [];
             groupLines.push(`🍔 *NOVO PEDIDO #${orderData.order_number}*`);
-            groupLines.push('__________________________________');
             groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
             groupLines.push('📦 *ITENS DO PEDIDO*');
             groupLines.push(itemsList.trim());
-            groupLines.push('__________________________________');
             groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
             groupLines.push('💰 *VALORES*');
             groupLines.push(`Subtotal dos itens: R$ ${subtotal.toFixed(2).replace('.', ',')}`);
+
             if (deliveryFee > 0) {
                 groupLines.push(`Taxa de entrega: R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+            } else {
+                groupLines.push('Taxa de entrega: R$ 0,00 (retirada)');
             }
+
             groupLines.push(`*TOTAL DO PEDIDO: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
-            groupLines.push('__________________________________');
             groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
             groupLines.push('👤 *DADOS DO CLIENTE*');
             groupLines.push(`Nome: ${orderData.customer_name}`);
 
@@ -632,24 +636,34 @@ class WhatsAppService {
             }
 
             groupLines.push(`Pagamento: ${orderData.payment_method || 'Não informado'}`);
-            if (orderData.change_for) {
-                groupLines.push(`Troco para: R$ ${parseFloat(orderData.change_for).toFixed(2).replace('.', ',')}`);
+
+            // Informação de troco
+            if (orderData.change_for !== null && orderData.change_for !== undefined) {
+                const valorPago = parseFloat(orderData.change_for);
+                if (valorPago === 0) {
+                    groupLines.push(`💵 *Troco*: Cliente deseja troco (valor não especificado)`);
+                } else if (valorPago > finalTotal) {
+                    const change = valorPago - finalTotal;
+                    groupLines.push(`💵 *Troco*: R$ ${change.toFixed(2).replace('.', ',')} (para R$ ${valorPago.toFixed(2).replace('.', ',')})`);
+                } else if (valorPago === finalTotal) {
+                    groupLines.push(`💵 *Troco*: Sem troco (valor exato)`);
+                }
             }
 
+            // Link WhatsApp do cliente
             const cleanPhone = orderData.customer_phone?.replace(/\D/g, '');
             if (cleanPhone) {
-                groupLines.push(`📱 *WhatsApp do Cliente:*`);
-                groupLines.push(`https://wa.me/${cleanPhone}`);
+                groupLines.push(`📱 *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
             }
 
+            // Link de localização do Google Maps
             if (mapsLink) {
-                groupLines.push(`📍 *Localização:*`);
-                groupLines.push(mapsLink);
+                groupLines.push(`📍 *Localização*: ${mapsLink}`);
             }
 
+            // Observações do local
             if (orderData.observation) {
-                groupLines.push(`📝 *Observações do local:*`);
-                groupLines.push(orderData.observation);
+                groupLines.push(`📝 Observações do local: ${orderData.observation}`);
             }
 
             groupLines.push(''); // Final newline
