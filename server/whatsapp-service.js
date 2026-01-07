@@ -473,7 +473,7 @@ class WhatsAppService {
             items.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 subtotal += itemTotal;
-                itemsList += `- ${item.quantity}x ${item.name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+                itemsList += `• ${item.quantity}x ${item.name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
 
                 if (item.addons && item.addons.length > 0) {
                     item.addons.forEach(addon => {
@@ -482,23 +482,55 @@ class WhatsAppService {
                         itemsList += `  + ${addon.name} - R$ ${addonTotal.toFixed(2).replace('.', ',')}\n`;
                     });
                 }
+
+                // Observação do item
+                if (item.observation && String(item.observation).trim().length > 0) {
+                    itemsList += `  📝 ${item.observation.trim()}\n`;
+                }
             });
 
             const deliveryFee = orderData.delivery_fee || 0;
             const total = subtotal + deliveryFee;
 
             const summaryLines = [];
-            summaryLines.push('*PEDIDO CONFIRMADO!*');
+            summaryLines.push('✅ *Pedido Confirmado!*');
             summaryLines.push('');
-            summaryLines.push(`Numero do pedido: #${orderData.order_number}`);
+            summaryLines.push(`Número do pedido: #${orderData.order_number}`);
             summaryLines.push('');
-            summaryLines.push('*Itens:*');
+            summaryLines.push('Itens:');
             summaryLines.push(itemsList.trim());
             if (deliveryFee > 0) {
-                summaryLines.push(`Taxa de entrega: R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+                summaryLines.push(`• Taxa de entrega - R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
             }
+            summaryLines.push(`Total: R$ ${total.toFixed(2).replace('.', ',')}`);
             summaryLines.push('');
-            summaryLines.push(`*Total: R$ ${total.toFixed(2).replace('.', ',')}*`);
+
+            // Informações do cliente
+            summaryLines.push('Informações do cliente:');
+            summaryLines.push(`Nome: ${orderData.customer_name}`);
+
+            // Endereço (se for entrega)
+            if (orderData.address) {
+                let addressText = '';
+                if (typeof orderData.address === 'string') {
+                    addressText = orderData.address;
+                } else {
+                    const { street, neighborhood, reference } = orderData.address;
+                    addressText = street || '';
+                    if (neighborhood) addressText += ` - ${neighborhood}`;
+                }
+                if (addressText) {
+                    summaryLines.push(`Endereço: ${addressText}`);
+                }
+
+                // Observações do local
+                const addressNote = orderData.address?.reference || orderData.observation;
+                if (addressNote && String(addressNote).trim().length > 0) {
+                    summaryLines.push(`Observações do local: ${String(addressNote).trim()}`);
+                }
+            }
+
+            summaryLines.push(`Forma de pagamento: ${orderData.payment_method || 'Não informado'}`);
             summaryLines.push('');
 
             // Adicionar dados do PIX se for o caso
@@ -517,7 +549,7 @@ class WhatsAppService {
                 summaryLines.push('');
             }
 
-            summaryLines.push('Seu pedido sera preparado e entregue em breve!');
+            summaryLines.push('*Seu pedido será preparado e entregue em breve!*');
 
             const message = summaryLines.join('\n');
 
