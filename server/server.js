@@ -121,12 +121,18 @@ async function initDatabase() {
         console.log('Schema aplicado');
     }
 
-    // Executar seeds
+    // Executar seeds APENAS se o banco estiver vazio (primeira inicializacao)
     const seedsPath = path.join(__dirname, 'database', 'seeds.sql');
     if (fs.existsSync(seedsPath)) {
-        const seeds = fs.readFileSync(seedsPath, 'utf-8');
-        await db.exec(seeds);
-        console.log('Seeds aplicados');
+        // Verificar se ja existem dados no banco
+        const existingTenants = await db.get('SELECT COUNT(*) as count FROM tenants');
+        if (!existingTenants || existingTenants.count === 0) {
+            const seeds = fs.readFileSync(seedsPath, 'utf-8');
+            await db.exec(seeds);
+            console.log('Seeds aplicados (primeira inicializacao)');
+        } else {
+            console.log('Seeds ignorados (banco ja possui dados)');
+        }
     }
 
     // Migrations manuais
