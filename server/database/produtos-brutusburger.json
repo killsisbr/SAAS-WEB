@@ -1,0 +1,224 @@
+[
+    {
+        "nome": "Brutus Burguer",
+        "descricao": "Pão, hambúrguer 160g, queijo cheddar, maionese da casa",
+        "preco": 18.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Brutus Salada",
+        "descricao": "Pão, hambúrguer 160g, alface, tomate, cebola roxa, picles, queijo cheddar, maionese da casa",
+        "preco": 20.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Brutus Bacon",
+        "descricao": "Pão, hambúrguer 160g, alface, tomate, cebola roxa, picles, queijo cheddar, Bacon em tiras, maionese da casa",
+        "preco": 23.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Big Brutus",
+        "descricao": "Pão, 2 hambúrgueres 160g, molho barbecue, queijo cheddar, bacon em tiras, maionese da casa",
+        "preco": 35.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Dallas",
+        "descricao": "Pão, hambúrguer 160g, alface, tomate, cebola roxa, picles, queijo cheddar, bacon em tiras, onion rings, molho barbecue e maionese da casa",
+        "preco": 30.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Explosão",
+        "descricao": "Pão, hambúrguer 160g, molho de cheddar, bacon em cubos",
+        "preco": 29.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Mexicomigo",
+        "descricao": "Pão, hambúrguer 160g, molho de cheddar, Doritos, Bacon em tiras, maionese da casa",
+        "preco": 30.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Brutal",
+        "descricao": "Pão, hambúrguer 160g, catupiry, linguiça toscana, mussarela, geleia de bacon e maionese da casa",
+        "preco": 36.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Catupiry empanado",
+        "descricao": "Pão, hambúrguer 160g, alface, tomate, cebola roxa, picles, queijo cheddar, 100g de catupiry empanado, maionese da casa",
+        "preco": 33.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Burguer",
+        "descricao": "Pão, hambúrguer 100g, queijo e maionese da casa",
+        "preco": 13.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Frango",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo, frango e maionese da casa",
+        "preco": 18.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Salada",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo e maionese da casa",
+        "preco": 15.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Egg",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo, ovo e maionese da casa",
+        "preco": 16.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Bacon",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo, bacon e maionese da casa",
+        "preco": 18.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Tudo",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo, bacon, frango, calabresa, ovo e maionese da casa",
+        "preco": 27.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "X-Calabresa",
+        "descricao": "Pão, hambúrguer 100g, alface, tomate, cebola roxa, picles, queijo, calabresa e maionese da casa",
+        "preco": 18.0,
+        "categoria": "Lanches"
+    },
+    {
+        "nome": "Batata palito",
+        "descricao": "400g",
+        "preco": 20.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Onion Rings",
+        "descricao": "400g",
+        "preco": 23.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Batata Crinkle",
+        "descricao": "400g",
+        "preco": 18.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Batata pequena",
+        "descricao": "180g",
+        "preco": 8.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Batata rústica",
+        "descricao": "400g",
+        "preco": 18.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Calabresa",
+        "descricao": "400g",
+        "preco": 20.0,
+        "categoria": "Porções"
+    },
+    {
+        "nome": "Queijo",
+        "descricao": "",
+        "preco": 5.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Bacon",
+        "descricao": "",
+        "preco": 5.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Catupiry",
+        "descricao": "",
+        "preco": 7.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Molho de cheddar",
+        "descricao": "",
+        "preco": 7.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Hambúrguer 160g",
+        "descricao": "",
+        "preco": 10.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Hambúrguer 100g",
+        "descricao": "",
+        "preco": 6.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Salada",
+        "descricao": "",
+        "preco": 2.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Catupiry empanado",
+        "descricao": "",
+        "preco": 13.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Doritos",
+        "descricao": "",
+        "preco": 5.0,
+        "categoria": "Adicionais"
+    },
+    {
+        "nome": "Coca lata",
+        "descricao": "350ml",
+        "preco": 6.0,
+        "categoria": "Bebidas"
+    },
+    {
+        "nome": "Coca lata Zero",
+        "descricao": "350ml",
+        "preco": 6.0,
+        "categoria": "Bebidas"
+    },
+    {
+        "nome": "Coca 2l",
+        "descricao": "2l",
+        "preco": 14.0,
+        "categoria": "Bebidas"
+    },
+    {
+        "nome": "Coca 2l Zero",
+        "descricao": "2l",
+        "preco": 14.0,
+        "categoria": "Bebidas"
+    },
+    {
+        "nome": "Guaraná lata",
+        "descricao": "350ml",
+        "preco": 6.0,
+        "categoria": "Bebidas"
+    },
+    {
+        "nome": "Guaraná 2l",
+        "descricao": "2l",
+        "preco": 12.0,
+        "categoria": "Bebidas"
+    }
+]
