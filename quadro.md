@@ -36,8 +36,8 @@ ssh root@82.29.58.126
 ### restaurantedegust.com
 | Item | Valor |
 |------|-------|
-| **Slug** | `restaurantedegust` |
-| **Rota** | `/loja/restaurantedegust` |
+| **Slug** | `degust` |
+| **Rota** | `/loja/degust` |
 | **Porta Backend** | 5000 |
 | **SSL** | Let's Encrypt (expira 2026-04-07) |
 | **Subdominio** | shop.restaurantedegust.com |
