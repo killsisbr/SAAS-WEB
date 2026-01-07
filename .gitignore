@@ -37,3 +37,7 @@ server/backups/
 # OS files
 .DS_Store
 Thumbs.db
+
+# User Uploads
+public/uploads/
+

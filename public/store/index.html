@@ -1826,6 +1826,9 @@
             }
 
             // Criar mapa
+            // Tentar 'p' ou 'whatsapp'
+            const params = new URLSearchParams(window.location.search);
+            let phone = params.get('p') || params.get('whatsapp');
             map = L.map('map-container', {
                 zoomControl: true,
                 attributionControl: false

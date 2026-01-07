@@ -299,7 +299,7 @@ export default function (db) {
     // ========================================
     router.post('/', authMiddleware(db), tenantMiddleware(db), checkLimits(db, 'products'), async (req, res) => {
         try {
-            const { name, description, price, categoryId, images, isAvailable, isFeatured, addons } = req.body;
+            const { name, description, price, categoryId, images, isAvailable, isFeatured, addons, imageSettings } = req.body;
 
             if (!name || !price || !categoryId) {
                 return res.status(400).json({ error: 'Nome, preco e categoria sao obrigatorios' });
@@ -325,8 +325,8 @@ export default function (db) {
             // Criar produto
             const productId = uuidv4();
             await db.run(`
-                INSERT INTO products (id, tenant_id, category_id, name, description, price, images, is_available, is_featured, order_index, addons)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO products (id, tenant_id, category_id, name, description, price, images, is_available, is_featured, order_index, addons, image_settings)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 productId,
                 req.tenantId,
@@ -338,7 +338,8 @@ export default function (db) {
                 isAvailable !== false ? 1 : 0,
                 isFeatured ? 1 : 0,
                 orderIndex,
-                JSON.stringify(addons || [])
+                JSON.stringify(addons || []),
+                JSON.stringify(imageSettings || {})
             ]);
 
             const product = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
@@ -382,6 +383,7 @@ export default function (db) {
             if (updates.images !== undefined) { fields.push('images = ?'); params.push(JSON.stringify(updates.images)); }
             if (updates.isAvailable !== undefined) { fields.push('is_available = ?'); params.push(updates.isAvailable ? 1 : 0); }
             if (updates.isFeatured !== undefined) { fields.push('is_featured = ?'); params.push(updates.isFeatured ? 1 : 0); }
+            if (updates.imageSettings !== undefined) { fields.push('image_settings = ?'); params.push(JSON.stringify(updates.imageSettings)); }
             if (updates.orderIndex !== undefined) { fields.push('order_index = ?'); params.push(updates.orderIndex); }
             if (updates.addons !== undefined) { fields.push('addons = ?'); params.push(JSON.stringify(updates.addons)); }
 

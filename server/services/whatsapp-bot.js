@@ -385,9 +385,9 @@ export class WhatsAppBot {
 
         let orderLink;
         if (this.settings.storeLink) {
-            orderLink = `${this.settings.storeLink}?p=${cleanPhone}`;
+            orderLink = `${this.settings.storeLink}?whatsapp=${cleanPhone}`;
         } else {
-            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?whatsapp=${cleanPhone}`;
         }
 
         const message = `Ola! Bem-vindo ao ${this.restaurantName}!\n\n` +
@@ -405,9 +405,9 @@ export class WhatsAppBot {
 
         let orderLink;
         if (this.settings.storeLink) {
-            orderLink = `${this.settings.storeLink}?p=${cleanPhone}`;
+            orderLink = `${this.settings.storeLink}?whatsapp=${cleanPhone}`;
         } else {
-            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?p=${cleanPhone}`;
+            orderLink = `https://${this.domain}/loja/${this.tenantSlug}?whatsapp=${cleanPhone}`;
         }
 
         const message = `Clique no link para fazer seu pedido:\n${orderLink}`;
