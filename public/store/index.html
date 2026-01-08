@@ -537,12 +537,18 @@
                         <!-- Campos de Endereco (aparecem apos confirmar no mapa) -->
                         <div id="address-fields"
                             class="hidden space-y-4 mt-4 p-4 bg-emerald-500/10 border-2 border-emerald-500 rounded-3xl">
-                            <div class="flex items-center gap-2 text-emerald-600 mb-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="bebas text-lg">Endereco Localizado</span>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2 text-emerald-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span class="bebas text-lg">Endereco Localizado</span>
+                                </div>
+                                <button onclick="changeAddress()" type="button"
+                                    class="text-xs font-bold text-emerald-600 underline hover:text-emerald-400 transition-colors">
+                                    ALTERAR
+                                </button>
                             </div>
                             <input type="text" id="cust-address" placeholder="Rua, Numero..."
                                 class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
@@ -2434,6 +2440,35 @@
                 if (mapPreview) mapPreview.style.display = '';
             }
 
+            updateCheckoutSummary();
+        }
+
+        // Funcao para alterar endereco (limpa e mostra opcoes novamente)
+        function changeAddress() {
+            // Limpar campos
+            document.getElementById('cust-address').value = '';
+            document.getElementById('cust-neighbor').value = '';
+            document.getElementById('cust-obs-address').value = '';
+            document.getElementById('cust-coordinates').value = '';
+            customerLat = null;
+            customerLng = null;
+            deliveryFee = 0;
+            deliveryOutOfRange = false;
+
+            // Esconder campos de endereco preenchido
+            document.getElementById('address-fields').classList.add('hidden');
+
+            // Mostrar secao de escolha de endereco
+            const addressChoiceSection = document.getElementById('address-choice-section');
+            if (addressChoiceSection) addressChoiceSection.classList.remove('hidden');
+
+            // Mostrar botoes de geolocalizacao e mapa
+            const geoBtn = document.getElementById('btn-geolocate');
+            const mapPreview = document.getElementById('map-preview');
+            if (geoBtn) geoBtn.style.display = '';
+            if (mapPreview) mapPreview.style.display = '';
+
+            // Atualizar resumo
             updateCheckoutSummary();
         }
 
