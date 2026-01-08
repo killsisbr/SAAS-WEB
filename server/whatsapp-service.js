@@ -359,14 +359,11 @@ class WhatsAppService {
                 return;
             }
 
-            // Modo Link: Verificar se bot basico esta habilitado
-            if (!currentSettings.whatsappBotEnabled) {
-                console.log(`Bot desabilitado para tenant ${tenantId}`);
-                return;
-            }
-
             // ============ GATILHOS DE PALAVRAS-CHAVE ============
+            // (Funciona mesmo se whatsappBotEnabled estiver desligado)
             const triggers = currentSettings.triggers || [];
+            console.log(`[Triggers] Tenant ${tenantId} tem ${triggers.length} gatilhos configurados`);
+
             if (triggers.length > 0) {
                 const msgLowerTrigger = messageBody.toLowerCase().trim();
 
@@ -385,14 +382,21 @@ class WhatsAppService {
                             .replace(/\{nome\}/gi, contact.pushname || 'Cliente');
 
                         await chat.sendMessage(response);
+                        console.log(`[Trigger] Resposta enviada: ${response.substring(0, 50)}...`);
                         return; // Nao continuar processamento
                     }
                 }
             }
 
+            // Modo Link: Verificar se bot basico esta habilitado
+            if (!currentSettings.whatsappBotEnabled) {
+                console.log(`Bot desabilitado para tenant ${tenantId}`);
+                return;
+            }
+
             // Enviar welcome se necessario (modo link)
             if (this.shouldSendWelcome(tenantId, whatsappId)) {
-                await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings);
+                await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings, contact.pushname);
                 this.markWelcomeSent(tenantId, whatsappId);
             }
 
@@ -466,17 +470,28 @@ class WhatsAppService {
         return `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
     }
 
-    async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings) {
+    async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings, customerName = 'Cliente') {
         const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         if (!tenant) return;
 
+        const tenantSettings = JSON.parse(tenant.settings || '{}');
         const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
         const restaurantName = tenant.name || 'Restaurante';
 
-        const welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +
-            `Eu sou o robo de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
-            `Para comecar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
-            `Dica: Seu pedido ja estara vinculado ao seu WhatsApp!`;
+        // Usar mensagem customizada ou fallback padrao
+        let welcomeMessage;
+        if (tenantSettings.botMessages?.welcome) {
+            welcomeMessage = tenantSettings.botMessages.welcome
+                .replace(/\{restaurante\}/gi, restaurantName)
+                .replace(/\{link\}/gi, orderLink)
+                .replace(/\{nome\}/gi, customerName || 'Cliente');
+        } else {
+            // Mensagem padrao
+            welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +
+                `Eu sou o robo de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
+                `Para comecar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
+                `Dica: Seu pedido ja estara vinculado ao seu WhatsApp!`;
+        }
 
         await chat.sendMessage(welcomeMessage);
         console.log(`Welcome enviado para ${sanitizedNumber} (tenant ${tenantId})`);
