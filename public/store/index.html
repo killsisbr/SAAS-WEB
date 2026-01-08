@@ -2068,6 +2068,19 @@
             calculateDeliveryFee();
             updateCheckoutSummary();
 
+            // ========================================
+            // SALVAR NO CACHE LOCAL PARA PROXIMO USO
+            // ========================================
+            customerCache.save({
+                address: fullAddress,
+                neighbor: neighbor,
+                obsAddress: obs,
+                coordinates: { lat: customerLat, lng: customerLng },
+                lastDeliveryFee: deliveryFee,
+                lastDistance: lastCalculatedDistance || 0
+            });
+            console.log('Cache de endereco salvo:', { address: fullAddress, deliveryFee, lastCalculatedDistance });
+
             // Mostrar campos de endereco no checkout (visual)
             document.getElementById('address-fields').classList.remove('hidden');
 
@@ -2325,26 +2338,46 @@
             const container = document.getElementById('previous-address-option-container');
             if (!container) return;
 
-            container.innerHTML = `
-                <div class="mb-6 p-4 bg-blue-500/10 border-2 border-blue-500 rounded-2xl">
-                    <p class="bebas text-lg text-blue-400 mb-2">ENDEREÇO ANTERIOR:</p>
-                    <p class="font-bold text-white mb-1">${cached.address}</p>
-                    ${cached.neighbor ? `<p class="text-sm opacity-50 mb-4">${cached.neighbor}</p>` : ''}
-                    
-                    <button onclick="togglePreviousAddress(true)" 
-                        class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors mb-2">
-                        USAR ESTE ENDEREÇO
-                    </button>
-                    <button onclick="togglePreviousAddress(false)" 
-                        class="w-full py-3 bg-transparent border border-white/20 hover:bg-white/5 text-white font-bold rounded-xl transition-colors">
-                        USAR OUTRO ENDEREÇO
-                    </button>
-                </div>
-                <div class="w-full h-px bg-white/10 my-6"></div>
-            `;
+            const feeText = cached.lastDeliveryFee !== undefined && cached.lastDeliveryFee !== null
+                ? `R$ ${cached.lastDeliveryFee.toFixed(2).replace('.', ',')}`
+                : '';
+            const distText = cached.lastDistance
+                ? `${cached.lastDistance.toFixed(1)} km`
+                : '';
 
-            // Se ja temos um endereco previo e ele esta "marcado", esconder a selecao de novo endereco inicialmente
-            // togglePreviousAddress(true); // Opcional: auto-selecionar
+            container.innerHTML = `
+                <div class="mb-6 p-4 bg-gradient-to-br from-emerald-900/30 to-emerald-800/10 border-2 border-emerald-500 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="bebas text-lg text-emerald-400">SEU ÚLTIMO ENDEREÇO</span>
+                    </div>
+                    <p class="font-bold text-white mb-1">${cached.address}</p>
+                    ${cached.neighbor ? `<p class="text-sm opacity-50">${cached.neighbor}</p>` : ''}
+                    ${feeText || distText ? `
+                        <div class="flex gap-4 mt-3 text-sm">
+                            ${distText ? `<span class="text-emerald-300"><i class="fas fa-route mr-1"></i>${distText}</span>` : ''}
+                            ${feeText ? `<span class="text-emerald-300 font-bold"><i class="fas fa-truck mr-1"></i>${feeText}</span>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="togglePreviousAddress(true)" 
+                            class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            USAR ESTE
+                        </button>
+                        <button onclick="togglePreviousAddress(false)" 
+                            class="flex-1 py-3 bg-transparent border border-white/20 hover:bg-white/5 text-white font-bold rounded-xl transition-colors">
+                            NOVO ENDEREÇO
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
 
@@ -2439,6 +2472,9 @@
                 btnR.classList.remove('bg-dark', 'text-mainBg');
                 fields.classList.remove('hidden');
                 if (paymentSection) paymentSection.classList.remove('hidden');
+                // Restaurar metodo de pagamento padrao
+                paymentMethod = 'pix';
+                setPaymentMethod('pix');
                 setTimeout(initMap, 100);
             } else {
                 // Retirada - esconder endereco E forma de pagamento (paga no local)
@@ -2449,6 +2485,8 @@
                 // Definir pagamento como "local" (nao precisa validar)
                 paymentMethod = 'local';
             }
+            // Atualizar resumo para refletir a mudanca de tipo
+            updateCheckoutSummary();
         }
 
         // ===== PAGAMENTO =====
@@ -2595,11 +2633,12 @@
             const subtotal = total;
             const finalTotal = checkoutType === 'entrega' ? (total + (deliveryOutOfRange ? 0 : deliveryFee)) : total;
 
-            const paymentLabels = { pix: 'PIX (Transferência)', cartao: 'Cartão (Maquininha)', dinheiro: 'Dinheiro (Espécie)' };
+            const paymentLabels = { pix: 'PIX (Transferência)', cartao: 'Cartão (Maquininha)', dinheiro: 'Dinheiro (Espécie)', local: 'Pagar no Local' };
             const paymentIcons = {
                 pix: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.32 21.97a6.92 6.92 0 01-4.71-1.89l-.11-.1-1.77 1.77a.5.5 0 01-.71 0 .5.5 0 010-.71l1.77-1.77-.1-.11a6.92 6.92 0 01-1.89-4.71c0-1.83.72-3.54 2.02-4.84l5.73-5.73a3.03 3.03 0 014.28 0l4.56 4.56a3.03 3.03 0 010 4.28l-5.73 5.73a6.82 6.82 0 01-4.84 2.02zm6.97-18.13a2.02 2.02 0 00-1.43.59l-5.73 5.73a5.9 5.9 0 00-1.73 4.54c.06 1.68.76 3.26 1.97 4.47s2.79 1.91 4.47 1.97a5.9 5.9 0 004.54-1.73l5.73-5.73a2.03 2.03 0 000-2.87l-4.56-4.56a2.02 2.02 0 00-1.43-.59l-.83.18z"/></svg>`,
                 cartao: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`,
-                dinheiro: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`
+                dinheiro: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
+                local: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>`
             };
 
             let html = `
