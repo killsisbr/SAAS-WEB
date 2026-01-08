@@ -242,17 +242,45 @@ class FollowUpService {
             const client = this.whatsappService.clients.get(tenantId);
             if (!client) return false;
 
-            const chatId = phone.replace(/\D/g, '') + '@c.us';
+            // Limpar e formatar numero
+            let cleanPhone = String(phone).replace(/\D/g, '');
+
+            // Adicionar 55 se nao comecar com ele (numeros brasileiros)
+            if (cleanPhone && !cleanPhone.startsWith('55')) {
+                cleanPhone = '55' + cleanPhone;
+            }
+
+            // Validar tamanho minimo (55 + DDD + numero = 12-13 digitos)
+            if (cleanPhone.length < 12) {
+                console.log(`[Follow-up] Numero invalido (muito curto): ${cleanPhone}`);
+                return false;
+            }
+
+            // Tentar obter o ID correto do numero usando getNumberId
+            let chatId = cleanPhone + '@c.us';
+            try {
+                const numberId = await client.getNumberId(cleanPhone);
+                if (numberId) {
+                    chatId = numberId._serialized;
+                    console.log(`[Follow-up] ID resolvido: ${chatId}`);
+                } else {
+                    console.log(`[Follow-up] Numero nao encontrado no WhatsApp: ${cleanPhone}`);
+                    return false;
+                }
+            } catch (idError) {
+                console.log(`[Follow-up] Erro ao resolver ID, tentando direto: ${cleanPhone}`);
+                // Fallback: tentar enviar direto
+            }
 
             await client.sendMessage(chatId, message);
 
             // Registrar envio
             await this.db.run(`
-                INSERT INTO activity_logs (tenant_id, action, details, created_at)
-                VALUES (?, 'FOLLOW_UP_SENT', ?, datetime('now'))
-            `, [tenantId, JSON.stringify({ phone, type, message: message.substring(0, 100) })]);
+                INSERT INTO activity_logs (id, tenant_id, action, details, created_at)
+                VALUES (?, ?, 'FOLLOW_UP_SENT', ?, datetime('now'))
+            `, [require('crypto').randomUUID(), tenantId, JSON.stringify({ phone: cleanPhone, type, message: message.substring(0, 100) })]);
 
-            console.log(`[Follow-up] ${type} enviado para ${phone}`);
+            console.log(`[Follow-up] ${type} enviado para ${cleanPhone}`);
 
             // Delay entre envios
             await new Promise(r => setTimeout(r, 3000));
