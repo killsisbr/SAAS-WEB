@@ -1476,19 +1476,37 @@
                     <div class="line"></div>
                     <div>Cliente: ${order.customer_name}</div>
                     <div>Tel: ${order.customer_phone}</div>
-                    ${order.delivery_type === 'DELIVERY' ? `<div class="line"></div><div><strong>ENTREGA:</strong></div><div>${order.delivery_address || '-'}</div>${order.observation ? `<div><strong>Obs:</strong> ${order.observation}</div>` : ''}` : '<div style="text-align:center;font-weight:bold;margin:8px 0">*** RETIRADA ***</div>'}
+                    ${order.delivery_type === 'DELIVERY' ? `
+                        <div class="line"></div>
+                        <div><strong>ENTREGA:</strong></div>
+                        <div>${order.address?.street || order.address?.formatted || '-'}</div>
+                        ${order.address?.neighborhood ? `<div>${order.address.neighborhood}</div>` : ''}
+                        ${order.address?.reference ? `<div>Ref: ${order.address.reference}</div>` : ''}
+                    ` : '<div style="text-align:center;font-weight:bold;margin:8px 0">*** RETIRADA ***</div>'}
                     <div class="line"></div>
                     <div style="font-weight:bold">ITENS:</div>
                     ${order.items.map(i => {
                 const iAddons = i.addons || i.extras || [];
                 return `
-                        <div class="item"><span>${i.quantity}x ${i.name}</span><span>R$ ${(i.price * i.quantity).toFixed(2)}</span></div>
+                        <div class="item"><span>${i.quantity || i.qty || 1}x ${i.name || i.title}</span><span>R$ ${((i.price || 0) * (i.quantity || i.qty || 1)).toFixed(2)}</span></div>
                         ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:10px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
                         ${i.observation ? `<div style="font-size:10px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
                     `}).join('')}
                     <div class="total">
+                        ${order.delivery_type === 'DELIVERY' && order.delivery_fee > 0 ? `
+                            <div class="item"><span>Subtotal:</span><span>R$ ${(order.total - order.delivery_fee).toFixed(2)}</span></div>
+                            <div class="item"><span>Taxa Entrega:</span><span>R$ ${order.delivery_fee.toFixed(2)}</span></div>
+                        ` : ''}
                         <div class="item"><span>TOTAL:</span><span>R$ ${order.total.toFixed(2)}</span></div>
                     </div>
+                    <div class="line"></div>
+                    <div><strong>Pagamento:</strong> ${order.payment_method === 'PIX' ? 'PIX' :
+                    order.payment_method === 'CASH' ? 'DINHEIRO' :
+                        order.payment_method === 'CREDIT_CARD' ? 'CARTAO' :
+                            order.payment_method === 'LOCAL' ? 'PAGAR NO LOCAL' :
+                                order.payment_method || '-'
+                }</div>
+                    ${order.observation ? `<div><strong>Obs:</strong> ${order.observation}</div>` : ''}
                     <div style="text-align:center;margin-top:12px;font-size:10px">Obrigado!</div>
                 </body>
                 </html>

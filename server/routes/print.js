@@ -111,9 +111,11 @@ export default function (db) {
                 'CASH': 'DINHEIRO',
                 'CREDIT_CARD': 'CARTAO CREDITO',
                 'DEBIT_CARD': 'CARTAO DEBITO',
+                'LOCAL': 'PAGAR NO LOCAL',
                 'pix': 'PIX',
                 'dinheiro': 'DINHEIRO',
-                'cartao': 'CARTAO'
+                'cartao': 'CARTAO',
+                'local': 'PAGAR NO LOCAL'
             };
             receipt += `Pagamento: ${paymentMap[order.payment_method] || order.payment_method}\n`;
 
