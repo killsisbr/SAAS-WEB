@@ -2294,6 +2294,7 @@
 
             // 2. Dados do cache
             const cached = customerCache.load();
+            console.log('DEBUG [openCheckoutModal] Cache carregado:', cached);
             if (cached) {
                 // Pre-preencher nome se nao estiver preenchido
                 if (nameInput && !nameInput.value && cached.name) {
