@@ -1540,17 +1540,17 @@
                     <title>Pedido #${order.order_number}</title>
                     <style>
                         @page { size: 80mm auto; margin: 0; }
-                        body { font-family: 'Courier New', monospace; font-size: 12px; padding: 5mm; width: 80mm; margin: 0; }
-                        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
-                        .item { display: flex; justify-content: space-between; margin: 3px 0; }
-                        .total { font-size: 14px; font-weight: bold; border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px; }
-                        .line { border-top: 1px dashed #000; margin: 8px 0; }
+                        body { font-family: 'Courier New', monospace; font-size: 18px; padding: 5mm; width: 80mm; margin: 0; }
+                        .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+                        .item { display: flex; justify-content: space-between; margin: 5px 0; }
+                        .total { font-size: 22px; font-weight: bold; border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px; }
+                        .line { border-top: 2px dashed #000; margin: 10px 0; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
-                        <div style="font-weight:bold;font-size:14px;">${tenantName.toUpperCase()}</div>
-                        <div>PEDIDO #${order.order_number}</div>
+                        <div style="font-weight:bold;font-size:24px;">${tenantName.toUpperCase()}</div>
+                        <div style="font-size:20px;">PEDIDO #${order.order_number}</div>
                     </div>
                     <div>Data: ${parseLocalTime(order.created_at).toLocaleString('pt-BR')}</div>
                     <div class="line"></div>
@@ -1562,15 +1562,15 @@
                         <div>${order.address?.street || order.address?.formatted || '-'}</div>
                         ${order.address?.neighborhood ? `<div>${order.address.neighborhood}</div>` : ''}
                         ${order.address?.reference ? `<div>Ref: ${order.address.reference}</div>` : ''}
-                    ` : '<div style="text-align:center;font-weight:bold;margin:8px 0">*** RETIRADA ***</div>'}
+                    ` : '<div style="text-align:center;font-weight:bold;margin:10px 0;font-size:20px;">*** RETIRADA ***</div>'}
                     <div class="line"></div>
-                    <div style="font-weight:bold">ITENS:</div>
+                    <div style="font-weight:bold;font-size:20px;">ITENS:</div>
                     ${order.items.map(i => {
                 const iAddons = i.addons || i.extras || [];
                 return `
                         <div class="item"><span>${i.quantity || i.qty || 1}x ${i.name || i.title}</span><span>R$ ${((i.price || 0) * (i.quantity || i.qty || 1)).toFixed(2)}</span></div>
-                        ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:10px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
-                        ${i.observation ? `<div style="font-size:10px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
+                        ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:14px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
+                        ${i.observation ? `<div style="font-size:14px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
                     `}).join('')}
                     <div class="total">
                         ${order.delivery_type === 'DELIVERY' && order.delivery_fee > 0 ? `

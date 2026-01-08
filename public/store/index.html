@@ -798,7 +798,31 @@
         // Dados da loja carregados da API
         let storeData = null;
         let storeWhatsApp = '5511999999999'; // Fallback
-        let whatsappFromUrl = null; // Telefone vindo do link do WhatsApp
+
+        // ================================================================
+        // WHATSAPP ID DO CLIENTE
+        // ----------------------------------------------------------------
+        // Quando o cliente clica no link enviado pelo bot do WhatsApp,
+        // a URL contém ?whatsapp=NUMERO_DO_TELEFONE
+        // Capturamos esse número para enviar junto com o pedido,
+        // permitindo que o bot envie a confirmação automaticamente.
+        // O backend espera o formato: NUMERO@c.us (ex: 5511999999999@c.us)
+        // ================================================================
+        let whatsappFromUrl = null;
+        (function extractWhatsAppFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const phone = params.get('whatsapp');
+            if (phone) {
+                // Formatar para o padrão que o backend espera
+                // O número pode vir só com os dígitos, adicionamos 55 se necessário
+                let formattedPhone = phone.replace(/\D/g, '');
+                if (!formattedPhone.startsWith('55') && formattedPhone.length <= 11) {
+                    formattedPhone = '55' + formattedPhone;
+                }
+                whatsappFromUrl = formattedPhone + '@c.us';
+                console.log('[WhatsApp] Cliente veio do bot, ID:', whatsappFromUrl);
+            }
+        })();
 
         // ===== SISTEMA DE CACHE DO CLIENTE =====
         const customerCache = {
