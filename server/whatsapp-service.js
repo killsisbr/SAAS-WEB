@@ -272,6 +272,11 @@ class WhatsAppService {
         try {
             const chat = await message.getChat();
 
+            // Ignorar mensagens do proprio bot (evita loops)
+            if (message.fromMe) {
+                return;
+            }
+
             // Ignorar grupos e broadcasts
             if (chat.isGroup || message.broadcast) {
                 return;
@@ -297,10 +302,17 @@ class WhatsAppService {
             }
 
             const whatsappId = contact.id._serialized;
-            const sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+            // Extrair apenas os dígitos e remover código do país (55) se presente
+            let sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+            console.log(`[DEBUG] whatsappId original: ${whatsappId}, somente digitos: ${sanitizedNumber}`);
+            // Números brasileiros começam com 55 - remover para ficar só DDD+número
+            if (sanitizedNumber.startsWith('55') && sanitizedNumber.length >= 12) {
+                sanitizedNumber = sanitizedNumber.substring(2);
+                console.log(`[DEBUG] Removido 55, resultado: ${sanitizedNumber}`);
+            }
             const messageBody = message.body || '';
 
-            console.log(`Mensagem de Cliente (${whatsappId}): ${messageBody.substring(0, 50)}`);
+            console.log(`Mensagem de Cliente (${whatsappId}): ${messageBody.substring(0, 50)}, tel: ${sanitizedNumber}`);
 
             // ============ COMANDOS DE ADMIN ============
             const msgLower = messageBody.toLowerCase().trim();
@@ -320,44 +332,13 @@ class WhatsAppService {
             }
 
             // Debug: mostrar status do bot
-            console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}, aiBot.enabled: ${currentSettings.aiBot?.enabled}, aiBot.apiKey: ${currentSettings.aiBot?.apiKey ? 'SIM' : 'NAO'}`);
+            console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}`);
 
-            // Verificar se IA esta habilitada (enabled deve ser explicitamente true)
-            if (currentSettings.aiBot?.enabled === true && currentSettings.aiBot?.apiKey) {
-                console.log(`[IA] Processando mensagem com IA para tenant ${tenantId}`);
-
-                // Buscar menu para contexto da IA
-                const menuData = await this.getMenuData(tenantId);
-
-                try {
-                    const result = await handleConversation({
-                        message: messageBody,
-                        whatsappId: whatsappId,
-                        tenantId: tenantId,
-                        customerName: contact.pushname || 'Cliente',
-                        menuData: menuData,
-                        tenantSettings: {
-                            ...currentSettings,
-                            aiBot: currentSettings.aiBot,
-                            name: tenant?.name || 'Restaurante'
-                        },
-                        db: this.db
-                    });
-
-                    if (result?.response) {
-                        await chat.sendMessage(result.response);
-                        console.log(`[IA] Resposta enviada para ${whatsappId}`);
-                    }
-                } catch (aiError) {
-                    console.error('[IA] Erro:', aiError.message);
-                    // Fallback: enviar link em caso de erro
-                    if (this.shouldSendWelcome(tenantId, whatsappId)) {
-                        await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings);
-                        this.markWelcomeSent(tenantId, whatsappId);
-                    }
-                }
-                return;
-            }
+            // ============ BOT COM IA - DESABILITADO TEMPORARIAMENTE ============
+            // TODO: Reimplementar bot com IA futuramente
+            // if (currentSettings.aiBot?.enabled === true && currentSettings.aiBot?.apiKey) {
+            //     ... codigo IA removido temporariamente ...
+            // }
 
             // ============ GATILHOS DE PALAVRAS-CHAVE ============
             // (Funciona mesmo se whatsappBotEnabled estiver desligado)

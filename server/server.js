@@ -233,9 +233,10 @@ async function loadRoutes() {
     const whatsappRoutes = await import('./routes/whatsapp.js');
     app.use('/api/whatsapp', whatsappRoutes.default(db));
 
-    // WhatsApp Bot (Multi-Tenant)
-    const whatsappBotRoutes = await import('./routes/whatsapp-bot.js');
-    app.use('/api/whatsapp-bot', whatsappBotRoutes.default(db));
+    // WhatsApp Bot (Multi-Tenant) - DESABILITADO TEMPORARIAMENTE
+    // TODO: Reimplementar bot com IA futuramente
+    // const whatsappBotRoutes = await import('./routes/whatsapp-bot.js');
+    // app.use('/api/whatsapp-bot', whatsappBotRoutes.default(db));
 
     // Buffet
     const buffetRoutes = await import('./routes/buffet.js');

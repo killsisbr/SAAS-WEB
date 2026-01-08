@@ -733,6 +733,16 @@
                 style="background: #8b5cf6; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                 <i class="fas fa-leaf"></i> Acai
             </button>
+            <!-- ========================================
+                 AUTO-PRINT TOGGLE
+                 Quando ativado, imprime automaticamente novos pedidos
+                 Estado salvo no localStorage para persistir entre recargas
+                 ======================================== -->
+            <button id="autoPrintToggle" onclick="toggleAutoPrint()" class="btn-header"
+                title="Auto-impressao: Imprime automaticamente novos pedidos"
+                style="background: #64748b; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-print"></i> <span id="autoPrintStatus">Auto OFF</span>
+            </button>
             <div class="header-status-container">
                 <a href="whatsapp" class="btn-header-wa" title="Ir para WhatsApp">
                     <i class="fab fa-whatsapp"></i>
@@ -1076,6 +1086,73 @@
         let currentOrderId = null;
         let currentSettings = {};
 
+        // ================================================================
+        // SISTEMA DE AUTO-IMPRESSAO
+        // ----------------------------------------------------------------
+        // Quando ativado, imprime automaticamente cada novo pedido que chega
+        // O estado é salvo no localStorage para persistir entre recargas
+        // Requisito: O navegador precisa estar conectado a uma impressora
+        // ================================================================
+
+        // Variavel global que controla se auto-print está ativado
+        let autoPrintEnabled = localStorage.getItem('autoPrintEnabled') === 'true';
+
+        /**
+         * Alterna o estado do auto-print (on/off)
+         * Atualiza a UI do botão e salva no localStorage
+         */
+        function toggleAutoPrint() {
+            autoPrintEnabled = !autoPrintEnabled;
+            localStorage.setItem('autoPrintEnabled', autoPrintEnabled);
+            updateAutoPrintUI();
+
+            // Feedback para o usuário
+            if (autoPrintEnabled) {
+                showToast('Auto-impressão ATIVADA', 'success', 'IMPRESSORA');
+            } else {
+                showToast('Auto-impressão desativada', 'info', 'IMPRESSORA');
+            }
+        }
+
+        /**
+         * Atualiza a aparência visual do botão de auto-print
+         * Verde quando ativo, cinza quando inativo
+         */
+        function updateAutoPrintUI() {
+            const btn = document.getElementById('autoPrintToggle');
+            const status = document.getElementById('autoPrintStatus');
+            if (btn && status) {
+                if (autoPrintEnabled) {
+                    btn.style.background = '#22c55e'; // Verde
+                    status.textContent = 'Auto ON';
+                } else {
+                    btn.style.background = '#64748b'; // Cinza
+                    status.textContent = 'Auto OFF';
+                }
+            }
+        }
+
+        /**
+         * Executa auto-impressão de um pedido
+         * Chamada automaticamente quando chega novo pedido via SSE
+         * @param {Object} order - Objeto do pedido a ser impresso
+         */
+        function autoPrintOrder(order) {
+            if (!autoPrintEnabled) return;
+
+            console.log('[AUTO-PRINT] Imprimindo pedido #' + order.order_number);
+
+            // Pequeno delay para garantir que o pedido foi renderizado
+            setTimeout(() => {
+                executePrint(order);
+            }, 500);
+        }
+
+        // Inicializar UI do auto-print ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAutoPrintUI();
+        });
+
         function toggleEditMode() {
             isEditing = !isEditing;
             const btn = document.getElementById('btnEditOrderTrigger');
@@ -1168,6 +1245,9 @@
                 renderOrders();
                 showToast('Pedido #' + order.order_number, 'success', 'NOVO PEDIDO!');
                 playNotification();
+
+                // AUTO-PRINT: Imprimir automaticamente se ativado
+                autoPrintOrder(order);
             });
 
             eventSource.addEventListener('order-updated', (e) => {

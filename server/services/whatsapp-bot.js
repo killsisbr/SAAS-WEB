@@ -83,7 +83,9 @@ export class WhatsAppBot {
      * Inicializar cliente WhatsApp
      */
     initialize() {
-        const sessionId = `tenant-${this.tenantSlug}`;
+        // IMPORTANTE: Usar tenantId ao inves de slug para sessionId
+        // Isso garante que nao haverá duplicatas com whatsapp-service.js
+        const sessionId = `tenant-${this.tenantId}`;
 
         this.client = new Client({
             authStrategy: new LocalAuth({
