@@ -2471,16 +2471,25 @@
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Carregando...</p></div>';
 
             try {
-                // Buscar addon groups da categoria Buffet/Marmita
-                const res = await fetch('/api/addon-groups?includeItems=true', { headers: API_HEADERS });
-                const groups = await res.json();
+                // Buscar todas categorias com seus addon groups
+                const res = await fetch('/api/category-addons/tenant', { headers: API_HEADERS });
+                const data = await res.json();
+                const categories = data.categories || [];
 
-                // Filtrar grupos que contem "buffet" ou "marmita" no nome
-                const buffetGroups = groups.filter(g =>
-                    g.name.toLowerCase().includes('buffet') ||
-                    g.name.toLowerCase().includes('marmita') ||
-                    g.name.toLowerCase().includes('acompanhamento')
-                );
+                // Coletar todos os grupos que contem "buffet" ou "marmita"
+                let buffetGroups = [];
+                for (const cat of categories) {
+                    if (cat.addonGroups) {
+                        for (const group of cat.addonGroups) {
+                            if (group.name.toLowerCase().includes('buffet') ||
+                                group.name.toLowerCase().includes('marmita') ||
+                                group.name.toLowerCase().includes('acompanhamento') ||
+                                cat.name.toLowerCase().includes('marmita')) {
+                                buffetGroups.push({ ...group, categoryName: cat.name });
+                            }
+                        }
+                    }
+                }
 
                 if (buffetGroups.length === 0) {
                     container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-info-circle" style="font-size: 2rem;"></i><p>Nenhum grupo de buffet encontrado.<br>Crie um grupo de adicionais com "Buffet" ou "Marmita" no nome.</p></div>';
@@ -2489,7 +2498,7 @@
 
                 let html = '';
                 for (const group of buffetGroups) {
-                    html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #f59e0b; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name}</div>`;
+                    html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #f59e0b; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name} <span style="color:#666; font-weight:400;">(${group.categoryName})</span></div>`;
 
                     if (group.items && group.items.length > 0) {
                         for (const item of group.items) {
@@ -2532,8 +2541,8 @@
 
         async function toggleItemAvailability(itemId, newStatus, type) {
             try {
-                const res = await fetch(`/api/addon-items/${itemId}`, {
-                    method: 'PUT',
+                const res = await fetch(`/api/category-addons/items/${itemId}/toggle`, {
+                    method: 'PATCH',
                     headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_available: newStatus })
                 });
@@ -2581,15 +2590,24 @@
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Carregando...</p></div>';
 
             try {
-                const res = await fetch('/api/addon-groups?includeItems=true', { headers: API_HEADERS });
-                const groups = await res.json();
+                const res = await fetch('/api/category-addons/tenant', { headers: API_HEADERS });
+                const data = await res.json();
+                const categories = data.categories || [];
 
-                // Filtrar grupos que contem "acai" no nome
-                const acaiGroups = groups.filter(g =>
-                    g.name.toLowerCase().includes('acai') ||
-                    g.name.toLowerCase().includes('topping') ||
-                    g.name.toLowerCase().includes('complemento')
-                );
+                // Coletar todos os grupos que contem "acai" ou "topping"
+                let acaiGroups = [];
+                for (const cat of categories) {
+                    if (cat.addonGroups) {
+                        for (const group of cat.addonGroups) {
+                            if (group.name.toLowerCase().includes('acai') ||
+                                group.name.toLowerCase().includes('topping') ||
+                                group.name.toLowerCase().includes('complemento') ||
+                                cat.name.toLowerCase().includes('acai')) {
+                                acaiGroups.push({ ...group, categoryName: cat.name });
+                            }
+                        }
+                    }
+                }
 
                 if (acaiGroups.length === 0) {
                     container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-info-circle" style="font-size: 2rem;"></i><p>Nenhum grupo de acai encontrado.<br>Crie um grupo de adicionais com "Acai" no nome.</p></div>';
@@ -2598,7 +2616,7 @@
 
                 let html = '';
                 for (const group of acaiGroups) {
-                    html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #8b5cf6; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name}</div>`;
+                    html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #8b5cf6; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name} <span style="color:#666; font-weight:400;">(${group.categoryName})</span></div>`;
 
                     if (group.items && group.items.length > 0) {
                         for (const item of group.items) {

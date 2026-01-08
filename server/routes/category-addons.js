@@ -203,6 +203,24 @@ export default function categoryAddonsRoutes(db) {
         }
     });
 
+    // PATCH /api/category-addons/items/:itemId/toggle - Toggle disponibilidade
+    router.patch('/items/:itemId/toggle', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        try {
+            const { itemId } = req.params;
+            const { is_available } = req.body;
+
+            await db.run(
+                `UPDATE addon_items SET is_available = ? WHERE id = ?`,
+                [is_available ? 1 : 0, itemId]
+            );
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Erro ao atualizar disponibilidade:', error);
+            res.status(500).json({ error: 'Erro ao atualizar disponibilidade' });
+        }
+    });
+
     // DELETE /api/category-addons/items/:itemId - Remover item
     router.delete('/items/:itemId', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
