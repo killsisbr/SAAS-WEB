@@ -556,7 +556,7 @@
                     </div>
 
                     <!-- Forma de Pagamento -->
-                    <div class="mt-8 p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
+                    <div id="payment-section" class="mt-8 p-4 bg-highlight/10 border-2 border-dark rounded-3xl">
                         <label class="bebas text-xl block mb-4">Forma de Pagamento</label>
                         <div class="grid grid-cols-3 gap-2">
                             <button type="button" onclick="setPaymentMethod('pix')" id="pay-pix"
@@ -2432,15 +2432,22 @@
             const btnE = document.getElementById('btn-entrega');
             const btnR = document.getElementById('btn-retirada');
             const fields = document.getElementById('delivery-fields');
+            const paymentSection = document.getElementById('payment-section');
+
             if (type === 'entrega') {
                 btnE.classList.add('bg-dark', 'text-mainBg');
                 btnR.classList.remove('bg-dark', 'text-mainBg');
                 fields.classList.remove('hidden');
+                if (paymentSection) paymentSection.classList.remove('hidden');
                 setTimeout(initMap, 100);
             } else {
+                // Retirada - esconder endereco E forma de pagamento (paga no local)
                 btnR.classList.add('bg-dark', 'text-mainBg');
                 btnE.classList.remove('bg-dark', 'text-mainBg');
                 fields.classList.add('hidden');
+                if (paymentSection) paymentSection.classList.add('hidden');
+                // Definir pagamento como "local" (nao precisa validar)
+                paymentMethod = 'local';
             }
         }
 
