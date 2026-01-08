@@ -1140,11 +1140,17 @@
         function autoPrintOrder(order) {
             if (!autoPrintEnabled) return;
 
-            console.log('[AUTO-PRINT] Imprimindo pedido #' + order.order_number);
+            // Verificar se o pedido tem ID válido
+            if (!order || !order.id) {
+                console.log('[AUTO-PRINT] Pedido inválido, sem ID');
+                return;
+            }
 
-            // Pequeno delay para garantir que o pedido foi renderizado
+            console.log('[AUTO-PRINT] Imprimindo pedido #' + order.order_number + ' (ID: ' + order.id + ')');
+
+            // Pequeno delay para garantir que o pedido foi renderizado na lista
             setTimeout(() => {
-                executePrint(order);
+                executePrint(order.id); // Passar o ID, não o objeto!
             }, 500);
         }
 
