@@ -2511,7 +2511,7 @@
                 // Restaurar metodo de pagamento padrao
                 paymentMethod = 'pix';
                 setPaymentMethod('pix');
-                setTimeout(initMap, 100);
+                // Nao disparar mapa automaticamente - usuario clica em "Usar Minha Localizacao"
             } else {
                 // Retirada - esconder endereco E forma de pagamento (paga no local)
                 btnR.classList.add('bg-dark', 'text-mainBg');
