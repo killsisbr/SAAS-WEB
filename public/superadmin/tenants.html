@@ -506,8 +506,11 @@
                     <td>${t.products_count || 0}</td>
                     <td>
                         <div class="action-btns">
-                            <a href="/loja/${t.slug}" target="_blank" class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye"></i>
+                            <button class="btn btn-secondary btn-sm" onclick="showTenantDetails('${t.id}')" title="Ver Detalhes">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <a href="/loja/${t.slug}" target="_blank" class="btn btn-secondary btn-sm" title="Abrir Loja">
+                                <i class="fas fa-external-link-alt"></i>
                             </a>
                             ${t.status === 'SUSPENDED' ?
                     `<button class="btn btn-success btn-sm" onclick="activateTenant('${t.id}')"><i class="fas fa-check"></i></button>` :
@@ -566,7 +569,316 @@
         }
 
         (async () => { if (await checkAuth()) loadTenants(); })();
+
+        // ========================================
+        // MODAL DE DETALHES DO TENANT
+        // ========================================
+        let currentTenantDetails = null;
+        let allPlans = [];
+
+        // Carregar planos disponíveis
+        async function loadPlans() {
+            try {
+                const res = await fetch('/api/superadmin/plans', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    allPlans = await res.json();
+                    const select = document.getElementById('selectPlan');
+                    select.innerHTML = allPlans.map(p =>
+                        `<option value="${p.id}">${p.name} - R$ ${(p.price || 0).toFixed(2)}/mes</option>`
+                    ).join('');
+                }
+            } catch (e) {
+                console.error('Erro ao carregar planos:', e);
+            }
+        }
+
+        async function showTenantDetails(id) {
+            const tenant = allTenants.find(t => t.id === id);
+            if (!tenant) return;
+            currentTenantDetails = tenant;
+
+            // Buscar detalhes completos incluindo dominios e subscription
+            try {
+                const res = await fetch(`/api/superadmin/tenants/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const details = await res.json();
+                    currentTenantDetails = { ...tenant, ...details };
+                }
+            } catch (e) {
+                console.error('Erro ao buscar detalhes:', e);
+            }
+
+            const settings = currentTenantDetails.settings ?
+                (typeof currentTenantDetails.settings === 'string' ?
+                    JSON.parse(currentTenantDetails.settings) : currentTenantDetails.settings) : {};
+
+            // Preencher campos basicos
+            document.getElementById('tenantModal').style.display = 'flex';
+            document.getElementById('modalTenantName').textContent = tenant.name;
+            document.getElementById('inputTenantName').value = tenant.name;
+            document.getElementById('inputTenantSlug').value = tenant.slug;
+            document.getElementById('inputTenantDomain').value = currentTenantDetails.custom_domain || settings.customDomain || '';
+            document.getElementById('inputTenantPhone').value = settings.phone || '';
+            document.getElementById('inputTenantWhatsapp').value = settings.whatsapp || '';
+
+            // Preencher info cards
+            document.getElementById('infoOwnerName').textContent = currentTenantDetails.owner_name || '-';
+            document.getElementById('infoOwnerEmail').textContent = currentTenantDetails.owner_email || '-';
+            document.getElementById('infoStatus').textContent = formatStatus(currentTenantDetails.subscription_status || currentTenantDetails.status);
+            document.getElementById('infoCreatedAt').textContent = currentTenantDetails.created_at ?
+                'Criado em ' + new Date(currentTenantDetails.created_at).toLocaleDateString('pt-BR') : '-';
+
+            // Preencher plano e assinatura
+            if (allPlans.length > 0) {
+                document.getElementById('selectPlan').value = currentTenantDetails.plan_id || '';
+            }
+            document.getElementById('selectSubscriptionStatus').value = currentTenantDetails.subscription_status || 'TRIALING';
+
+            // Datas
+            if (currentTenantDetails.trial_ends_at) {
+                document.getElementById('inputTrialEnds').value = currentTenantDetails.trial_ends_at.split('T')[0];
+            } else {
+                document.getElementById('inputTrialEnds').value = '';
+            }
+            if (currentTenantDetails.current_period_end) {
+                document.getElementById('inputPeriodEnd').value = currentTenantDetails.current_period_end.split('T')[0];
+            } else {
+                document.getElementById('inputPeriodEnd').value = '';
+            }
+        }
+
+        function closeTenantModal() {
+            document.getElementById('tenantModal').style.display = 'none';
+            currentTenantDetails = null;
+        }
+
+        async function saveTenantDetails() {
+            if (!currentTenantDetails) return;
+
+            const name = document.getElementById('inputTenantName').value;
+            const slug = document.getElementById('inputTenantSlug').value;
+            const domain = document.getElementById('inputTenantDomain').value.trim();
+            const phone = document.getElementById('inputTenantPhone').value;
+            const whatsapp = document.getElementById('inputTenantWhatsapp').value;
+
+            // Novos campos de plano/subscription
+            const planId = document.getElementById('selectPlan').value;
+            const subscriptionStatus = document.getElementById('selectSubscriptionStatus').value;
+            const trialEndsAt = document.getElementById('inputTrialEnds').value;
+            const periodEnd = document.getElementById('inputPeriodEnd').value;
+
+            // Parse settings existentes
+            let settings = {};
+            try {
+                settings = currentTenantDetails.settings ?
+                    (typeof currentTenantDetails.settings === 'string' ?
+                        JSON.parse(currentTenantDetails.settings) : currentTenantDetails.settings) : {};
+            } catch (e) { }
+
+            settings.phone = phone;
+            settings.whatsapp = whatsapp;
+            settings.customDomain = domain;
+
+            try {
+                // Atualizar tenant
+                const res = await fetch(`/api/superadmin/tenants/${currentTenantDetails.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, slug, settings })
+                });
+
+                if (res.ok) {
+                    // Salvar dominio customizado
+                    if (domain) {
+                        await fetch(`/api/superadmin/tenants/${currentTenantDetails.id}/domain`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ domain })
+                        });
+                    }
+
+                    // Atualizar subscription (plano e status)
+                    await fetch(`/api/superadmin/tenants/${currentTenantDetails.id}/subscription`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            plan_id: planId,
+                            status: subscriptionStatus,
+                            trial_ends_at: trialEndsAt || null,
+                            current_period_end: periodEnd || null
+                        })
+                    });
+
+                    alert('Loja atualizada com sucesso!');
+                    closeTenantModal();
+                    loadTenants();
+                } else {
+                    const err = await res.json();
+                    alert('Erro: ' + (err.error || 'Falha ao salvar'));
+                }
+            } catch (e) {
+                console.error('Erro ao salvar:', e);
+                alert('Erro de conexao');
+            }
+        }
+
+        // Inicialização
+        (async () => {
+            if (await checkAuth()) {
+                await loadPlans();
+                loadTenants();
+            }
+        })();
     </script>
+
+    <!-- Modal de Detalhes do Tenant -->
+    <div id="tenantModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div
+            style="background:var(--card); border:3px solid var(--dark); border-radius:20px; padding:32px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:8px 8px 0 var(--dark); margin:20px;">
+
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 id="modalTenantName"
+                    style="font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:2px;">Detalhes</h2>
+                <button onclick="closeTenantModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+
+            <!-- Info Cards -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
+                <div style="background:var(--bg); padding:12px; border-radius:12px; border:2px solid var(--dark);">
+                    <small style="color:var(--text-muted); font-weight:600;">OWNER</small>
+                    <div id="infoOwnerName" style="font-weight:700;">-</div>
+                    <div id="infoOwnerEmail" style="font-size:0.8rem; color:var(--text-muted);">-</div>
+                </div>
+                <div style="background:var(--bg); padding:12px; border-radius:12px; border:2px solid var(--dark);">
+                    <small style="color:var(--text-muted); font-weight:600;">STATUS</small>
+                    <div id="infoStatus" style="font-weight:700;">-</div>
+                    <div id="infoCreatedAt" style="font-size:0.8rem; color:var(--text-muted);">-</div>
+                </div>
+            </div>
+
+            <!-- Dados da Loja -->
+            <div
+                style="background:#f8f8f8; padding:16px; border-radius:12px; margin-bottom:16px; border:2px solid var(--dark);">
+                <h3
+                    style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; margin-bottom:12px; letter-spacing:1px;">
+                    DADOS DA LOJA</h3>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label
+                            style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Nome</label>
+                        <input type="text" id="inputTenantName"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Slug
+                            (URL)</label>
+                        <input type="text" id="inputTenantSlug"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Dominio
+                        Customizado</label>
+                    <input type="text" id="inputTenantDomain" placeholder="ex: seusite.com.br"
+                        style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    <small style="color:var(--text-muted);">Configure CNAME para apontar ao servidor</small>
+                </div>
+            </div>
+
+            <!-- Plano e Assinatura -->
+            <div
+                style="background:#fff3cd; padding:16px; border-radius:12px; margin-bottom:16px; border:2px solid #ff9800;">
+                <h3
+                    style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; margin-bottom:12px; letter-spacing:1px; color:#e65100;">
+                    <i class="fas fa-crown"></i> PLANO E ASSINATURA
+                </h3>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Plano
+                            Atual</label>
+                        <select id="selectPlan"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem; background:white;">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Status
+                            Assinatura</label>
+                        <select id="selectSubscriptionStatus"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem; background:white;">
+                            <option value="TRIALING">Trial</option>
+                            <option value="ACTIVE">Ativo</option>
+                            <option value="SUSPENDED">Suspenso</option>
+                            <option value="CANCELLED">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Trial
+                            Termina Em</label>
+                        <input type="date" id="inputTrialEnds"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Proximo
+                            Vencimento</label>
+                        <input type="date" id="inputPeriodEnd"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contato -->
+            <div
+                style="background:#e8f5e9; padding:16px; border-radius:12px; margin-bottom:20px; border:2px solid #4caf50;">
+                <h3
+                    style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; margin-bottom:12px; letter-spacing:1px; color:#2e7d32;">
+                    <i class="fab fa-whatsapp"></i> CONTATO
+                </h3>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label
+                            style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">Telefone</label>
+                        <input type="text" id="inputTenantPhone" placeholder="(11) 99999-9999"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                    <div>
+                        <label
+                            style="display:block; font-weight:600; margin-bottom:4px; font-size:0.85rem;">WhatsApp</label>
+                        <input type="text" id="inputTenantWhatsapp" placeholder="5511999999999"
+                            style="width:100%; padding:10px; border:2px solid var(--dark); border-radius:8px; font-size:0.95rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botoes -->
+            <div style="display:flex; gap:12px;">
+                <button onclick="closeTenantModal()" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                <button onclick="saveTenantDetails()" class="btn btn-primary" style="flex:1;"><i
+                        class="fas fa-save"></i> Salvar</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

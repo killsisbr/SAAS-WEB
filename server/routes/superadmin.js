@@ -267,5 +267,165 @@ export default function (db) {
         }
     });
 
+    // ========================================
+    // GET /api/superadmin/tenants/:id - Detalhes do tenant
+    // ========================================
+    router.get('/tenants/:id', async (req, res) => {
+        try {
+            const tenant = await db.get(`
+                SELECT t.*, u.name as owner_name, u.email as owner_email,
+                       s.status as subscription_status, s.plan_id, s.trial_ends_at, 
+                       s.current_period_start, s.current_period_end,
+                       p.name as plan_name, p.price as plan_price,
+                       cd.domain as custom_domain
+                FROM tenants t
+                JOIN users u ON t.owner_id = u.id
+                LEFT JOIN subscriptions s ON s.tenant_id = t.id
+                LEFT JOIN plans p ON s.plan_id = p.id
+                LEFT JOIN custom_domains cd ON cd.tenant_id = t.id AND cd.verified = 1
+                WHERE t.id = ?
+            `, [req.params.id]);
+
+            if (!tenant) {
+                return res.status(404).json({ error: 'Tenant não encontrado' });
+            }
+
+            res.json(tenant);
+        } catch (error) {
+            console.error('Get tenant error:', error);
+            res.status(500).json({ error: 'Erro ao buscar tenant' });
+        }
+    });
+
+    // ========================================
+    // PUT /api/superadmin/tenants/:id - Atualizar tenant
+    // ========================================
+    router.put('/tenants/:id', async (req, res) => {
+        try {
+            const { name, slug, settings } = req.body;
+            const { id } = req.params;
+
+            // Atualizar tenant
+            await db.run(`
+                UPDATE tenants SET 
+                    name = COALESCE(?, name),
+                    slug = COALESCE(?, slug),
+                    settings = COALESCE(?, settings),
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [name, slug, typeof settings === 'object' ? JSON.stringify(settings) : settings, id]);
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Update tenant error:', error);
+            res.status(500).json({ error: 'Erro ao atualizar tenant' });
+        }
+    });
+
+    // ========================================
+    // POST /api/superadmin/tenants/:id/domain - Adicionar/atualizar domínio
+    // ========================================
+    router.post('/tenants/:id/domain', async (req, res) => {
+        try {
+            const { domain } = req.body;
+            const { id } = req.params;
+
+            if (!domain) {
+                return res.status(400).json({ error: 'Domínio é obrigatório' });
+            }
+
+            // Verificar se já existe
+            const existing = await db.get(
+                'SELECT id FROM custom_domains WHERE tenant_id = ?',
+                [id]
+            );
+
+            if (existing) {
+                // Atualizar
+                await db.run(
+                    'UPDATE custom_domains SET domain = ?, verified = 1, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?',
+                    [domain, id]
+                );
+            } else {
+                // Criar
+                const { v4: uuidv4 } = await import('uuid');
+                await db.run(
+                    'INSERT INTO custom_domains (id, tenant_id, domain, verified, ssl_status) VALUES (?, ?, ?, 1, ?)',
+                    [uuidv4(), id, domain, 'active']
+                );
+            }
+
+            res.json({ success: true, domain });
+        } catch (error) {
+            console.error('Set domain error:', error);
+            res.status(500).json({ error: 'Erro ao configurar domínio' });
+        }
+    });
+    // ========================================
+    // GET /api/superadmin/plans - Listar planos disponíveis
+    // ========================================
+    router.get('/plans', async (req, res) => {
+        try {
+            const plans = await db.all('SELECT * FROM plans ORDER BY price ASC');
+            res.json(plans);
+        } catch (error) {
+            console.error('Get plans error:', error);
+            res.status(500).json({ error: 'Erro ao buscar planos' });
+        }
+    });
+
+    // ========================================
+    // PUT /api/superadmin/tenants/:id/subscription - Atualizar subscription
+    // ========================================
+    router.put('/tenants/:id/subscription', async (req, res) => {
+        try {
+            const { plan_id, status, trial_ends_at, current_period_end } = req.body;
+            const { id } = req.params;
+
+            // Verificar se já existe subscription
+            const existing = await db.get(
+                'SELECT id FROM subscriptions WHERE tenant_id = ?',
+                [id]
+            );
+
+            if (existing) {
+                // Atualizar
+                await db.run(`
+                    UPDATE subscriptions SET 
+                        plan_id = COALESCE(?, plan_id),
+                        status = COALESCE(?, status),
+                        trial_ends_at = COALESCE(?, trial_ends_at),
+                        current_period_end = COALESCE(?, current_period_end),
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE tenant_id = ?
+                `, [plan_id, status, trial_ends_at, current_period_end, id]);
+            } else {
+                // Criar nova subscription
+                const { v4: uuidv4 } = await import('uuid');
+                await db.run(`
+                    INSERT INTO subscriptions (id, tenant_id, plan_id, status, trial_ends_at, current_period_start, current_period_end)
+                    VALUES (?, ?, ?, ?, ?, datetime('now'), ?)
+                `, [uuidv4(), id, plan_id || 'plan_trial', status || 'TRIALING', trial_ends_at, current_period_end]);
+            }
+
+            // Atualizar status do tenant também se mudar status da subscription
+            if (status) {
+                let tenantStatus = 'ACTIVE';
+                if (status === 'SUSPENDED') tenantStatus = 'SUSPENDED';
+                if (status === 'CANCELLED') tenantStatus = 'CANCELLED';
+
+                await db.run(
+                    'UPDATE tenants SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [tenantStatus, id]
+                );
+            }
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Update subscription error:', error);
+            res.status(500).json({ error: 'Erro ao atualizar subscription' });
+        }
+    });
+
     return router;
 }
