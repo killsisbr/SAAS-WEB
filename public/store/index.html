@@ -2917,13 +2917,22 @@
             cart = [];
             updateCartUI();
 
-            // Limpar campos
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-phone').value = '';
+            // Limpar campos - mas preservar nome e telefone se veio do WhatsApp
+            // para facilitar novos pedidos
+            if (!whatsappFromUrl) {
+                document.getElementById('cust-name').value = '';
+                document.getElementById('cust-phone').value = '';
+            }
+            // Sempre limpar endereço e observações para novo pedido
             document.getElementById('cust-address').value = '';
             document.getElementById('cust-neighbor').value = '';
             document.getElementById('cust-obs-address').value = '';
             document.getElementById('cust-change').value = '';
+
+            // Resetar coordenadas para próximo pedido
+            customerLat = null;
+            customerLng = null;
+            deliveryFee = 0;
 
             showToast('PEDIDO ENVIADO!');
         }
