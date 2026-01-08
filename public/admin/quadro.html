@@ -1226,7 +1226,7 @@
                 <div class="order-card ${isBlacklisted ? 'blacklisted' : ''}" onclick="showOrderDetails('${orderId}')" style="${isBlacklisted ? 'border-color: #ef4444; background: rgba(239,68,68,0.05);' : ''}">
                     <div class="order-header">
                         <span class="order-number">#${order.order_number}</span>
-                        <span class="order-time">${new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span class="order-time">${parseLocalTime(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <div class="customer-name" style="display: flex; align-items: center; gap: 8px;">
                         ${order.customer_name}
@@ -1310,6 +1310,21 @@
             }
         }
 
+        // Converter timestamp UTC do SQLite para horário local
+        function parseLocalTime(utcString) {
+            if (!utcString) return new Date();
+            // SQLite retorna formato "YYYY-MM-DD HH:MM:SS" sem timezone
+            // Adicionar 'Z' para indicar UTC e converter para local
+            let dateStr = utcString;
+            if (!dateStr.includes('T')) {
+                dateStr = dateStr.replace(' ', 'T');
+            }
+            if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
+                dateStr += 'Z';
+            }
+            return new Date(dateStr);
+        }
+
         function formatItems(items) {
             if (!Array.isArray(items)) return '';
             return items.slice(0, 2).map(i => `${i.quantity}x ${i.name}`).join(', ') +
@@ -1366,7 +1381,7 @@
                                 PEDIDO #${order.order_number}
                             </div>
                             <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px;">
-                                Data: ${new Date(order.created_at).toLocaleString('pt-BR')}
+                                Data: ${parseLocalTime(order.created_at).toLocaleString('pt-BR')}
                             </div>
                             <div style="margin: 8px 0;">
                                 Cliente: ${order.customer_name}<br>
@@ -1449,7 +1464,7 @@
                         <div style="font-weight:bold;font-size:14px;">${tenantName.toUpperCase()}</div>
                         <div>PEDIDO #${order.order_number}</div>
                     </div>
-                    <div>Data: ${new Date(order.created_at).toLocaleString('pt-BR')}</div>
+                    <div>Data: ${parseLocalTime(order.created_at).toLocaleString('pt-BR')}</div>
                     <div class="line"></div>
                     <div>Cliente: ${order.customer_name}</div>
                     <div>Tel: ${order.customer_phone}</div>
@@ -1604,7 +1619,7 @@
                     </div>
                     <div class="premium-card">
                         <label>Data/Hora</label>
-                        <div style="font-weight: 700; color: #fff;">${new Date(order.created_at).toLocaleString('pt-BR')}</div>
+                        <div style="font-weight: 700; color: #fff;">${parseLocalTime(order.created_at).toLocaleString('pt-BR')}</div>
                     </div>
                 </div>
 
@@ -2049,7 +2064,7 @@
             } else {
                 // Fallback: usar dados locais do orders array
                 for (const order of orders) {
-                    const orderDate = new Date(order.created_at).toISOString().split('T')[0];
+                    const orderDate = parseLocalTime(order.created_at).toISOString().split('T')[0];
                     if (dailyData[orderDate]) {
                         dailyData[orderDate].total += order.total || 0;
                         dailyData[orderDate].orders += 1;
