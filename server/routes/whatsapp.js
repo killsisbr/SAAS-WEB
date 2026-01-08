@@ -135,7 +135,7 @@ export default function (db) {
     // ========================================
     router.put('/settings', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const { whatsappBotEnabled, whatsappGroupId, botMessages, aiBot } = req.body;
+            const { whatsappBotEnabled, whatsappGroupId, botMessages, aiBot, triggers } = req.body;
 
             // Buscar tenant atual
             const tenant = await db.get('SELECT settings FROM tenants WHERE id = ?', [req.tenantId]);
@@ -155,6 +155,10 @@ export default function (db) {
             // Salvar config de IA
             if (aiBot !== undefined) {
                 settings.aiBot = aiBot;
+            }
+            // Salvar gatilhos de palavras-chave
+            if (triggers !== undefined) {
+                settings.triggers = triggers;
             }
 
             await db.run(
