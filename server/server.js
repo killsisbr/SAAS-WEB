@@ -347,7 +347,7 @@ app.get('/loja/:slug', (req, res) => {
 
 // Quadro de Pedidos da Loja (por slug)
 app.get('/loja/:slug/quadro', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'store', 'quadro.html'));
+    res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'quadro.html'));
 });
 
 // Admin da Loja (por slug) - Reutiliza o admin global

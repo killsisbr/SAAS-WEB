@@ -837,12 +837,12 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="toast">
-        <div
+        <div id="toastIconContainer"
             style="background: var(--success); color: white; width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--dark); display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-bell"></i>
+            <i id="toastIcon" class="fas fa-bell"></i>
         </div>
         <div>
-            <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;">Novo Pedido!</div>
+            <div id="toastTitle" style="font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;">Novo Pedido!</div>
             <div id="toastMessage" style="font-size: 0.9rem; color: var(--text-muted);">Pedido recebido</div>
         </div>
     </div>
@@ -1166,7 +1166,7 @@
                 const order = JSON.parse(e.data);
                 orders.unshift(order);
                 renderOrders();
-                showToast('Pedido #' + order.order_number);
+                showToast('Pedido #' + order.order_number, 'success', 'NOVO PEDIDO!');
                 playNotification();
             });
 
@@ -1478,12 +1478,7 @@
             }, 250);
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
-            toast.classList.add('visible');
-            setTimeout(() => toast.classList.remove('visible'), 4000);
-        }
+
 
         function playNotification() {
             const audio = document.getElementById('notificationSound');
@@ -1634,7 +1629,7 @@
                 </div>
             `;
 
-            const waLink = order.customer_phone ? `https://wa.me/55${order.customer_phone.replace(/\D/g, '')}` : '#';
+            const waLink = order.customer_phone ? `https://wa.me/55${order.customer_phone.replace(/\\D/g, '')}` : '#';
             footer.innerHTML = `
                 <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                     <button class="btn-premium" style="flex: 1; background: #3b82f6; color: white; padding: 14px;" onclick="printOrder('${order.id}')">
@@ -1646,12 +1641,17 @@
                     </button>
                     ` : ''}
                 </div>
-                <div style="display: flex; gap: 12px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                     <a href="${waLink}" target="_blank" class="btn-premium" style="flex: 1; background: #059669; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 12px;">
                         <i class="fab fa-whatsapp"></i> CONVERSAR
                     </a>
                     <button class="btn-premium" style="flex: 1; background: #dc2626; color: white; padding: 12px;" onclick="toggleBlacklist()">
                         <i class="fas fa-ban"></i> MARCAR GOLPISTA
+                    </button>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-premium" style="flex: 1; background: rgba(127, 29, 29, 0.8); color: #fca5a5; padding: 12px; border: 1px solid #991b1b;" onclick="confirmDeleteOrder('${order.id}', ${order.order_number})">
+                        <i class="fas fa-trash-alt"></i> APAGAR PEDIDO
                     </button>
                 </div>
             `;
@@ -1905,6 +1905,63 @@
             } catch (e) {
                 console.error(e);
                 showToast('Erro de conexao');
+            }
+        }
+
+        // ========================================
+        // Delete Order Functions
+        // ========================================
+        function confirmDeleteOrder(orderId, orderNumber) {
+            const confirmHtml = `
+                <div id="deleteOrderConfirmModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px;">
+                    <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%;">
+                        <h3 style="color: #ef4444; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-trash-alt"></i> Apagar Pedido #${orderNumber}
+                        </h3>
+                        <p style="color: #ccc; margin-bottom: 16px;">
+                            Tem certeza que deseja <strong style="color: #ef4444;">APAGAR PERMANENTEMENTE</strong> este pedido?
+                        </p>
+                        <p style="color: #999; font-size: 0.85rem; margin-bottom: 20px;">
+                            Esta acao nao pode ser desfeita. O pedido sera removido completamente do sistema.
+                        </p>
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="closeDeleteOrderModal()" style="flex: 1; padding: 12px; background: #333; color: #ccc; border: none; border-radius: 8px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="deleteOrder('${orderId}')" style="flex: 1; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                <i class="fas fa-trash-alt"></i> APAGAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', confirmHtml);
+        }
+
+        function closeDeleteOrderModal() {
+            const modal = document.getElementById('deleteOrderConfirmModal');
+            if (modal) modal.remove();
+        }
+
+        async function deleteOrder(orderId) {
+            try {
+                const res = await fetch(`/api/orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: API_HEADERS
+                });
+
+                if (res.ok) {
+                    showToast('Pedido apagado com sucesso!');
+                    closeDeleteOrderModal();
+                    closeOrderModal();
+                    await loadOrders();
+                } else {
+                    const err = await res.json();
+                    showToast('Erro: ' + (err.error || 'Nao foi possivel apagar'));
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Erro de conexao ao apagar');
             }
         }
 
@@ -2276,11 +2333,36 @@
             }
         }
 
-        function showToast(msg, type = 'success') {
+        function showToast(msg, type = 'success', title = null) {
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toastMessage');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconContainer = document.getElementById('toastIconContainer');
+
             if (!toast || !toastMsg) return;
 
+            // Definir título padrão se não fornecido
+            if (!title) {
+                if (type === 'success') title = 'Sucesso!';
+                else if (type === 'error') title = 'Erro!';
+                else if (type === 'warning') title = 'Atenção!';
+                else title = 'Notificação';
+            }
+
+            // Configurar ícones e cores baseados no tipo
+            if (type === 'error') {
+                toastIcon.className = 'fas fa-exclamation-circle';
+                toastIconContainer.style.background = '#ef4444';
+            } else if (type === 'warning') {
+                toastIcon.className = 'fas fa-exclamation-triangle';
+                toastIconContainer.style.background = '#f59e0b';
+            } else {
+                toastIcon.className = 'fas fa-check-circle';
+                toastIconContainer.style.background = 'var(--success)';
+            }
+
+            toastTitle.textContent = title;
             toastMsg.textContent = msg;
             toast.className = 'toast visible ' + type;
 

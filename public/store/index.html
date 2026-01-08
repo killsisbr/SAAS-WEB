@@ -2364,9 +2364,14 @@
                 if (cached.coordinates) {
                     customerLat = cached.coordinates.lat;
                     customerLng = cached.coordinates.lng;
+                    // Também salvar no input hidden para ser enviado
+                    const coordsInput = document.getElementById('cust-coordinates');
+                    if (coordsInput) {
+                        coordsInput.value = JSON.stringify(cached.coordinates);
+                    }
                 }
 
-                if (cached.lastDeliveryFee !== undefined) {
+                if (cached.lastDeliveryFee !== undefined && cached.lastDeliveryFee !== null) {
                     deliveryFee = cached.lastDeliveryFee;
                     deliveryOutOfRange = false;
                 }
@@ -2766,9 +2771,9 @@
                             name: name,
                             phone: phone,
                             address: address?.street || '',
-                            neighbor: address?.neighbor || '',
-                            obsAddress: address?.observation || '',
-                            coordinates: address?.coordinates ? JSON.parse(address.coordinates) : null,
+                            neighbor: address?.neighborhood || '',
+                            obsAddress: address?.reference || '',
+                            coordinates: (address?.lat && address?.lng) ? { lat: address.lat, lng: address.lng } : null,
                             lastDeliveryFee: checkoutType === 'entrega' ? deliveryFee : null
                         });
                         console.log('Cache do cliente salvo');

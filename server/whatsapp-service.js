@@ -530,7 +530,15 @@ class WhatsAppService {
                 }
             }
 
-            summaryLines.push(`Forma de pagamento: ${orderData.payment_method || 'Não informado'}`);
+            // Traduzir método de pagamento para português
+            const paymentLabels = {
+                'PIX': 'PIX',
+                'CREDIT_CARD': 'Cartão',
+                'DEBIT_CARD': 'Cartão (Débito)',
+                'CASH': 'Dinheiro'
+            };
+            const paymentDisplay = paymentLabels[orderData.payment_method] || orderData.payment_method || 'Não informado';
+            summaryLines.push(`Forma de pagamento: ${paymentDisplay}`);
             summaryLines.push('');
 
             // Adicionar dados do PIX se for o caso
@@ -676,7 +684,15 @@ class WhatsAppService {
                 groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
             }
 
-            groupLines.push(`Pagamento: ${orderData.payment_method || 'Não informado'}`);
+            // Traduzir método de pagamento para português
+            const groupPaymentLabels = {
+                'PIX': 'PIX',
+                'CREDIT_CARD': 'Cartão',
+                'DEBIT_CARD': 'Cartão (Débito)',
+                'CASH': 'Dinheiro'
+            };
+            const groupPaymentDisplay = groupPaymentLabels[orderData.payment_method] || orderData.payment_method || 'Não informado';
+            groupLines.push(`Pagamento: ${groupPaymentDisplay}`);
 
             // Informação de troco
             if (orderData.change_for !== null && orderData.change_for !== undefined) {
@@ -691,8 +707,12 @@ class WhatsAppService {
                 }
             }
 
-            // Link WhatsApp do cliente
-            const cleanPhone = orderData.customer_phone?.replace(/\D/g, '');
+            // Link WhatsApp do cliente - garantir formato com 55
+            let cleanPhone = orderData.customer_phone?.replace(/\D/g, '') || '';
+            // Adicionar 55 se não começar com ele (números brasileiros)
+            if (cleanPhone && !cleanPhone.startsWith('55')) {
+                cleanPhone = '55' + cleanPhone;
+            }
             if (cleanPhone) {
                 groupLines.push(`📱 *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
             }

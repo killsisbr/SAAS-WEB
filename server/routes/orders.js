@@ -497,5 +497,35 @@ export default function (db, broadcast) {
         }
     });
 
+    // ========================================
+    // DELETE /api/orders/:id - Apagar pedido
+    // ========================================
+    router.delete('/:id', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // Verificar se o pedido existe e pertence ao tenant
+            const order = await db.get('SELECT * FROM orders WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
+            if (!order) {
+                return res.status(404).json({ error: 'Pedido nao encontrado' });
+            }
+
+            // Deletar o pedido
+            await db.run('DELETE FROM orders WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
+
+            console.log(`Pedido #${order.order_number} deletado pelo tenant ${req.tenantId}`);
+
+            // Broadcast via SSE para atualizar o quadro
+            if (broadcast) {
+                broadcast(req.tenantId, 'order-deleted', { id });
+            }
+
+            res.json({ success: true, message: `Pedido #${order.order_number} apagado` });
+        } catch (error) {
+            console.error('Delete order error:', error);
+            res.status(500).json({ error: 'Erro ao apagar pedido' });
+        }
+    });
+
     return router;
 }
