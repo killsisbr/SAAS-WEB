@@ -1445,17 +1445,25 @@
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
+            // Criar ou reutilizar iframe oculto
+            let printFrame = document.getElementById('printFrame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'printFrame';
+                printFrame.style.cssText = 'position:fixed;top:-10000px;left:-10000px;width:80mm;height:auto;visibility:hidden;';
+                document.body.appendChild(printFrame);
+            }
+
+            const printContent = `
                 <html>
                 <head>
                     <title>Pedido #${order.order_number}</title>
                     <style>
                         @page { size: 80mm auto; margin: 0; }
-                        body { font-family: 'Courier New', monospace; font-size: 20px; padding: 5mm; width: 80mm; margin: 0; }
+                        body { font-family: 'Courier New', monospace; font-size: 12px; padding: 5mm; width: 80mm; margin: 0; }
                         .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
                         .item { display: flex; justify-content: space-between; margin: 3px 0; }
-                        .total { font-size: 22px; font-weight: bold; border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px; }
+                        .total { font-size: 14px; font-weight: bold; border-top: 1px dashed #000; padding-top: 8px; margin-top: 8px; }
                         .line { border-top: 1px dashed #000; margin: 8px 0; }
                     </style>
                 </head>
@@ -1475,8 +1483,8 @@
                 const iAddons = i.addons || i.extras || [];
                 return `
                         <div class="item"><span>${i.quantity}x ${i.name}</span><span>R$ ${(i.price * i.quantity).toFixed(2)}</span></div>
-                        ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:18px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
-                        ${i.observation ? `<div style="font-size:16px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
+                        ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:10px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
+                        ${i.observation ? `<div style="font-size:10px;font-style:italic;padding-left:8px">Obs: ${i.observation}</div>` : ''}
                     `}).join('')}
                     <div class="total">
                         <div class="item"><span>TOTAL:</span><span>R$ ${order.total.toFixed(2)}</span></div>
@@ -1484,13 +1492,18 @@
                     <div style="text-align:center;margin-top:12px;font-size:10px">Obrigado!</div>
                 </body>
                 </html>
-            `);
-            printWindow.document.close();
-            printWindow.focus();
+            `;
+
+            const doc = printFrame.contentWindow.document;
+            doc.open();
+            doc.write(printContent);
+            doc.close();
+
+            // Aguardar carregar e imprimir direto
+            printFrame.contentWindow.focus();
             setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
+                printFrame.contentWindow.print();
+            }, 100);
         }
 
 
