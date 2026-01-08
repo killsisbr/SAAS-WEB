@@ -365,6 +365,31 @@ class WhatsAppService {
                 return;
             }
 
+            // ============ GATILHOS DE PALAVRAS-CHAVE ============
+            const triggers = currentSettings.triggers || [];
+            if (triggers.length > 0) {
+                const msgLowerTrigger = messageBody.toLowerCase().trim();
+
+                for (const trigger of triggers) {
+                    // Verificar se a mensagem contém a palavra-chave
+                    if (msgLowerTrigger.includes(trigger.word.toLowerCase())) {
+                        console.log(`[Trigger] Palavra-chave "${trigger.word}" detectada para ${whatsappId}`);
+
+                        // Preparar link da loja
+                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
+
+                        // Substituir variaveis na resposta
+                        let response = trigger.response
+                            .replace(/\{link\}/gi, orderLink)
+                            .replace(/\{restaurante\}/gi, tenant?.name || 'Restaurante')
+                            .replace(/\{nome\}/gi, contact.pushname || 'Cliente');
+
+                        await chat.sendMessage(response);
+                        return; // Nao continuar processamento
+                    }
+                }
+            }
+
             // Enviar welcome se necessario (modo link)
             if (this.shouldSendWelcome(tenantId, whatsappId)) {
                 await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings);
@@ -416,28 +441,36 @@ class WhatsAppService {
         }
     }
 
+    // Construir link da loja com domínio customizado se disponível
+    async buildOrderLink(tenantId, tenant, sanitizedNumber) {
+        if (!tenant) {
+            tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+        }
+        if (!tenant) return '';
+
+        // Tentar buscar domínio customizado verificado
+        const customDomain = await this.db.get('SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1', [tenantId]);
+
+        if (customDomain) {
+            return `https://${customDomain.domain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+        }
+
+        // Fallback para APP_DOMAIN ou HOST configurado
+        let appDomain = process.env.APP_DOMAIN;
+        if (!appDomain && process.env.HOST) {
+            appDomain = process.env.HOST.replace(/^https?:\/\//, '');
+        }
+        if (!appDomain) appDomain = 'localhost:3000';
+
+        const protocol = appDomain.includes('localhost') ? 'http' : 'https';
+        return `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+    }
+
     async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings) {
         const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         if (!tenant) return;
 
-        // Tentar buscar domínio customizado
-        const customDomain = await this.db.get('SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1', [tenantId]);
-
-        let orderLink;
-        if (customDomain) {
-            orderLink = `https://${customDomain.domain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
-        } else {
-            // Fallback para APP_DOMAIN ou HOST configurado
-            let appDomain = process.env.APP_DOMAIN;
-            if (!appDomain && process.env.HOST) {
-                appDomain = process.env.HOST.replace(/^https?:\/\//, '');
-            }
-            if (!appDomain) appDomain = 'localhost:3000';
-
-            const protocol = appDomain.includes('localhost') ? 'http' : 'https';
-            orderLink = `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
-        }
-
+        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
         const restaurantName = tenant.name || 'Restaurante';
 
         const welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +

@@ -964,79 +964,177 @@ Estamos com saudade! Aproveite e mate a vontade:
 Voce faz falta aqui! Que tal relembrar nosso sabor?
 {link}</textarea>
                     </div>
-                </div>
 
-                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                    <button class="btn btn-secondary" onclick="closeMessageConfig()">CANCELAR</button>
-                    <button class="btn btn-whatsapp" onclick="saveMessageConfig()"><i class="fas fa-save"></i> SALVAR
-                        MENSAGENS</button>
+                    <!-- Gatilhos de Palavras-Chave -->
+                    <div style="border-top: 3px dashed var(--dark); padding-top: 20px; margin-top: 20px;">
+                        <h3 style="font-family: 'Bebas Neue'; font-size: 1.5rem; margin-bottom: 16px;">
+                            <i class="fas fa-bolt" style="color: #8b5cf6;"></i> Gatilhos de Palavras-Chave
+                        </h3>
+                        <small style="color: var(--text-muted); display: block; margin-bottom: 16px;">
+                            Quando o cliente enviar uma dessas palavras, o bot respondera automaticamente.
+                        </small>
+
+                        <div id="triggersList"></div>
+
+                        <div
+                            style="background: var(--bg); padding: 16px; border-radius: 12px; border: 2px solid var(--dark); margin-top: 16px;">
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <div style="flex: 1;">
+                                    <label
+                                        style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px; display: block;">PALAVRA-CHAVE</label>
+                                    <input type="text" id="newTriggerWord" placeholder="ex: cardapio, menu, preco"
+                                        style="width: 100%; padding: 10px; border: 2px solid var(--dark); border-radius: 8px;">
+                                </div>
+                                <div style="flex: 2;">
+                                    <label
+                                        style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px; display: block;">RESPOSTA</label>
+                                    <input type="text" id="newTriggerResponse"
+                                        placeholder="Mensagem a enviar (use {link} para o link)"
+                                        style="width: 100%; padding: 10px; border: 2px solid var(--dark); border-radius: 8px;">
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="addTrigger()" style="width: 100%;">
+                                <i class="fas fa-plus"></i> ADICIONAR GATILHO
+                            </button>
+                        </div>
+
+                        <div class="info-box" style="margin-top: 16px;">
+                            <i class="fas fa-lightbulb" style="color: var(--warning);"></i>
+                            <div>
+                                <strong>Dica:</strong> Use palavras simples como "cardapio", "menu", "precos",
+                                "horario".
+                                Use {link} na resposta para incluir o link da loja.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button class="btn btn-secondary" onclick="closeMessageConfig()">CANCELAR</button>
+                        <button class="btn btn-whatsapp" onclick="saveMessageConfig()"><i class="fas fa-save"></i>
+                            SALVAR
+                            MENSAGENS</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        // ========================================
-        // Configuracao de Mensagens
-        // ========================================
-        let messageConfig = {};
+        <script>
+            // ========================================
+            // Configuracao de Mensagens
+            // ========================================
+            let messageConfig = {};
+            let triggers = [];
 
-        function openMessageConfig() {
-            loadMessageConfig();
-            document.getElementById('messageConfigModal').style.display = 'flex';
-        }
-
-        function closeMessageConfig() {
-            document.getElementById('messageConfigModal').style.display = 'none';
-        }
-
-        async function loadMessageConfig() {
-            try {
-                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const data = await res.json();
-                messageConfig = data.settings?.botMessages || {};
-
-                if (messageConfig.welcome) document.getElementById('msgWelcome').value = messageConfig.welcome;
-                if (messageConfig.orderLink) document.getElementById('msgOrderLink').value = messageConfig.orderLink;
-                if (messageConfig.help) document.getElementById('msgHelp').value = messageConfig.help;
-                if (messageConfig.confirmation) document.getElementById('msgConfirmation').value = messageConfig.confirmation;
-                if (messageConfig.followup7) document.getElementById('msgFollowup7').value = messageConfig.followup7;
-                if (messageConfig.followup15) document.getElementById('msgFollowup15').value = messageConfig.followup15;
-                if (messageConfig.followup30) document.getElementById('msgFollowup30').value = messageConfig.followup30;
-            } catch (e) {
-                console.error('Erro ao carregar mensagens:', e);
+            function openMessageConfig() {
+                loadMessageConfig();
+                document.getElementById('messageConfigModal').style.display = 'flex';
             }
-        }
 
-        async function saveMessageConfig() {
-            const messages = {
-                welcome: document.getElementById('msgWelcome').value,
-                orderLink: document.getElementById('msgOrderLink').value,
-                help: document.getElementById('msgHelp').value,
-                confirmation: document.getElementById('msgConfirmation').value,
-                followup7: document.getElementById('msgFollowup7').value,
-                followup15: document.getElementById('msgFollowup15').value,
-                followup30: document.getElementById('msgFollowup30').value
-            };
-
-            try {
-                await fetch('/api/whatsapp/settings', {
-                    method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ botMessages: messages })
-                });
-                alert('Mensagens salvas com sucesso!');
-                closeMessageConfig();
-            } catch (e) {
-                alert('Erro ao salvar mensagens');
+            function closeMessageConfig() {
+                document.getElementById('messageConfigModal').style.display = 'none';
             }
-        }
 
-        // Fechar modal ao clicar fora
-        document.getElementById('messageConfigModal').addEventListener('click', function (e) {
-            if (e.target === this) closeMessageConfig();
-        });
-    </script>
+            async function loadMessageConfig() {
+                try {
+                    const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
+                    const data = await res.json();
+                    messageConfig = data.settings?.botMessages || {};
+                    triggers = data.settings?.triggers || [];
+
+                    if (messageConfig.welcome) document.getElementById('msgWelcome').value = messageConfig.welcome;
+                    if (messageConfig.orderLink) document.getElementById('msgOrderLink').value = messageConfig.orderLink;
+                    if (messageConfig.help) document.getElementById('msgHelp').value = messageConfig.help;
+                    if (messageConfig.confirmation) document.getElementById('msgConfirmation').value = messageConfig.confirmation;
+                    if (messageConfig.followup7) document.getElementById('msgFollowup7').value = messageConfig.followup7;
+                    if (messageConfig.followup15) document.getElementById('msgFollowup15').value = messageConfig.followup15;
+                    if (messageConfig.followup30) document.getElementById('msgFollowup30').value = messageConfig.followup30;
+
+                    renderTriggers();
+                } catch (e) {
+                    console.error('Erro ao carregar mensagens:', e);
+                }
+            }
+
+            function renderTriggers() {
+                const container = document.getElementById('triggersList');
+                if (triggers.length === 0) {
+                    container.innerHTML = '<div style="padding: 12px; color: var(--text-muted); text-align: center;">Nenhum gatilho configurado</div>';
+                    return;
+                }
+
+                container.innerHTML = triggers.map((t, i) => `
+                <div style="display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--card); border: 2px solid var(--dark); border-radius: 8px; margin-bottom: 8px;">
+                    <div style="background: #8b5cf6; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                        ${t.word}
+                    </div>
+                    <div style="flex: 1; font-size: 0.9rem;">${t.response}</div>
+                    <button onclick="removeTrigger(${i})" style="background: var(--danger); color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            }
+
+            function addTrigger() {
+                const word = document.getElementById('newTriggerWord').value.trim().toLowerCase();
+                const response = document.getElementById('newTriggerResponse').value.trim();
+
+                if (!word || !response) {
+                    alert('Preencha a palavra-chave e a resposta');
+                    return;
+                }
+
+                // Verificar duplicata
+                if (triggers.some(t => t.word === word)) {
+                    alert('Essa palavra-chave ja existe');
+                    return;
+                }
+
+                triggers.push({ word, response });
+                renderTriggers();
+
+                // Limpar campos
+                document.getElementById('newTriggerWord').value = '';
+                document.getElementById('newTriggerResponse').value = '';
+            }
+
+            function removeTrigger(index) {
+                triggers.splice(index, 1);
+                renderTriggers();
+            }
+
+            async function saveMessageConfig() {
+                const messages = {
+                    welcome: document.getElementById('msgWelcome').value,
+                    orderLink: document.getElementById('msgOrderLink').value,
+                    help: document.getElementById('msgHelp').value,
+                    confirmation: document.getElementById('msgConfirmation').value,
+                    followup7: document.getElementById('msgFollowup7').value,
+                    followup15: document.getElementById('msgFollowup15').value,
+                    followup30: document.getElementById('msgFollowup30').value
+                };
+
+                try {
+                    await fetch('/api/whatsapp/settings', {
+                        method: 'PUT',
+                        headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            botMessages: messages,
+                            triggers: triggers
+                        })
+                    });
+                    alert('Mensagens e gatilhos salvos com sucesso!');
+                    closeMessageConfig();
+                } catch (e) {
+                    alert('Erro ao salvar mensagens');
+                }
+            }
+
+            // Fechar modal ao clicar fora
+            document.getElementById('messageConfigModal').addEventListener('click', function (e) {
+                if (e.target === this) closeMessageConfig();
+            });
+        </script>
 </body>
 
 </html>
