@@ -771,11 +771,27 @@ class WhatsAppService {
     }
 
     // Helper: garantir formato do chatId
+    // Adiciona código do país 55 se número brasileiro não tiver
     _ensureChatId(id) {
         if (!id) return id;
         const str = String(id);
-        if (str.includes('@')) return str;
-        const digits = str.replace(/\D/g, '');
+
+        // Se já tem @, apenas garantir que tem código do país
+        if (str.includes('@')) {
+            const [number, domain] = str.split('@');
+            let digits = number.replace(/\D/g, '');
+            // Número brasileiro sem código do país (10-11 dígitos = DDD + número)
+            if (!digits.startsWith('55') && digits.length >= 10 && digits.length <= 11) {
+                digits = '55' + digits;
+            }
+            return digits + '@' + domain;
+        }
+
+        // Sem @, adicionar @c.us e código do país se necessário
+        let digits = str.replace(/\D/g, '');
+        if (!digits.startsWith('55') && digits.length >= 10 && digits.length <= 11) {
+            digits = '55' + digits;
+        }
         return digits + '@c.us';
     }
 
