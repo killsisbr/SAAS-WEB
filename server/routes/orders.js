@@ -202,7 +202,7 @@ export default function (db, broadcast) {
                 orderId, tenantId, customerId, orderNumber, customerName, customerPhone,
                 JSON.stringify(itemsWithDetails), subtotal, deliveryFee, total,
                 deliveryType || 'DELIVERY', address ? JSON.stringify(address) : null,
-                observation || null, paymentMethod || null, req.body.payment_change || 0
+                observation || null, (paymentMethod === 'LOCAL' ? 'CASH' : paymentMethod) || null, req.body.payment_change || 0
             ]);
 
             // Buscar pedido criado
