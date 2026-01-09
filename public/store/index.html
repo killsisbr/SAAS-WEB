@@ -1994,11 +1994,28 @@
                         case error.TIMEOUT: msg = 'Tempo esgotado'; break;
                     }
                     if (statusEl) statusEl.textContent = msg;
-                    showToast(msg.toUpperCase());
 
-                    // Abrir modal mesmo assim, mas verificar se ja nao esta aberto
-                    if (!document.getElementById('map-modal').classList.contains('modal-active')) {
-                        openMapModal();
+                    // Verificar se tem endereco em cache
+                    const cached = customerCache.load();
+                    if (cached && cached.address && cached.coordinates) {
+                        // Tem endereco salvo - perguntar se quer usar
+                        showPopup(
+                            'LOCALIZAÇÃO NEGADA',
+                            `Encontramos seu último endereço:\n${cached.address}\n\nDeseja usar este endereço?`,
+                            'warning'
+                        );
+                        // Usar o endereco anterior automaticamente
+                        togglePreviousAddress(true);
+                        showToast('USANDO ENDEREÇO ANTERIOR');
+                    } else {
+                        // Sem endereco salvo - abrir modal de entrada manual
+                        showPopup(
+                            'DIGITE SEU ENDEREÇO',
+                            'Não foi possível obter sua localização. Por favor, digite seu endereço manualmente.',
+                            'warning'
+                        );
+                        // Abrir modal de detalhes de endereco para digitacao manual
+                        openModal('address-details-modal');
                     }
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
@@ -2088,24 +2105,36 @@
             const neighbor = document.getElementById('modal-address-neighbor').value.trim();
             const obs = document.getElementById('modal-address-obs').value.trim();
 
-            if (!number) {
-                showPopup('FALTA O NÚMERO', 'Por favor, informe o número da casa ou apto.', 'warning');
-                document.getElementById('modal-address-number').focus();
+            // Validar endereço mínimo (rua ou numero)
+            if (!street && !number) {
+                showPopup('ENDEREÇO INCOMPLETO', 'Por favor, informe a rua e o número.', 'warning');
+                document.getElementById('modal-address-street').focus();
                 return;
             }
 
             // Preencher campos reais do checkout
-            const fullAddress = `${street}, ${number}`;
+            const fullAddress = number ? `${street}, ${number}` : street;
             document.getElementById('cust-address').value = fullAddress;
             document.getElementById('cust-neighbor').value = neighbor;
             document.getElementById('cust-obs-address').value = obs;
-            document.getElementById('cust-coordinates').value = JSON.stringify(tempCoords);
 
-            // Ja atualizado no confirmMapLocation, mas garantindo consistencia
-            customerLat = tempCoords.lat;
-            customerLng = tempCoords.lng;
+            // Se temos coordenadas do mapa, usar; senão, usar taxa fixa
+            if (tempCoords && tempCoords.lat && tempCoords.lng) {
+                document.getElementById('cust-coordinates').value = JSON.stringify(tempCoords);
+                customerLat = tempCoords.lat;
+                customerLng = tempCoords.lng;
+                calculateDeliveryFee();
+            } else {
+                // Entrada manual sem GPS - usar taxa fixa padrão
+                const settings = storeData?.settings || {};
+                const fixedFee = settings.deliveryFixedFee || settings.delivery_fixed_fee || 7;
+                deliveryFee = fixedFee;
+                isUsingFixedFeeFallback = true;
+                customerLat = null;
+                customerLng = null;
+                console.log('[Manual] Entrada sem GPS, usando taxa fixa:', fixedFee);
+            }
 
-            calculateDeliveryFee();
             updateCheckoutSummary();
 
             // ========================================
@@ -2669,12 +2698,20 @@
             }
 
             if (checkoutType === 'entrega') {
-                if (!customerLat || !customerLng) {
-                    showPopup('CADÊ VOCÊ?', 'Você precisa clicar no mapa ou usar sua localização para que possamos calcular a entrega.', 'warning');
-                    openMapModal();
+                const address = document.getElementById('cust-address').value.trim();
+                // Permitir entrega se tem coordenadas OU endereco preenchido manualmente (taxa fixa)
+                if ((!customerLat || !customerLng) && !address) {
+                    showPopup('CADÊ VOCÊ?', 'Você precisa informar seu endereço para a entrega.', 'warning');
+                    // Se tem endereco em cache, usar; senão pedir para digitar
+                    const cached = customerCache.load();
+                    if (cached && cached.address) {
+                        togglePreviousAddress(true);
+                    } else {
+                        openModal('address-details-modal');
+                    }
                     return;
                 }
-                const address = document.getElementById('cust-address').value.trim();
+                // address já foi declarado acima, verificar se está vazio
                 if (!address) {
                     showPopup('ENDEREÇO VAZIO', 'Por favor, informe a rua e o número da sua casa para a entrega.', 'warning');
                     document.getElementById('cust-address').focus();

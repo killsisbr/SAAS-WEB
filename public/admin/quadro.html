@@ -1764,7 +1764,7 @@
             const waLink = order.customer_phone ? `https://wa.me/55${order.customer_phone.replace(/\\D/g, '')}` : '#';
             footer.innerHTML = `
                 <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                    <button class="btn-premium" style="flex: 1; background: #3b82f6; color: white; padding: 14px;" onclick="printOrder('${order.id}')">
+                    <button class="btn-premium" style="flex: 1; background: #3b82f6; color: white; padding: 14px;" onclick="executePrint('${order.id}')">
                         <i class="fas fa-print"></i> IMPRIMIR
                     </button>
                     ${order.status !== 'DELIVERED' ? `
