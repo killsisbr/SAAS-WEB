@@ -119,6 +119,12 @@ export default function (db) {
             };
             receipt += `Pagamento: ${paymentMap[order.payment_method] || order.payment_method}\n`;
 
+            // Troco para pagamento em dinheiro
+            if (order.payment_method === 'CASH' && order.payment_change > 0) {
+                receipt += `Cliente pagara: R$ ${order.payment_change.toFixed(2)}\n`;
+                receipt += formatLine('TROCO:', `R$ ${(order.payment_change - order.total).toFixed(2)}`, width) + '\n';
+            }
+
             if (order.observation) {
                 receipt += dashes + '\n';
                 receipt += 'OBSERVACOES:\n';
@@ -220,6 +226,13 @@ export default function (db) {
     <div class="line"></div>
     
     <div><strong>Pagamento:</strong> ${order.payment_method}</div>
+    ${order.payment_method === 'CASH' && order.payment_change > 0 ? `
+        <div class="line"></div>
+        <div style="background: #f0f0f0; padding: 8px; border-radius: 4px;">
+            <div><strong>Cliente pagara:</strong> R$ ${order.payment_change.toFixed(2)}</div>
+            <div style="font-size: 14px; font-weight: bold;"><strong>TROCO:</strong> R$ ${(order.payment_change - order.total).toFixed(2)}</div>
+        </div>
+    ` : ''}
     
     ${order.observation ? `
         <div class="line"></div>

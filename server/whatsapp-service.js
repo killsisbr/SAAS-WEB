@@ -301,14 +301,39 @@ class WhatsAppService {
                 };
             }
 
+
             const whatsappId = contact.id._serialized;
-            // Extrair apenas os dígitos e remover código do país (55) se presente
-            let sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
-            console.log(`[DEBUG] whatsappId original: ${whatsappId}, somente digitos: ${sanitizedNumber}`);
+            let sanitizedNumber = '';
+
+            // Verificar se é um LID (Linked ID) - não é um número de telefone válido
+            if (whatsappId.includes('@lid')) {
+                console.log(`[DEBUG] Detectado LID (Linked ID): ${whatsappId} - tentando obter numero real`);
+                // Tentar obter o número real do contato
+                const realNumber = contact.number || contact.id?.user || '';
+                if (realNumber && !realNumber.includes('lid')) {
+                    sanitizedNumber = String(realNumber).replace(/[^0-9]/g, '');
+                    console.log(`[DEBUG] Numero real obtido: ${sanitizedNumber}`);
+                } else {
+                    // Se não conseguir obter número real, usar placeholder para evitar link quebrado
+                    console.log(`[WARN] Nao foi possivel obter numero real do LID ${whatsappId}`);
+                    sanitizedNumber = ''; // Deixar vazio para forçar input manual
+                }
+            } else {
+                // Extrair apenas os dígitos do ID normal
+                sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+                console.log(`[DEBUG] whatsappId original: ${whatsappId}, somente digitos: ${sanitizedNumber}`);
+            }
+
             // Números brasileiros começam com 55 - remover para ficar só DDD+número
             if (sanitizedNumber.startsWith('55') && sanitizedNumber.length >= 12) {
                 sanitizedNumber = sanitizedNumber.substring(2);
                 console.log(`[DEBUG] Removido 55, resultado: ${sanitizedNumber}`);
+            }
+
+            // Validar se o número tem formato brasileiro válido (10-11 dígitos)
+            if (sanitizedNumber && (sanitizedNumber.length < 10 || sanitizedNumber.length > 11)) {
+                console.log(`[WARN] Numero invalido detectado: ${sanitizedNumber} (${sanitizedNumber.length} digitos)`);
+                sanitizedNumber = ''; // Número inválido
             }
             const messageBody = message.body || '';
 
@@ -448,7 +473,8 @@ class WhatsAppService {
         if (!appDomain) appDomain = 'localhost:3000';
 
         const protocol = appDomain.includes('localhost') ? 'http' : 'https';
-        return `${protocol}://${appDomain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+        const baseUrl = `${protocol}://${appDomain}/loja/${tenant.slug}`;
+        return sanitizedNumber ? `${baseUrl}?whatsapp=${sanitizedNumber}` : baseUrl;
     }
 
     async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings, customerName = 'Cliente') {
@@ -456,8 +482,21 @@ class WhatsAppService {
         if (!tenant) return;
 
         const tenantSettings = JSON.parse(tenant.settings || '{}');
-        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
         const restaurantName = tenant.name || 'Restaurante';
+
+        // Verificar se o número é válido antes de enviar o link
+        if (!sanitizedNumber || sanitizedNumber.length < 10 || sanitizedNumber.length > 11) {
+            console.log(`[WARN] Numero invalido para envio de link: "${sanitizedNumber}"`);
+            // Enviar mensagem informando que não foi possível identificar o número
+            const errorMessage = `Ola! Infelizmente nao conseguimos identificar seu numero de telefone corretamente.\n\n` +
+                `Por favor, entre em contato novamente usando seu numero de WhatsApp principal (nao use conta empresarial ou dispositivo vinculado).\n\n` +
+                `Se o problema persistir, entre em contato diretamente com ${restaurantName}.`;
+            await chat.sendMessage(errorMessage);
+            console.log(`Mensagem de erro enviada - numero invalido (tenant ${tenantId})`);
+            return;
+        }
+
+        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
 
         // Usar mensagem customizada ou fallback padrao
         let welcomeMessage;
