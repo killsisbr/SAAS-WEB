@@ -687,30 +687,32 @@ class WhatsAppService {
             let mapsLink = '';
             let addressObservation = '';
 
-            if (orderData.address) {
-                if (typeof orderData.address === 'string') {
-                    addressText = orderData.address;
-                } else {
-                    const { street, number, neighborhood, city, complement, reference, lat, lng } = orderData.address;
+            if (orderData.address && typeof orderData.address === 'object') {
+                const { street, number, neighborhood, city, complement, reference, lat, lng } = orderData.address;
 
-                    // Montar endereco sem undefined
-                    let parts = [];
-                    if (street) parts.push(street);
-                    if (number) parts.push(number);
-                    addressText = parts.join(', ');
+                // Montar endereco sem undefined
+                let parts = [];
+                if (street) parts.push(street);
+                if (number) parts.push(number);
+                addressText = parts.join(', ');
 
-                    if (neighborhood) addressText += ` - ${neighborhood}`;
-                    if (city) addressText += ` - ${city}`;
-                    if (complement) addressText += `\nComplemento: ${complement}`;
+                if (neighborhood) addressText += ` - ${neighborhood}`;
+                if (city) addressText += ` - ${city}`;
+                if (complement) addressText += `\nComplemento: ${complement}`;
 
-                    // Guardar reference para usar como observacao
-                    if (reference) addressObservation = reference;
+                // Guardar reference para usar como observacao
+                if (reference) addressObservation = reference;
 
-                    if (lat && lng) {
-                        mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
-                    }
+                if (lat && lng) {
+                    mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
                 }
                 groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
+            } else if (typeof orderData.address === 'string' && orderData.address.trim()) {
+                addressText = orderData.address;
+                groupLines.push(`Endereço: ${addressText}`);
+            } else {
+                // Pedido de RETIRADA ou sem endereço
+                groupLines.push(`📍 *RETIRADA NO LOCAL*`);
             }
 
             // Traduzir método de pagamento para português
