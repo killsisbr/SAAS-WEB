@@ -808,19 +808,29 @@
         // permitindo que o bot envie a confirmação automaticamente.
         // O backend espera o formato: NUMERO@c.us (ex: 5511999999999@c.us)
         // ================================================================
-        let whatsappFromUrl = null;
+        let whatsappFromUrl = null;  // ID completo para backend (ex: 5511999999999@c.us)
+        let phoneFromWhatsApp = null; // Número limpo para exibição (ex: 11999999999)
         (function extractWhatsAppFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const phone = params.get('whatsapp');
             if (phone) {
                 // Formatar para o padrão que o backend espera
                 // O número pode vir só com os dígitos, adicionamos 55 se necessário
-                let formattedPhone = phone.replace(/\D/g, '');
-                if (!formattedPhone.startsWith('55') && formattedPhone.length <= 11) {
-                    formattedPhone = '55' + formattedPhone;
+                let cleanDigits = phone.replace(/\D/g, '');
+
+                // Guardar número original para exibição (sem 55 se for brasileiro)
+                if (cleanDigits.startsWith('55') && cleanDigits.length >= 12) {
+                    phoneFromWhatsApp = cleanDigits.substring(2); // Remove 55 para exibição
+                } else {
+                    phoneFromWhatsApp = cleanDigits;
                 }
-                whatsappFromUrl = formattedPhone + '@c.us';
-                console.log('[WhatsApp] Cliente veio do bot, ID:', whatsappFromUrl);
+
+                // Adicionar 55 para o whatsappId do backend
+                if (!cleanDigits.startsWith('55') && cleanDigits.length >= 10 && cleanDigits.length <= 11) {
+                    cleanDigits = '55' + cleanDigits;
+                }
+                whatsappFromUrl = cleanDigits + '@c.us';
+                console.log('[WhatsApp] Cliente veio do bot, ID:', whatsappFromUrl, 'Phone:', phoneFromWhatsApp);
             }
         })();
 
@@ -2299,8 +2309,9 @@
             const phoneContainer = phoneInput?.parentElement;
 
             // 1. Telefone da URL (prioridade maxima)
-            if (whatsappFromUrl) {
-                phoneInput.value = whatsappFromUrl;
+            if (phoneFromWhatsApp) {
+                // Usar phoneFromWhatsApp para exibição (sem 55)
+                phoneInput.value = phoneFromWhatsApp;
                 // Esconder campo de telefone e mostrar badge
                 if (phoneContainer) {
                     phoneContainer.innerHTML = `
@@ -2309,8 +2320,8 @@
                             <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                             </svg>
-                            <span class="font-bold text-emerald-700">${formatPhone(whatsappFromUrl)}</span>
-                            <input type="hidden" id="cust-phone" value="${whatsappFromUrl}">
+                            <span class="font-bold text-emerald-700">${formatPhone(phoneFromWhatsApp)}</span>
+                            <input type="hidden" id="cust-phone" value="${phoneFromWhatsApp}">
                         </div>
                     `;
                 }
