@@ -301,11 +301,12 @@ class WhatsAppService {
                 };
             }
 
-
-            const whatsappId = contact.id._serialized;
+            // Usar message.from que SEMPRE contém o @c.us com número real
+            // contact.id._serialized pode retornar @lid em alguns casos
+            const whatsappId = message.from || contact.id._serialized;
             // Extrair apenas os dígitos e remover código do país (55) se presente
             let sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
-            console.log(`[DEBUG] whatsappId original: ${whatsappId}, somente digitos: ${sanitizedNumber}`);
+            console.log(`[DEBUG] whatsappId (from message.from): ${whatsappId}, somente digitos: ${sanitizedNumber}`);
             // Números brasileiros começam com 55 - remover para ficar só DDD+número
             if (sanitizedNumber.startsWith('55') && sanitizedNumber.length >= 12) {
                 sanitizedNumber = sanitizedNumber.substring(2);
