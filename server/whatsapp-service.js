@@ -301,12 +301,41 @@ class WhatsAppService {
                 };
             }
 
-            // Usar message.from que SEMPRE contém o @c.us com número real
-            // contact.id._serialized pode retornar @lid em alguns casos
-            const whatsappId = message.from || contact.id._serialized;
-            // Extrair apenas os dígitos e remover código do país (55) se presente
-            let sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
-            console.log(`[DEBUG] whatsappId (from message.from): ${whatsappId}, somente digitos: ${sanitizedNumber}`);
+            // Estratégia para obter número real (evitar LID):
+            // 1. contact.number geralmente tem o número real
+            // 2. Se não tiver, usar message.from
+            // 3. Se for LID, usar contact.id.user
+            let whatsappId = message.from || contact.id._serialized;
+            let sanitizedNumber = '';
+
+            // Prioridade 1: contact.number (número real)
+            if (contact.number && String(contact.number).match(/^\d{10,13}$/)) {
+                sanitizedNumber = String(contact.number).replace(/[^0-9]/g, '');
+                console.log(`[DEBUG] Numero obtido de contact.number: ${sanitizedNumber}`);
+            }
+            // Prioridade 2: Extrair de whatsappId se for @c.us
+            else if (whatsappId && whatsappId.includes('@c.us')) {
+                sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+                console.log(`[DEBUG] Numero obtido de @c.us: ${whatsappId} -> ${sanitizedNumber}`);
+            }
+            // Prioridade 3: LID - tentar contact.id.user
+            else if (whatsappId && whatsappId.includes('@lid')) {
+                console.log(`[DEBUG] Detectado LID: ${whatsappId}`);
+                // Tentar obter de contact.id.user ou outras fontes
+                const altNumber = contact.id?.user || contact.id?._serialized?.split('@')[0];
+                if (altNumber && !altNumber.includes('lid')) {
+                    sanitizedNumber = String(altNumber).replace(/[^0-9]/g, '');
+                    console.log(`[DEBUG] Numero alternativo do LID: ${sanitizedNumber}`);
+                } else {
+                    // Último recurso: usar o próprio LID (vai gerar link incorreto)
+                    sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+                    console.log(`[WARN] Usando LID como numero - link pode nao funcionar: ${sanitizedNumber}`);
+                }
+            } else {
+                sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
+                console.log(`[DEBUG] Numero padrao: ${sanitizedNumber}`);
+            }
+
             // Números brasileiros começam com 55 - remover para ficar só DDD+número
             if (sanitizedNumber.startsWith('55') && sanitizedNumber.length >= 12) {
                 sanitizedNumber = sanitizedNumber.substring(2);
