@@ -502,3 +502,20 @@ CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_loyalty_points_customer ON loyalty_points(tenant_id, customer_id);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_tenant ON push_subscriptions(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_tenant ON activity_logs(tenant_id, created_at);
+
+-- ============================================================
+-- MAPEAMENTO LID PARA TELEFONE (WhatsApp)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS lid_phone_mappings (
+    id TEXT PRIMARY KEY,
+    lid TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(lid, tenant_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_lid_mappings ON lid_phone_mappings(lid, tenant_id);

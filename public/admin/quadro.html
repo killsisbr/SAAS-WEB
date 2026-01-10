@@ -2602,6 +2602,9 @@
             document.getElementById('buffetModal').classList.remove('active');
         }
 
+        // Variavel global para guardar grupos do buffet
+        let buffetGroupsList = [];
+
         async function loadBuffetItems() {
             const container = document.getElementById('buffetItemsList');
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Carregando...</p></div>';
@@ -2613,7 +2616,7 @@
                 const categories = data.categories || [];
 
                 // Coletar todos os grupos que contem "buffet" ou "marmita"
-                let buffetGroups = [];
+                buffetGroupsList = [];
                 for (const cat of categories) {
                     if (cat.addonGroups) {
                         for (const group of cat.addonGroups) {
@@ -2621,19 +2624,19 @@
                                 group.name.toLowerCase().includes('marmita') ||
                                 group.name.toLowerCase().includes('acompanhamento') ||
                                 cat.name.toLowerCase().includes('marmita')) {
-                                buffetGroups.push({ ...group, categoryName: cat.name });
+                                buffetGroupsList.push({ ...group, categoryName: cat.name });
                             }
                         }
                     }
                 }
 
-                if (buffetGroups.length === 0) {
+                if (buffetGroupsList.length === 0) {
                     container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-info-circle" style="font-size: 2rem;"></i><p>Nenhum grupo de buffet encontrado.<br>Crie um grupo de adicionais com "Buffet" ou "Marmita" no nome.</p></div>';
                     return;
                 }
 
                 let html = '';
-                for (const group of buffetGroups) {
+                for (const group of buffetGroupsList) {
                     html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #f59e0b; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name} <span style="color:#666; font-weight:400;">(${group.categoryName})</span></div>`;
 
                     if (group.items && group.items.length > 0) {
@@ -2705,11 +2708,39 @@
         async function addBuffetItem() {
             const input = document.getElementById('newBuffetItem');
             const name = input.value.trim();
-            if (!name) return;
+            if (!name) {
+                showToast('Digite o nome do item');
+                return;
+            }
 
-            // TODO: Implementar adicao de novo item
-            alert('Para adicionar novos itens, use a pagina de Adicionais');
-            input.value = '';
+            // Verificar se temos grupos de buffet
+            if (buffetGroupsList.length === 0) {
+                showToast('Nenhum grupo de buffet encontrado. Crie um primeiro na pagina de Adicionais.');
+                return;
+            }
+
+            // Usar o primeiro grupo de buffet encontrado
+            const targetGroup = buffetGroupsList[0];
+
+            try {
+                const res = await fetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price: 0 })
+                });
+
+                if (res.ok) {
+                    input.value = '';
+                    showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
+                    await loadBuffetItems(); // Recarregar lista
+                } else {
+                    const err = await res.json();
+                    showToast('Erro: ' + (err.error || 'Falha ao adicionar'), 'error');
+                }
+            } catch (e) {
+                console.error('Erro ao adicionar item:', e);
+                showToast('Erro de conexao', 'error');
+            }
         }
 
         // ========================================

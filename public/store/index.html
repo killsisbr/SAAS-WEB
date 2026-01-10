@@ -483,9 +483,12 @@
                         <input type="text" id="cust-name" placeholder="Ex: João Brutus"
                             class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
                     </div>
-                    <div>
-                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu
-                            Telemóvel</label>
+                    <div id="phone-field-container">
+                        <div class="flex items-center gap-2 mb-2">
+                            <label class="bebas text-xl opacity-50 uppercase tracking-widest">Teu Telemóvel</label>
+                            <span id="phone-save-notice" class="text-[10px] text-red-500 font-bold hidden">(salvo para
+                                próximos pedidos)</span>
+                        </div>
                         <input type="text" id="cust-phone" placeholder="9xx xxx xxx"
                             class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
                     </div>
@@ -810,6 +813,7 @@
         // ================================================================
         let whatsappFromUrl = null;  // ID completo para backend (ex: 5511999999999@c.us)
         let phoneFromWhatsApp = null; // Número limpo para exibição (ex: 11999999999)
+        let lidFromUrl = null; // LID do WhatsApp quando não há número real
         (function extractWhatsAppFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const phone = params.get('whatsapp');
@@ -908,6 +912,15 @@
             }
 
             if (!customerLat || !customerLng) {
+                // Se nao tem coordenadas mas tem endereco digitado, usar taxa fixa
+                const addressField = document.getElementById('cust-address');
+                if (addressField && addressField.value.trim()) {
+                    const fixedFee = parseFloat(settings.deliveryFee) || 7; // Default R$ 7,00
+                    deliveryFee = fixedFee;
+                    deliveryOutOfRange = false;
+                    isUsingFixedFeeFallback = true;
+                    console.log('[DeliveryFee] Usando taxa fixa para endereco manual:', fixedFee);
+                }
                 return;
             }
 
@@ -1063,6 +1076,7 @@
             const phoneFromUrl = urlParams.get('p'); // Novo: parametro simples
             const orderToken = urlParams.get('t'); // Compatibilidade JWT
             const whatsappLegacy = urlParams.get('whatsapp'); // Compatibilidade antiga
+            const lidParam = urlParams.get('lid'); // NOVO: LID quando nao tem numero real
 
             // Armazenar telefone para uso
             let phoneFromToken = null;
@@ -1079,6 +1093,11 @@
                 }
             } else if (whatsappLegacy) {
                 whatsappFromUrl = whatsappLegacy.replace(/\D/g, '');
+            } else if (lidParam) {
+                // NOVO: Cliente veio com LID (sem numero real)
+                lidFromUrl = lidParam;
+                sessionStorage.setItem('lidFromUrl', lidParam);
+                console.log('[LID] Cliente veio com LID:', lidParam);
             }
 
             // Carregar cache do cliente
@@ -1159,6 +1178,48 @@
             // Pre-preencher dados se veio do WhatsApp
             if (whatsappFromUrl) {
                 await prefillCustomerData(whatsappFromUrl);
+            }
+            // NOVO: Se veio com LID, tentar buscar telefone do mapeamento
+            else if (lidFromUrl) {
+                await prefillFromLid(lidFromUrl);
+            }
+        }
+
+        // NOVO: Buscar telefone do mapeamento LID e pre-preencher
+        async function prefillFromLid(lid) {
+            console.log('[LID] Buscando mapeamento para:', lid);
+
+            try {
+                const res = await fetch(`/api/orders/lid-mapping/${lid}?tenantId=${storeData?.id}`);
+                const data = await res.json();
+
+                if (data.exists && data.phone) {
+                    // Encontrou mapeamento! Usar o telefone salvo
+                    console.log('[LID] Mapeamento encontrado:', data.phone);
+                    whatsappFromUrl = data.phone;
+                    await prefillCustomerData(data.phone);
+                } else {
+                    // Nao encontrou - mostrar campo de telefone obrigatorio
+                    console.log('[LID] Sem mapeamento - campo de telefone sera obrigatorio');
+                    const phoneInput = document.getElementById('cust-phone');
+                    const phoneContainer = phoneInput?.closest('.form-group') || phoneInput?.parentElement;
+
+                    if (phoneInput) {
+                        phoneInput.placeholder = 'Digite seu telefone com DDD *';
+                        phoneInput.required = true;
+                        // Manter visivel para o cliente preencher
+                        if (phoneContainer) {
+                            phoneContainer.style.display = 'block';
+                        }
+                        // Mostrar aviso de que o numero sera salvo
+                        const saveNotice = document.getElementById('phone-save-notice');
+                        if (saveNotice) {
+                            saveNotice.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[LID] Erro ao buscar mapeamento:', e);
             }
         }
 
@@ -2409,12 +2470,15 @@
             const container = document.getElementById('previous-address-option-container');
             if (!container) return;
 
-            const feeText = cached.lastDeliveryFee !== undefined && cached.lastDeliveryFee !== null
-                ? `R$ ${cached.lastDeliveryFee.toFixed(2).replace('.', ',')}`
-                : '';
+            // Usar taxa do cache ou default R$ 7,00
+            const cachedFee = cached.lastDeliveryFee !== undefined && cached.lastDeliveryFee !== null
+                ? cached.lastDeliveryFee
+                : 7;
+            const feeText = `R$ ${cachedFee.toFixed(2).replace('.', ',')}`;
             const distText = cached.lastDistance
-                ? `${cached.lastDistance.toFixed(1)} km`
+                ? `${cached.lastDistance.toFixed(2)} km`
                 : '';
+            const obsText = cached.obsAddress || '';
 
             container.innerHTML = `
                 <div class="mb-6 p-4 bg-gradient-to-br from-emerald-900/30 to-emerald-800/10 border-2 border-emerald-500 rounded-2xl">
@@ -2423,16 +2487,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <span class="bebas text-lg text-emerald-400">SEU ÚLTIMO ENDEREÇO</span>
+                        <span class="bebas text-lg text-emerald-400">Seu ultimo endereco</span>
                     </div>
-                    <p class="font-bold text-white mb-1">${cached.address}</p>
-                    ${cached.neighbor ? `<p class="text-sm opacity-50">${cached.neighbor}</p>` : ''}
-                    ${feeText || distText ? `
-                        <div class="flex gap-4 mt-3 text-sm">
-                            ${distText ? `<span class="text-emerald-300"><i class="fas fa-route mr-1"></i>${distText}</span>` : ''}
-                            ${feeText ? `<span class="text-emerald-300 font-bold"><i class="fas fa-truck mr-1"></i>${feeText}</span>` : ''}
-                        </div>
-                    ` : ''}
+                    <p class="font-bold text-white mb-1">${cached.address}${cached.neighbor ? ', ' + cached.neighbor : ''}</p>
+                    <div class="flex gap-4 mt-2 text-sm">
+                        ${distText ? `<span class="text-emerald-300"><i class="fas fa-route mr-1"></i>${distText}</span>` : ''}
+                        <span class="text-emerald-300 font-bold"><i class="fas fa-truck mr-1"></i>${feeText}</span>
+                    </div>
+                    ${obsText ? `<p class="text-sm text-gray-400 mt-2">Obs: ${obsText}</p>` : ''}
                     
                     <div class="flex gap-2 mt-4">
                         <button onclick="togglePreviousAddress(true)" 
@@ -2641,7 +2703,11 @@
                 // Recalcular taxa de entrega
                 calculateDeliveryFee();
 
-                if (!customerLat || !customerLng) {
+                // Se nao tem coordenadas E nao tem taxa fixa configurada, pedir localizacao
+                const addressField = document.getElementById('cust-address');
+                const hasManualAddress = addressField && addressField.value.trim();
+
+                if ((!customerLat || !customerLng) && !hasManualAddress) {
                     deliveryHtml = `
                         <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
                             <span class="font-bold">Taxa de Entrega</span>
@@ -2894,11 +2960,20 @@
                     local: 'LOCAL' // Pagamento no local (retirada)
                 };
 
+                // DEBUG: Verificar valores antes de enviar
+                console.log('[DEBUG] whatsappFromUrl:', whatsappFromUrl);
+                console.log('[DEBUG] lidFromUrl:', lidFromUrl);
+                const computedWhatsappId = whatsappFromUrl
+                    ? (whatsappFromUrl.includes('@') ? whatsappFromUrl : whatsappFromUrl + '@c.us')
+                    : (lidFromUrl ? lidFromUrl + '@lid' : null);
+                console.log('[DEBUG] computedWhatsappId:', computedWhatsappId);
+
                 const orderData = {
                     tenantId: storeData?.id,
                     customerName: name,
                     customerPhone: phone,
-                    whatsappId: whatsappFromUrl || null, // Incluir whatsappId se veio do bot
+                    // Se veio do bot com numero, usa o whatsappId. Se veio com LID, reconstruir o ID completo
+                    whatsappId: computedWhatsappId,
                     orderToken: sessionStorage.getItem('orderToken') || null, // Token JWT para validacao
                     items: items,
                     deliveryType: checkoutType === 'entrega' ? 'DELIVERY' : 'PICKUP',
@@ -2932,6 +3007,24 @@
                             lastDeliveryFee: checkoutType === 'entrega' ? deliveryFee : null
                         });
                         console.log('Cache do cliente salvo');
+
+                        // NOVO: Salvar mapeamento LID -> Telefone se veio de LID
+                        if (lidFromUrl && phone) {
+                            try {
+                                await fetch('/api/orders/lid-mapping', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        lid: lidFromUrl,
+                                        phone: phone,
+                                        tenantId: storeData?.id
+                                    })
+                                });
+                                console.log('[LID] Mapeamento salvo:', lidFromUrl, '->', phone);
+                            } catch (e) {
+                                console.warn('[LID] Erro ao salvar mapeamento:', e);
+                            }
+                        }
 
                         // Notificacao sera enviada automaticamente via backend (WhatsApp bot)
                         // Nao precisa abrir link manualmente

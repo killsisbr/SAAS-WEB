@@ -306,24 +306,35 @@ class WhatsAppService {
             // Apenas usar @c.us que contém o número de telefone real
             let whatsappId = message.from || contact.id._serialized;
             let sanitizedNumber = '';
+            let isLid = false;
+            let lidValue = '';
 
             // Verificar se é @c.us (número real)
             if (whatsappId && whatsappId.includes('@c.us')) {
                 sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
                 console.log(`[DEBUG] Numero obtido de @c.us: ${whatsappId} -> ${sanitizedNumber}`);
             }
-            // Se for @lid, tentar obter de contact.number
+            // Se for @lid, tentar obter de contact.number ou mapeamento
             else if (whatsappId && whatsappId.includes('@lid')) {
-                console.log(`[DEBUG] Detectado LID: ${whatsappId}`);
+                isLid = true;
+                lidValue = whatsappId.replace('@lid', ''); // Extrair apenas o ID
+                console.log(`[DEBUG] Detectado LID: ${whatsappId}, lidValue: ${lidValue}`);
 
                 // Tentar contact.number primeiro
                 if (contact.number && String(contact.number).match(/^\d{10,15}$/)) {
                     sanitizedNumber = String(contact.number).replace(/[^0-9]/g, '');
                     console.log(`[DEBUG] Numero obtido de contact.number: ${sanitizedNumber}`);
                 } else {
-                    // LID sem número real - não enviar link
-                    console.log(`[WARN] LID sem numero real disponivel - ignorando mensagem`);
-                    return; // Sair da função sem enviar link
+                    // Buscar mapeamento LID -> Telefone no banco
+                    const mapping = await this.getLidPhoneMapping(tenantId, lidValue);
+                    if (mapping) {
+                        sanitizedNumber = mapping.phone;
+                        console.log(`[DEBUG] Numero obtido do mapeamento LID: ${sanitizedNumber}`);
+                    } else {
+                        // LID sem mapeamento - enviar link com LID para cliente preencher telefone
+                        console.log(`[INFO] LID sem mapeamento - enviando link com lid=${lidValue}`);
+                        // sanitizedNumber fica vazio, usaremos lid
+                    }
                 }
             } else {
                 sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
@@ -378,8 +389,8 @@ class WhatsAppService {
                     if (msgLowerTrigger.includes(trigger.word.toLowerCase())) {
                         console.log(`[Trigger] Palavra-chave "${trigger.word}" detectada para ${whatsappId}`);
 
-                        // Preparar link da loja
-                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
+                        // Preparar link da loja (com telefone ou LID)
+                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, isLid ? lidValue : null);
 
                         // Substituir variaveis na resposta
                         let response = trigger.response
@@ -402,7 +413,7 @@ class WhatsAppService {
 
             // Enviar welcome se necessario (modo link)
             if (this.shouldSendWelcome(tenantId, whatsappId)) {
-                await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings, contact.pushname);
+                await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings, contact.pushname, isLid ? lidValue : null);
                 this.markWelcomeSent(tenantId, whatsappId);
             }
 
@@ -452,17 +463,28 @@ class WhatsAppService {
     }
 
     // Construir link da loja com domínio customizado se disponível
-    async buildOrderLink(tenantId, tenant, sanitizedNumber) {
+    // Agora aceita lidValue para quando não conseguir o número real
+    async buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue = null) {
         if (!tenant) {
             tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         }
         if (!tenant) return '';
 
+        // Determinar qual parâmetro usar: whatsapp (se tiver número) ou lid (se não tiver)
+        let queryParam = '';
+        if (sanitizedNumber) {
+            queryParam = `whatsapp=${sanitizedNumber}`;
+        } else if (lidValue) {
+            queryParam = `lid=${lidValue}`;
+        }
+
         // Tentar buscar domínio customizado verificado
         const customDomain = await this.db.get('SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1', [tenantId]);
 
         if (customDomain) {
-            return `https://${customDomain.domain}/loja/${tenant.slug}?whatsapp=${sanitizedNumber}`;
+            return queryParam
+                ? `https://${customDomain.domain}/loja/${tenant.slug}?${queryParam}`
+                : `https://${customDomain.domain}/loja/${tenant.slug}`;
         }
 
         // Fallback para APP_DOMAIN ou HOST configurado
@@ -474,16 +496,48 @@ class WhatsAppService {
 
         const protocol = appDomain.includes('localhost') ? 'http' : 'https';
         const baseUrl = `${protocol}://${appDomain}/loja/${tenant.slug}`;
-        return sanitizedNumber ? `${baseUrl}?whatsapp=${sanitizedNumber}` : baseUrl;
+        return queryParam ? `${baseUrl}?${queryParam}` : baseUrl;
     }
 
-    async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings, customerName = 'Cliente') {
+    // Buscar mapeamento LID -> Telefone no banco
+    async getLidPhoneMapping(tenantId, lid) {
+        try {
+            const mapping = await this.db.get(
+                'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                [tenantId, lid]
+            );
+            return mapping || null;
+        } catch (err) {
+            console.error('[LidMapping] Erro ao buscar mapeamento:', err.message);
+            return null;
+        }
+    }
+
+    // Salvar mapeamento LID -> Telefone no banco
+    async saveLidPhoneMapping(tenantId, lid, phone) {
+        try {
+            const id = `lid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            await this.db.run(
+                `INSERT INTO lid_phone_mappings (id, lid, phone, tenant_id) 
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT(lid, tenant_id) DO UPDATE SET phone = ?, updated_at = CURRENT_TIMESTAMP`,
+                [id, lid, phone, tenantId, phone]
+            );
+            console.log(`[LidMapping] Mapeamento salvo: ${lid} -> ${phone} (tenant: ${tenantId})`);
+            return true;
+        } catch (err) {
+            console.error('[LidMapping] Erro ao salvar mapeamento:', err.message);
+            return false;
+        }
+    }
+
+    async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings, customerName = 'Cliente', lidValue = null) {
         const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         if (!tenant) return;
 
         const tenantSettings = JSON.parse(tenant.settings || '{}');
         const restaurantName = tenant.name || 'Restaurante';
-        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber);
+        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue);
 
         // Usar mensagem customizada ou fallback padrao
         let welcomeMessage;
@@ -502,6 +556,59 @@ class WhatsAppService {
 
         await chat.sendMessage(welcomeMessage);
         console.log(`Welcome enviado para ${sanitizedNumber} (tenant ${tenantId})`);
+    }
+
+    /**
+     * Normalizar whatsappId para formato correto de chatId
+     * Trata números brasileiros - remove o 9 adicional quando necessário
+     */
+    _ensureChatId(whatsappId) {
+        if (!whatsappId) return null;
+
+        let cleanNumber = '';
+        let domain = '@c.us';
+
+        // Se já é um ID completo
+        if (whatsappId.includes('@')) {
+            // Se for LID, retornar como está (não podemos processar)
+            if (whatsappId.includes('@lid')) {
+                return whatsappId;
+            }
+            // Se for @c.us, extrair o número para processar
+            if (whatsappId.includes('@c.us')) {
+                cleanNumber = whatsappId.replace('@c.us', '').replace(/\D/g, '');
+            } else {
+                // Outro formato desconhecido, retornar como está
+                return whatsappId;
+            }
+        } else {
+            // Limpar caracteres não numéricos
+            cleanNumber = whatsappId.replace(/\D/g, '');
+        }
+
+        // Se tem 10 ou 11 dígitos, adicionar 55 (codigo do Brasil)
+        if (cleanNumber.length >= 10 && cleanNumber.length <= 11) {
+            cleanNumber = '55' + cleanNumber;
+        }
+
+        // Tratar números brasileiros - remover 9 adicional
+        // Formato WhatsApp: 55DDXXXXXXXX (12 dígitos, sem o 9 adicional)
+        // Se tem 13 dígitos (55 + DDD + 9 + 8 dígitos), remover o 9
+        if (cleanNumber.length === 13 && cleanNumber.startsWith('55')) {
+            const ddd = cleanNumber.substring(2, 4);
+            const nineDigit = cleanNumber.substring(4, 5);
+            const restOfNumber = cleanNumber.substring(5);
+
+            // Se o terceiro dígito após 55 é 9 e o resto tem 8 dígitos, remover o 9
+            if (nineDigit === '9' && restOfNumber.length === 8) {
+                const oldNumber = cleanNumber;
+                cleanNumber = '55' + ddd + restOfNumber;
+                console.log(`[ChatId] Removido 9 adicional: ${oldNumber} -> ${cleanNumber}`);
+            }
+        }
+
+        console.log(`[ChatId] Normalizado: ${whatsappId} -> ${cleanNumber}@c.us`);
+        return cleanNumber + '@c.us';
     }
 
     // Enviar confirmacao de pedido ao cliente
@@ -798,30 +905,7 @@ class WhatsAppService {
         }
     }
 
-    // Helper: garantir formato do chatId
-    // Adiciona código do país 55 se número brasileiro não tiver
-    _ensureChatId(id) {
-        if (!id) return id;
-        const str = String(id);
 
-        // Se já tem @, apenas garantir que tem código do país
-        if (str.includes('@')) {
-            const [number, domain] = str.split('@');
-            let digits = number.replace(/\D/g, '');
-            // Número brasileiro sem código do país (10-11 dígitos = DDD + número)
-            if (!digits.startsWith('55') && digits.length >= 10 && digits.length <= 11) {
-                digits = '55' + digits;
-            }
-            return digits + '@' + domain;
-        }
-
-        // Sem @, adicionar @c.us e código do país se necessário
-        let digits = str.replace(/\D/g, '');
-        if (!digits.startsWith('55') && digits.length >= 10 && digits.length <= 11) {
-            digits = '55' + digits;
-        }
-        return digits + '@c.us';
-    }
 
     // Obter QR Code como Data URL
     async getQRCodeDataURL(tenantId) {

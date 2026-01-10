@@ -14,6 +14,65 @@ export default function (db, broadcast) {
     const whatsappService = getWhatsAppService(db);
 
     // ========================================
+    // GET /api/orders/lid-mapping/:lid - Buscar telefone pelo LID
+    // ========================================
+    router.get('/lid-mapping/:lid', async (req, res) => {
+        try {
+            const { lid } = req.params;
+            const { tenantId } = req.query;
+
+            if (!tenantId) {
+                return res.status(400).json({ error: 'Tenant ID obrigatorio' });
+            }
+
+            const mapping = await db.get(
+                'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                [tenantId, lid]
+            );
+
+            if (mapping) {
+                console.log(`[LidMapping API] Encontrado: ${lid} -> ${mapping.phone}`);
+                return res.json({ exists: true, phone: mapping.phone });
+            }
+
+            res.json({ exists: false });
+        } catch (error) {
+            console.error('Get LID mapping error:', error);
+            res.status(500).json({ error: 'Erro ao buscar mapeamento' });
+        }
+    });
+
+    // ========================================
+    // POST /api/orders/lid-mapping - Salvar mapeamento LID -> Telefone
+    // ========================================
+    router.post('/lid-mapping', async (req, res) => {
+        try {
+            const { lid, phone, tenantId } = req.body;
+
+            if (!lid || !phone || !tenantId) {
+                return res.status(400).json({ error: 'Dados incompletos (lid, phone, tenantId)' });
+            }
+
+            // Limpar telefone
+            const cleanPhone = phone.replace(/\D/g, '');
+
+            const id = `lid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            await db.run(
+                `INSERT INTO lid_phone_mappings (id, lid, phone, tenant_id) 
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT(lid, tenant_id) DO UPDATE SET phone = ?, updated_at = CURRENT_TIMESTAMP`,
+                [id, lid, cleanPhone, tenantId, cleanPhone]
+            );
+
+            console.log(`[LidMapping API] Salvo: ${lid} -> ${cleanPhone} (tenant: ${tenantId})`);
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Save LID mapping error:', error);
+            res.status(500).json({ error: 'Erro ao salvar mapeamento' });
+        }
+    });
+
+    // ========================================
     // GET /api/orders/customer/:phone - Buscar ultimo endereco do cliente
     // ========================================
     router.get('/customer/:phone', async (req, res) => {
@@ -55,6 +114,7 @@ export default function (db, broadcast) {
             res.status(500).json({ error: 'Erro ao buscar cliente' });
         }
     });
+
 
     // ========================================
     // POST /api/orders - Criar pedido (publico)
@@ -220,8 +280,33 @@ export default function (db, broadcast) {
             const { whatsappId } = req.body;
             if (whatsappId) {
                 try {
+                    // Se é LID, tentar buscar o telefone mapeado para usar como fallback
+                    let confirmationTarget = whatsappId;
+                    if (whatsappId.includes('@lid')) {
+                        const lid = whatsappId.replace('@lid', '');
+                        const mapping = await db.get(
+                            'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                            [tenantId, lid]
+                        );
+                        if (mapping && mapping.phone) {
+                            // Usar telefone do mapeamento
+                            confirmationTarget = mapping.phone + '@c.us';
+                            console.log(`[LID->Phone] Usando telefone mapeado: ${lid} -> ${mapping.phone}`);
+                        } else if (customerPhone) {
+                            // Fallback: usar o telefone do pedido
+                            let cleanPhone = customerPhone.replace(/\D/g, '');
+                            if (!cleanPhone.startsWith('55') && cleanPhone.length <= 11) {
+                                cleanPhone = '55' + cleanPhone;
+                            }
+                            confirmationTarget = cleanPhone + '@c.us';
+                            console.log(`[LID->Phone] Usando telefone do pedido: ${lid} -> ${cleanPhone}`);
+                        }
+                    }
+
+                    console.log(`[Confirmacao] Tentando enviar para: ${confirmationTarget}`);
+
                     // Enviar confirmacao para o cliente
-                    await whatsappService.sendOrderConfirmation(tenantId, whatsappId, {
+                    await whatsappService.sendOrderConfirmation(tenantId, confirmationTarget, {
                         order_number: orderNumber,
                         items: itemsWithDetails,
                         delivery_fee: deliveryFee,
@@ -231,7 +316,7 @@ export default function (db, broadcast) {
                         address,
                         payment_method: paymentMethod
                     });
-                    console.log(`Confirmacao WhatsApp enviada para ${whatsappId}`);
+                    console.log(`Confirmacao WhatsApp enviada para ${confirmationTarget}`);
                 } catch (err) {
                     console.error('Erro ao enviar confirmacao WhatsApp:', err.message);
                 }
