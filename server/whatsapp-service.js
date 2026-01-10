@@ -302,34 +302,28 @@ class WhatsAppService {
             }
 
             // Estratégia para obter número real (evitar LID):
-            // 1. contact.number geralmente tem o número real
-            // 2. Se não tiver, usar message.from
-            // 3. Se for LID, usar contact.id.user
+            // LID (@lid) é um identificador interno do WhatsApp que não representa o número real
+            // Apenas usar @c.us que contém o número de telefone real
             let whatsappId = message.from || contact.id._serialized;
             let sanitizedNumber = '';
 
-            // Prioridade 1: contact.number (número real)
-            if (contact.number && String(contact.number).match(/^\d{10,13}$/)) {
-                sanitizedNumber = String(contact.number).replace(/[^0-9]/g, '');
-                console.log(`[DEBUG] Numero obtido de contact.number: ${sanitizedNumber}`);
-            }
-            // Prioridade 2: Extrair de whatsappId se for @c.us
-            else if (whatsappId && whatsappId.includes('@c.us')) {
+            // Verificar se é @c.us (número real)
+            if (whatsappId && whatsappId.includes('@c.us')) {
                 sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
                 console.log(`[DEBUG] Numero obtido de @c.us: ${whatsappId} -> ${sanitizedNumber}`);
             }
-            // Prioridade 3: LID - tentar contact.id.user
+            // Se for @lid, tentar obter de contact.number
             else if (whatsappId && whatsappId.includes('@lid')) {
                 console.log(`[DEBUG] Detectado LID: ${whatsappId}`);
-                // Tentar obter de contact.id.user ou outras fontes
-                const altNumber = contact.id?.user || contact.id?._serialized?.split('@')[0];
-                if (altNumber && !altNumber.includes('lid')) {
-                    sanitizedNumber = String(altNumber).replace(/[^0-9]/g, '');
-                    console.log(`[DEBUG] Numero alternativo do LID: ${sanitizedNumber}`);
+
+                // Tentar contact.number primeiro
+                if (contact.number && String(contact.number).match(/^\d{10,15}$/)) {
+                    sanitizedNumber = String(contact.number).replace(/[^0-9]/g, '');
+                    console.log(`[DEBUG] Numero obtido de contact.number: ${sanitizedNumber}`);
                 } else {
-                    // Último recurso: usar o próprio LID (vai gerar link incorreto)
-                    sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
-                    console.log(`[WARN] Usando LID como numero - link pode nao funcionar: ${sanitizedNumber}`);
+                    // LID sem número real - não enviar link
+                    console.log(`[WARN] LID sem numero real disponivel - ignorando mensagem`);
+                    return; // Sair da função sem enviar link
                 }
             } else {
                 sanitizedNumber = String(whatsappId).replace(/[^0-9]/g, '');
