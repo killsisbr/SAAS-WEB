@@ -145,6 +145,11 @@ class WhatsAppService {
         }
 
         const settings = JSON.parse(tenant.settings || '{}');
+        const chromePath = process.env.WHATSAPP_CHROME_PATH || (process.platform === 'linux'
+            ? ['/usr/bin/chromium-browser', '/usr/bin/chromium', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].find(p => fs.existsSync(p))
+            : undefined);
+
+        console.log(`[WhatsApp][${tenantId}] Usando Chrome em: ${chromePath || 'Bundled Chromium'}`);
 
         const client = new Client({
             authStrategy: new LocalAuth({
@@ -157,9 +162,7 @@ class WhatsAppService {
             },
             puppeteer: {
                 headless: true,
-                executablePath: process.env.WHATSAPP_CHROME_PATH || (process.platform === 'linux'
-                    ? ['/usr/bin/chromium-browser', '/usr/bin/chromium', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].find(p => fs.existsSync(p))
-                    : undefined),
+                executablePath: chromePath,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',

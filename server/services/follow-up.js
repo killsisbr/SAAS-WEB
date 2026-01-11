@@ -89,8 +89,8 @@ class FollowUpService {
     // ========================================
     async processInactiveCustomers(tenantId) {
         try {
-            const client = this.whatsappService.clients.get(tenantId);
-            if (!client) return;
+            const status = this.whatsappService.statuses.get(tenantId);
+            if (status !== 'connected') return;
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             const settings = JSON.parse(tenant?.settings || '{}');
@@ -129,8 +129,8 @@ class FollowUpService {
     // ========================================
     async processCartAbandonment(tenantId) {
         try {
-            const client = this.whatsappService.clients.get(tenantId);
-            if (!client) return;
+            const status = this.whatsappService.statuses.get(tenantId);
+            if (status !== 'connected') return;
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
 
@@ -181,8 +181,8 @@ class FollowUpService {
     // ========================================
     async processPostOrderFeedback(tenantId) {
         try {
-            const client = this.whatsappService.clients.get(tenantId);
-            if (!client) return;
+            const status = this.whatsappService.statuses.get(tenantId);
+            if (status !== 'connected') return;
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
 
