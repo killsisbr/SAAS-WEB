@@ -247,7 +247,20 @@ export default function (db) {
             }
 
             const settings = JSON.parse(tenant.settings || '{}');
-            const deliveryZones = settings.deliveryZones || [];
+
+            // ============================================================
+            // CONFIGURACOES DE TAXA HIBRIDA
+            // ============================================================
+            // baseFeeDistance: Distancia ate onde aplica taxa base (ex: 4 km)
+            // baseFee: Taxa fixa ate a distancia base (ex: R$ 7,00)
+            // feePerKm: Taxa adicional por km apos distancia base (ex: R$ 2,00)
+            // maxDeliveryDistance: Distancia maxima de entrega (ex: 70 km)
+            // ============================================================
+            const baseFeeDistance = parseFloat(settings.baseFeeDistance) || 5; // Ate 5km
+            const baseFee = parseFloat(settings.baseFee) || 7; // R$ 7,00 base
+            const feePerKm = parseFloat(settings.feePerKm) || 2; // R$ 2,00 por km adicional
+            const maxDeliveryDistance = parseFloat(settings.maxDeliveryDistance) || 70; // Maximo 70km
+            const deliveryZones = settings.deliveryZones || []; // Zonas legadas (opcional)
 
             // Calcular distancia por ROTA REAL
             console.log(`[ORS] Calculando rota: Loja(${storeLat}, ${storeLng}) -> Cliente(${customerLat}, ${customerLng})`);
@@ -264,54 +277,92 @@ export default function (db) {
 
             console.log(`[ORS] Distancia calculada: ${distance.toFixed(2)}km (${calculationType}), Tempo: ${duration || 'N/A'} min`);
 
-            // Se nao tem zonas configuradas, usar taxa fixa
-            if (deliveryZones.length === 0) {
-                return res.json({
-                    fee: settings.deliveryFee || 0,
-                    distance: Math.round(distance * 100) / 100,
-                    duration: duration,
-                    type: 'fixed',
-                    calculationType: calculationType
-                });
-            }
-
-            // Ordenar zonas por distancia
-            const sortedZones = [...deliveryZones].sort((a, b) => parseFloat(a.maxKm) - parseFloat(b.maxKm));
-
-            // Encontrar zona correta
-            let fee = 0;
-            let outOfRange = true;
-
-            for (const zone of sortedZones) {
-                if (distance <= parseFloat(zone.maxKm)) {
-                    fee = parseFloat(zone.fee);
-                    outOfRange = false;
-                    console.log(`[ORS] Zona encontrada: ate ${zone.maxKm}km = R$ ${zone.fee}`);
-                    break;
-                }
-            }
-
             // Verificar se esta fora da area de entrega
-            if (outOfRange) {
-                const maxZone = sortedZones[sortedZones.length - 1];
+            if (distance > maxDeliveryDistance) {
                 return res.json({
                     fee: 0,
                     distance: Math.round(distance * 100) / 100,
                     duration: duration,
                     outOfRange: true,
-                    maxRadius: parseFloat(maxZone.maxKm),
-                    message: `Endereco fora da area de entrega (${distance.toFixed(1)}km, maximo ${maxZone.maxKm}km)`,
+                    maxRadius: maxDeliveryDistance,
+                    message: `Endereco fora da area de entrega (${distance.toFixed(1)}km, maximo ${maxDeliveryDistance}km)`,
                     calculationType: calculationType
                 });
+            }
+
+            // ============================================================
+            // CALCULO HIBRIDO: Taxa base + Taxa por km adicional
+            // ============================================================
+            let fee = baseFee;
+            let extraKm = 0;
+            let extraFee = 0;
+            let pricingType = 'hybrid';
+
+            // Se tem deliveryZones configuradas, usar sistema antigo de zonas
+            if (deliveryZones.length > 0 && !settings.useHybridPricing) {
+                const sortedZones = [...deliveryZones].sort((a, b) => parseFloat(a.maxKm) - parseFloat(b.maxKm));
+                let zoneFound = false;
+
+                for (const zone of sortedZones) {
+                    if (distance <= parseFloat(zone.maxKm)) {
+                        fee = parseFloat(zone.fee);
+                        zoneFound = true;
+                        pricingType = 'zone';
+                        console.log(`[ORS] Zona encontrada: ate ${zone.maxKm}km = R$ ${zone.fee}`);
+                        break;
+                    }
+                }
+
+                if (!zoneFound) {
+                    const maxZone = sortedZones[sortedZones.length - 1];
+                    return res.json({
+                        fee: 0,
+                        distance: Math.round(distance * 100) / 100,
+                        duration: duration,
+                        outOfRange: true,
+                        maxRadius: parseFloat(maxZone.maxKm),
+                        message: `Endereco fora da area de entrega (${distance.toFixed(1)}km, maximo ${maxZone.maxKm}km)`,
+                        calculationType: calculationType
+                    });
+                }
+            } else {
+                // Sistema HIBRIDO: Taxa base ate X km, depois km TOTAL x feePerKm
+                if (distance > baseFeeDistance) {
+                    // Acima da distancia base: calcula KM TOTAL × taxa por km
+                    fee = distance * feePerKm;
+                    console.log(`[ORS] Hibrido: ${distance.toFixed(2)}km TOTAL x R$ ${feePerKm} = R$ ${fee.toFixed(2)}`);
+                } else {
+                    // Dentro da distancia base: taxa fixa
+                    fee = baseFee;
+                    console.log(`[ORS] Hibrido: Distancia ${distance.toFixed(2)}km dentro da base (${baseFeeDistance}km) = R$ ${baseFee}`);
+                }
+            }
+
+            // Regra de Arredondamento (sem centavos)
+            if (distance > 10) {
+                // Acima de 10km: Arredonda para baixo
+                fee = Math.floor(fee);
+                console.log(`[ORS] Arredondado para baixo (>10km): R$ ${fee}`);
+            } else {
+                // Ate 10km: Arredonda para cima
+                fee = Math.ceil(fee);
+                console.log(`[ORS] Arredondado para cima (<=10km): R$ ${fee}`);
             }
 
             res.json({
                 fee: fee,
                 distance: Math.round(distance * 100) / 100,
                 duration: duration,
-                type: 'zone',
+                type: pricingType,
                 calculationType: calculationType,
-                outOfRange: false
+                outOfRange: false,
+                // Info adicional para debug
+                breakdown: {
+                    baseFee: baseFee,
+                    baseFeeDistance: baseFeeDistance,
+                    feePerKm: feePerKm,
+                    totalKm: Math.round(distance * 100) / 100
+                }
             });
 
         } catch (error) {
