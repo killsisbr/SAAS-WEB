@@ -883,10 +883,13 @@
         let tempCoords = null; // Para guardar coordenadas antes de confirmar detalhes
         let deliveryOutOfRange = false;
         let lastCalculatedDistance = null;
+        let lastCalculatedDuration = null; // Tempo de entrega estimado (minutos)
+        let lastCalculationType = null; // 'route' ou 'haversine_fallback'
         let isUsingFixedFeeFallback = false;
+        let isCalculatingDelivery = false; // Flag para evitar chamadas duplicadas
 
-        // Calcular distancia entre dois pontos GPS (Haversine)
-        function calculateDistance(lat1, lng1, lat2, lng2) {
+        // Calcular distancia entre dois pontos GPS (Haversine) - FALLBACK LOCAL
+        function calculateDistanceHaversine(lat1, lng1, lat2, lng2) {
             const R = 6371; // Raio da Terra em km
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLng = (lng2 - lng1) * Math.PI / 180;
@@ -897,12 +900,15 @@
             return R * c;
         }
 
-        // Calcular taxa de entrega baseado na distancia
-        function calculateDeliveryFee() {
+        // Calcular taxa de entrega usando API do backend (rota real)
+        async function calculateDeliveryFee() {
             const settings = storeData?.settings || {};
             isUsingFixedFeeFallback = false;
             lastCalculatedDistance = null;
+            lastCalculatedDuration = null;
+            lastCalculationType = null;
 
+            // Se nao tem coordenadas da loja, usar taxa fixa
             if (!settings.storeLat || !settings.storeLng) {
                 const fixedFee = parseFloat(settings.deliveryFee) || 0;
                 deliveryFee = fixedFee;
@@ -911,8 +917,9 @@
                 return;
             }
 
+            // Se nao tem coordenadas do cliente
             if (!customerLat || !customerLng) {
-                // Se nao tem coordenadas mas tem endereco digitado, usar taxa fixa
+                // Se tem endereco digitado, usar taxa fixa
                 const addressField = document.getElementById('cust-address');
                 if (addressField && addressField.value.trim()) {
                     const fixedFee = parseFloat(settings.deliveryFee) || 7; // Default R$ 7,00
@@ -924,40 +931,85 @@
                 return;
             }
 
-            const zones = storeData.settings.deliveryZones || [];
-            if (zones.length === 0) {
-                // Sem zonas configuradas, usar taxa fixa se existir
-                deliveryFee = parseFloat(storeData.settings.deliveryFee) || 0;
-                deliveryOutOfRange = false;
-                isUsingFixedFeeFallback = true;
-                return;
-            }
+            // Evitar chamadas duplicadas
+            if (isCalculatingDelivery) return;
+            isCalculatingDelivery = true;
 
-            // Converter para numero para garantir calculo correto
-            const sLat = parseFloat(storeData.settings.storeLat);
-            const sLng = parseFloat(storeData.settings.storeLng);
-            const cLat = parseFloat(customerLat);
-            const cLng = parseFloat(customerLng);
+            try {
+                // Chamar API do backend para calcular rota real
+                console.log('[DeliveryFee] Calculando rota real via API...');
+                const response = await fetch('/api/delivery/calculate-route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tenantId: storeData.id,
+                        storeLat: settings.storeLat,
+                        storeLng: settings.storeLng,
+                        customerLat: customerLat,
+                        customerLng: customerLng
+                    })
+                });
 
-            const distance = calculateDistance(sLat, sLng, cLat, cLng);
-            lastCalculatedDistance = distance;
+                const result = await response.json();
 
-            // Ordenar zonas por distancia
-            const sortedZones = [...zones].sort((a, b) => parseFloat(a.maxKm) - parseFloat(b.maxKm));
+                if (response.ok) {
+                    deliveryFee = result.fee || 0;
+                    lastCalculatedDistance = result.distance;
+                    lastCalculatedDuration = result.duration;
+                    lastCalculationType = result.calculationType;
+                    deliveryOutOfRange = result.outOfRange || false;
 
-            // Encontrar a zona correta
-            for (const zone of sortedZones) {
-                if (distance <= parseFloat(zone.maxKm)) {
-                    deliveryFee = parseFloat(zone.fee);
-                    deliveryOutOfRange = false;
-                    return;
+                    console.log(`[DeliveryFee] Resultado: R$ ${deliveryFee}, ${lastCalculatedDistance}km (${lastCalculationType}), ${lastCalculatedDuration || 'N/A'} min`);
+
+                    if (deliveryOutOfRange) {
+                        console.warn('[DeliveryFee] Fora da area de entrega:', result.message);
+                    }
+                } else {
+                    throw new Error(result.error || 'Erro ao calcular taxa');
                 }
-            }
 
-            // Fora de todas as zonas
-            deliveryFee = 0;
-            deliveryOutOfRange = true;
-            console.warn('DEBUG [calculateDeliveryFee] Fora da area de entrega. Distance:', distance);
+            } catch (error) {
+                console.error('[DeliveryFee] Erro na API, usando fallback local:', error);
+
+                // Fallback: calcular localmente com Haversine
+                const zones = settings.deliveryZones || [];
+                if (zones.length === 0) {
+                    deliveryFee = parseFloat(settings.deliveryFee) || 0;
+                    deliveryOutOfRange = false;
+                    isUsingFixedFeeFallback = true;
+                } else {
+                    const sLat = parseFloat(settings.storeLat);
+                    const sLng = parseFloat(settings.storeLng);
+                    const cLat = parseFloat(customerLat);
+                    const cLng = parseFloat(customerLng);
+
+                    const distance = calculateDistanceHaversine(sLat, sLng, cLat, cLng);
+                    lastCalculatedDistance = distance;
+                    lastCalculationType = 'haversine_local_fallback';
+
+                    // Ordenar zonas por distancia
+                    const sortedZones = [...zones].sort((a, b) => parseFloat(a.maxKm) - parseFloat(b.maxKm));
+
+                    // Encontrar a zona correta
+                    let found = false;
+                    for (const zone of sortedZones) {
+                        if (distance <= parseFloat(zone.maxKm)) {
+                            deliveryFee = parseFloat(zone.fee);
+                            deliveryOutOfRange = false;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        deliveryFee = 0;
+                        deliveryOutOfRange = true;
+                        console.warn('[DeliveryFee] Fora da area de entrega (fallback). Distance:', distance);
+                    }
+                }
+            } finally {
+                isCalculatingDelivery = false;
+            }
         }
 
         // Variavel global para nome do titular do PIX
@@ -1275,6 +1327,19 @@
                         if (addr.neighbor && neighborInput && !addr.neighborhood) {
                             neighborInput.value = addr.neighbor;
                         }
+
+                        // CORRECAO: Restaurar coordenadas para gerar link do Maps
+                        if (addr.lat && addr.lng) {
+                            customerLat = addr.lat;
+                            customerLng = addr.lng;
+                            // Salvar no input hidden para ser enviado
+                            const coordsInput = document.getElementById('cust-coordinates');
+                            if (coordsInput) {
+                                coordsInput.value = JSON.stringify({ lat: addr.lat, lng: addr.lng });
+                            }
+                            console.log('[Prefill] Coordenadas restauradas do servidor:', addr.lat, addr.lng);
+                        }
+
                         console.log('Dados carregados do servidor');
                     }
                 }
@@ -1992,7 +2057,7 @@
 
         // Abrir modal com geolocalizacao
         let isGeolocating = false;
-        function openMapModalWithGeolocation() {
+        async function openMapModalWithGeolocation() {
             if (isGeolocating) return;
 
             const btn = document.getElementById('btn-geolocate');
@@ -2014,7 +2079,7 @@
             }
 
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     isGeolocating = false;
                     btn.disabled = false;
                     btn.innerHTML = originalInner;
@@ -2029,7 +2094,7 @@
                     document.getElementById('cust-coordinates').value = JSON.stringify({ lat, lng });
                     customerLat = lat;
                     customerLng = lng;
-                    calculateDeliveryFee();
+                    await calculateDeliveryFee();
                     updateCheckoutSummary();
                     if (statusEl) statusEl.textContent = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)} (~${Math.round(accuracy)}m)`;
 
@@ -2132,7 +2197,7 @@
                 customerLat = pos.lat;
                 customerLng = pos.lng;
 
-                calculateDeliveryFee();
+                await calculateDeliveryFee();
                 updateCheckoutSummary();
 
                 openModal('address-details-modal');
@@ -2148,7 +2213,7 @@
                 customerLat = pos.lat;
                 customerLng = pos.lng;
 
-                calculateDeliveryFee();
+                await calculateDeliveryFee();
                 updateCheckoutSummary();
 
                 openModal('address-details-modal');
@@ -2160,7 +2225,7 @@
             btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> CONFIRMAR';
         }
 
-        function saveAddressDetails() {
+        async function saveAddressDetails() {
             const street = document.getElementById('modal-address-street').value.trim();
             const number = document.getElementById('modal-address-number').value.trim();
             const neighbor = document.getElementById('modal-address-neighbor').value.trim();
@@ -2184,7 +2249,7 @@
                 document.getElementById('cust-coordinates').value = JSON.stringify(tempCoords);
                 customerLat = tempCoords.lat;
                 customerLng = tempCoords.lng;
-                calculateDeliveryFee();
+                await calculateDeliveryFee();
             } else {
                 // Entrada manual sem GPS - usar taxa fixa padrão
                 const settings = storeData?.settings || {};
@@ -2676,7 +2741,7 @@
         }
 
         // ===== CHECKOUT SUMMARY =====
-        function updateCheckoutSummary() {
+        async function updateCheckoutSummary() {
             const summaryEl = document.getElementById('checkout-summary');
             const totalEl = document.getElementById('checkout-total');
 
@@ -2701,7 +2766,7 @@
 
             if (checkoutType === 'entrega') {
                 // Recalcular taxa de entrega
-                calculateDeliveryFee();
+                await calculateDeliveryFee();
 
                 // Se nao tem coordenadas E nao tem taxa fixa configurada, pedir localizacao
                 const addressField = document.getElementById('cust-address');

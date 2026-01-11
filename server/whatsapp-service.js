@@ -838,6 +838,9 @@ class WhatsAppService {
 
                 if (lat && lng) {
                     mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                    console.log(`[WhatsApp Group] Link Maps gerado: ${mapsLink}`);
+                } else {
+                    console.log(`[WhatsApp Group] SEM coordenadas - lat: ${lat}, lng: ${lng}`);
                 }
                 groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
             } else if (typeof orderData.address === 'string' && orderData.address.trim()) {

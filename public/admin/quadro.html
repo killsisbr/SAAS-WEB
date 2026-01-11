@@ -2755,6 +2755,9 @@
             document.getElementById('acaiModal').classList.remove('active');
         }
 
+        // Variavel global para guardar grupos do acai
+        let acaiGroupsList = [];
+
         async function loadAcaiItems() {
             const container = document.getElementById('acaiItemsList');
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Carregando...</p></div>';
@@ -2765,7 +2768,7 @@
                 const categories = data.categories || [];
 
                 // Coletar todos os grupos que contem "acai" ou "topping"
-                let acaiGroups = [];
+                acaiGroupsList = [];
                 for (const cat of categories) {
                     if (cat.addonGroups) {
                         for (const group of cat.addonGroups) {
@@ -2773,19 +2776,19 @@
                                 group.name.toLowerCase().includes('topping') ||
                                 group.name.toLowerCase().includes('complemento') ||
                                 cat.name.toLowerCase().includes('acai')) {
-                                acaiGroups.push({ ...group, categoryName: cat.name });
+                                acaiGroupsList.push({ ...group, categoryName: cat.name });
                             }
                         }
                     }
                 }
 
-                if (acaiGroups.length === 0) {
+                if (acaiGroupsList.length === 0) {
                     container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-info-circle" style="font-size: 2rem;"></i><p>Nenhum grupo de acai encontrado.<br>Crie um grupo de adicionais com "Acai" no nome.</p></div>';
                     return;
                 }
 
                 let html = '';
-                for (const group of acaiGroups) {
+                for (const group of acaiGroupsList) {
                     html += `<div style="margin-bottom: 16px;"><div style="font-weight: 700; color: #8b5cf6; margin-bottom: 8px; font-size: 0.85rem;"><i class="fas fa-folder"></i> ${group.name} <span style="color:#666; font-weight:400;">(${group.categoryName})</span></div>`;
 
                     if (group.items && group.items.length > 0) {
@@ -2807,10 +2810,39 @@
         async function addAcaiItem() {
             const input = document.getElementById('newAcaiItem');
             const name = input.value.trim();
-            if (!name) return;
+            if (!name) {
+                showToast('Digite o nome do item');
+                return;
+            }
 
-            alert('Para adicionar novos itens, use a pagina de Adicionais');
-            input.value = '';
+            // Verificar se temos grupos de acai
+            if (acaiGroupsList.length === 0) {
+                showToast('Nenhum grupo de acai encontrado. Crie um primeiro na pagina de Adicionais.');
+                return;
+            }
+
+            // Usar o primeiro grupo de acai encontrado
+            const targetGroup = acaiGroupsList[0];
+
+            try {
+                const res = await fetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price: 0 })
+                });
+
+                if (res.ok) {
+                    input.value = '';
+                    showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
+                    await loadAcaiItems(); // Recarregar lista
+                } else {
+                    const err = await res.json();
+                    showToast('Erro: ' + (err.error || 'Falha ao adicionar'), 'error');
+                }
+            } catch (e) {
+                console.error('Erro ao adicionar item:', e);
+                showToast('Erro de conexao', 'error');
+            }
         }
 
         init();
