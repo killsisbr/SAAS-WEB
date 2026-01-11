@@ -157,9 +157,9 @@ class WhatsAppService {
             },
             puppeteer: {
                 headless: true,
-                executablePath: process.platform === 'linux'
-                    ? (fs.existsSync('/usr/bin/chromium-browser') ? '/usr/bin/chromium-browser' : '/usr/bin/chromium')
-                    : undefined,
+                executablePath: process.env.WHATSAPP_CHROME_PATH || (process.platform === 'linux'
+                    ? ['/usr/bin/chromium-browser', '/usr/bin/chromium', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].find(p => fs.existsSync(p))
+                    : undefined),
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
