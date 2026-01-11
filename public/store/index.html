@@ -3045,7 +3045,11 @@
                     deliveryFee: checkoutType === 'entrega' ? deliveryFee : 0, // Taxa de entrega
                     address: address,
                     paymentMethod: paymentMethodMap[paymentMethod] || 'CASH',
-                    observation: ''
+                    observation: '',
+                    // Troco: enviar valor para exibir na mensagem do grupo
+                    payment_change: paymentMethod === 'dinheiro'
+                        ? (parseFloat(document.getElementById('cust-change')?.value) || 0)
+                        : null
                 };
 
                 // Salvar pedido via API
