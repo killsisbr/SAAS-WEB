@@ -157,6 +157,7 @@ class WhatsAppService {
             },
             puppeteer: {
                 headless: true,
+                executablePath: process.platform === 'linux' ? '/usr/bin/chromium-browser' : undefined,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -165,7 +166,8 @@ class WhatsAppService {
                     '--no-first-run',
                     '--no-zygote',
                     '--single-process',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--disable-extensions'
                 ]
             }
         });
