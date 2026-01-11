@@ -56,11 +56,7 @@ class FollowUpService {
      * Processar todos os tipos de follow-up
      */
     async processAllFollowUps() {
-        // ============ DESABILITADO TEMPORARIAMENTE ============
-        console.log('[Follow-up] DESABILITADO TEMPORARIAMENTE - Remover este return para reativar');
-        return;
         // ========================================================
-
         console.log('[Follow-up] Processando follow-ups...');
 
         try {

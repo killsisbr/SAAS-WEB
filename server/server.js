@@ -31,6 +31,9 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Confiar no proxy reverso (Nginx) para pegar IP real
+app.set('trust proxy', 1);
+
 // Middleware basico
 // Middleware basico
 app.use(express.json({ limit: '50mb' }));
