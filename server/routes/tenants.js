@@ -190,12 +190,20 @@ export default function (db) {
                     ORDER BY order_index ASC
                 `, [cat.id]);
 
-                // Parse images JSON
+                // Parse JSON fields
                 for (const prod of cat.products) {
                     try {
                         prod.images = JSON.parse(prod.images || '[]');
+                        prod.addons = JSON.parse(prod.addons || '[]');
+                        prod.sizes = JSON.parse(prod.sizes || '[]');
+                        prod.size_prices = JSON.parse(prod.size_prices || '{}');
+                        prod.image_settings = JSON.parse(prod.image_settings || '{}');
                     } catch {
-                        prod.images = [];
+                        if (!prod.images) prod.images = [];
+                        if (!prod.addons) prod.addons = [];
+                        if (!prod.sizes) prod.sizes = [];
+                        if (!prod.size_prices) prod.size_prices = {};
+                        if (!prod.image_settings) prod.image_settings = {};
                     }
                 }
             }

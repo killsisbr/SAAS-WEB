@@ -34,11 +34,14 @@ export default function (db) {
 
             const products = await db.all(query, params);
 
-            // Parse images JSON
+            // Parse JSON fields
             for (const prod of products) {
                 try {
                     prod.images = JSON.parse(prod.images || '[]');
                     prod.addons = JSON.parse(prod.addons || '[]');
+                    prod.sizes = JSON.parse(prod.sizes || '[]');
+                    prod.size_prices = JSON.parse(prod.size_prices || '{}');
+                    prod.image_settings = JSON.parse(prod.image_settings || '{}');
                 } catch { }
             }
 
@@ -116,6 +119,9 @@ export default function (db) {
                 try {
                     prod.images = JSON.parse(prod.images || '[]');
                     prod.addons = JSON.parse(prod.addons || '[]');
+                    prod.sizes = JSON.parse(prod.sizes || '[]');
+                    prod.size_prices = JSON.parse(prod.size_prices || '{}');
+                    prod.image_settings = JSON.parse(prod.image_settings || '{}');
                 } catch { }
             }
 

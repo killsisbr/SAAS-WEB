@@ -1816,11 +1816,11 @@
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
 
             // Se tem tamanhos, pegar o menor preco
-            let price = product.price || 0;
+            let price = parseFloat(product.price) || 0;
             try {
-                const sizePrices = JSON.parse(product.size_prices || '{}');
+                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
                 if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
-                    const values = Object.values(sizePrices);
+                    const values = Object.values(sizePrices).map(v => parseFloat(v));
                     if (values.length > 0) price = Math.min(...values);
                 }
             } catch (e) { }
@@ -1859,17 +1859,17 @@
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x400?text=Pizza';
 
             // Se tem tamanhos, mostrar preco do menor (M ou primeiro disponivel)
-            let price = product.price || 0;
+            let price = parseFloat(product.price) || 0;
             try {
-                const sizePrices = JSON.parse(product.size_prices || '{}');
+                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
                 // sizePrices pode ser objeto {'M': 35, 'G': 45} ou array
                 if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
                     // Objeto - pegar o menor preco (M)
-                    const values = Object.values(sizePrices);
+                    const values = Object.values(sizePrices).map(v => parseFloat(v));
                     if (values.length > 0) price = Math.min(...values);
                 } else if (Array.isArray(sizePrices) && sizePrices.length > 0) {
                     // Array - pegar o primeiro
-                    price = sizePrices[0];
+                    price = parseFloat(sizePrices[0]);
                 }
             } catch (e) { }
 
