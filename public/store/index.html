@@ -478,19 +478,20 @@
     <!-- MODAL: DETALHES DO PRODUTO (PIZZARIA) -->
     <div id="product-modal" class="modal-overlay fixed inset-0 p-6">
         <div class="paper-modal w-full max-w-sm rounded-custom overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
-            <!-- HEADER COM IMAGEM CIRCULAR -->
-            <div
-                class="relative bg-gradient-to-b from-zinc-200 to-zinc-100 pt-6 pb-4 flex flex-col items-center border-b-2 border-dark flex-shrink-0">
+            <!-- HEADER COM IMAGEM (Alterna entre circular/esticado via JS) -->
+            <div id="modal-header"
+                class="relative bg-gradient-to-b from-zinc-200 to-zinc-100 flex flex-col items-center border-b-2 border-dark flex-shrink-0 transition-all duration-300">
                 <button onclick="closeModal('product-modal')"
-                    class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors z-10">
+                    class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors z-30 shadow-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                             d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                <!-- Container de Imagem (redondo apenas para pizza) -->
+
+                <!-- Container de Imagem -->
                 <div id="pizza-image-container"
-                    class="relative w-40 h-40 border-4 border-dark shadow-xl overflow-hidden bg-zinc-200 rounded-xl">
+                    class="relative transition-all duration-500 overflow-hidden bg-zinc-200">
                     <!-- Imagem unica (normal) - z-10 garante que fica por cima do split -->
                     <img id="modal-img" src="" class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200">
                     <!-- Container split (meio a meio) - escondido por padrao -->
@@ -510,9 +511,11 @@
                         1/2 + 1/2
                     </div>
                 </div>
-                <h2 id="modal-title" class="bebas text-3xl text-brand mt-4 leading-none text-center px-4"></h2>
-                <p id="modal-desc" class="text-zinc-500 font-medium text-sm text-center px-6 mt-1"></p>
 
+                <div id="modal-title-container" class="w-full pt-4 pb-4 flex flex-col items-center">
+                    <h2 id="modal-title" class="bebas text-3xl text-brand leading-none text-center px-4 uppercase"></h2>
+                    <p id="modal-desc" class="text-zinc-500 font-medium text-sm text-center px-6 mt-1"></p>
+                </div>
             </div>
 
             <div class="p-6 overflow-y-auto no-scrollbar flex-1">
@@ -2131,6 +2134,25 @@
             const modalImg = document.getElementById('modal-img');
             modalImg.src = img;
 
+            // ===== AJUSTE DE LAYOUT (PIZZA VS LANCHE) =====
+            const imgContainer = document.getElementById('pizza-image-container');
+            const modalHeader = document.getElementById('modal-header');
+            const productCat = storeData.categories.find(c => c.id === product?.category_id);
+            const catName = (productCat?.name || '').toLowerCase();
+            const isPizza = catName.includes('pizza');
+
+            if (isPizza) {
+                // Layout Pizza: Circular/Quadrado centralizado
+                imgContainer.className = "relative w-40 h-40 border-4 border-dark shadow-xl overflow-hidden bg-zinc-200 rounded-xl my-6";
+                modalHeader.classList.add('pt-2');
+                modalHeader.classList.remove('p-0');
+            } else {
+                // Layout Lanche: Esticado/Largura Total
+                imgContainer.className = "relative w-full h-64 border-b-2 border-dark bg-zinc-200";
+                modalHeader.classList.remove('pt-2');
+                modalHeader.classList.add('p-0');
+            }
+
             // Aplicar ajustes de imagem no modal
             if (product && product.image_settings) {
                 modalImg.style.transform = `scale(${product.image_settings.zoom || 1.0})`;
@@ -2189,10 +2211,6 @@
                 }
             } else {
                 // Se nao tem tamanhos mas e categoria de pizza, mostrar tamanhos padrao
-                const productCat = storeData.categories.find(c => c.id === product?.category_id);
-                const catName = (productCat?.name || '').toLowerCase();
-                const isPizza = catName.includes('pizza');
-
                 if (isPizza) {
                     // Tamanhos padrao para pizza
                     productSizes = ['P', 'M', 'G'];
@@ -2225,8 +2243,6 @@
 
             // ===== SECAO MEIO A MEIO =====
             const halfSection = document.getElementById('half-section');
-            const productCat = storeData.categories.find(c => c.id === product?.category_id);
-            const catName = (productCat?.name || '').toLowerCase();
             const isPizzaProduct = catName.includes('pizza');
 
             // Resetar estado do meio a meio
