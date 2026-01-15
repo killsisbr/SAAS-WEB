@@ -2896,13 +2896,26 @@
             }
 
             const extrasTotal = selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
-            cart.push({
+
+            // Montar item do carrinho com suporte a meio a meio
+            const cartItem = {
                 ...currentItem,
                 qty,
                 obs: document.getElementById('modal-obs').value,
                 extras: [...selectedExtras],
-                totalPrice: (currentItem.price + extrasTotal) * qty
-            });
+                totalPrice: (currentItem.price + extrasTotal) * qty,
+                // Dados de meio a meio
+                isHalfHalf: isHalfHalf,
+                secondFlavor: secondFlavor ? { ...secondFlavor } : null
+            };
+
+            // Se for meio a meio, ajustar o titulo
+            if (isHalfHalf && secondFlavor) {
+                cartItem.title = `${currentItem.title} + ${secondFlavor.name}`;
+                cartItem.displayTitle = `1/2 ${currentItem.title} + 1/2 ${secondFlavor.name}`;
+            }
+
+            cart.push(cartItem);
             updateCartUI();
             closeModal('product-modal');
             showToast("ADICIONADO!");
@@ -2937,12 +2950,41 @@
             list.innerHTML = cart.map((item, index) => {
                 total += item.totalPrice;
                 const extrasSummary = item.extras.map(e => e.name).join(', ');
+
+                // Titulo para exibicao (usa displayTitle se for meio a meio)
+                const displayTitle = item.displayTitle || item.title;
+
+                // Imagem para exibicao
+                let displayImg = item.img;
+                let imgClass = 'w-24 h-24 object-cover rounded-custom border-2 border-dark';
+                let imgHtml = '';
+
+                if (item.isHalfHalf && item.secondFlavor) {
+                    // Imagem dividida para meio a meio
+                    imgHtml = `
+                        <div class="w-24 h-24 rounded-custom border-2 border-dark overflow-hidden relative flex-shrink-0">
+                            <div class="absolute inset-0 flex">
+                                <div class="w-1/2 h-full overflow-hidden">
+                                    <img src="${item.img}" class="w-full h-full object-cover object-right" onerror="this.src='https://via.placeholder.com/100'">
+                                </div>
+                                <div class="w-1/2 h-full overflow-hidden">
+                                    <img src="${item.secondFlavor.img}" class="w-full h-full object-cover object-left" onerror="this.src='https://via.placeholder.com/100'">
+                                </div>
+                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="bg-brand text-white text-[8px] font-black px-1 rounded">1/2+1/2</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    imgHtml = `<img src="${displayImg}" class="${imgClass}" onerror="this.src='https://via.placeholder.com/100'">`;
+                }
+
                 return `
                     <div class="flex items-center gap-6 bg-zinc-500/5 p-6 rounded-custom border-2 border-dark">
-                        <img src="${item.img}" class="w-24 h-24 object-cover rounded-custom border-2 border-dark"
-                             onerror="this.src='https://via.placeholder.com/100'">
+                        ${imgHtml}
                         <div class="flex-1 leading-none">
-                            <h4 class="bebas text-3xl uppercase tracking-tighter">${item.title}</h4>
+                            <h4 class="bebas text-3xl uppercase tracking-tighter">${displayTitle}</h4>
                             <p class="text-xs font-bold opacity-50 mb-2">${item.qty}X - R$ ${(item.totalPrice / item.qty).toFixed(2)}</p>
                             ${extrasSummary ? `<p class="text-[10px] text-brand font-black uppercase tracking-widest">+ ${extrasSummary}</p>` : ''}
                         </div>
