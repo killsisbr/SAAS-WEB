@@ -300,6 +300,14 @@ export default function (db, broadcast) {
                             }
                             confirmationTarget = cleanPhone + '@c.us';
                             console.log(`[LID->Phone] Usando telefone do pedido: ${lid} -> ${cleanPhone}`);
+
+                            // ✨ AUTO-CADASTRO: Salvar mapeamento LID->Telefone para futuras comunicações
+                            try {
+                                await whatsappService.saveLidPhoneMapping(tenantId, lid, cleanPhone);
+                                console.log(`[AutoCadastro] ✅ Salvo mapeamento: ${lid} -> ${cleanPhone}`);
+                            } catch (err) {
+                                console.error(`[AutoCadastro] ❌ Erro ao salvar mapeamento:`, err.message);
+                            }
                         }
                     }
 

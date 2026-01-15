@@ -176,7 +176,7 @@ export default function (db) {
     router.put('/:id', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
             const { id } = req.params;
-            const { name, description, icon, isActive, orderIndex } = req.body;
+            const { name, description, icon, isActive, orderIndex, displayMode } = req.body;
 
             const category = await db.get(
                 'SELECT * FROM categories WHERE id = ? AND tenant_id = ?',
@@ -195,6 +195,7 @@ export default function (db) {
             if (icon !== undefined) { fields.push('icon = ?'); params.push(icon); }
             if (isActive !== undefined) { fields.push('is_active = ?'); params.push(isActive ? 1 : 0); }
             if (orderIndex !== undefined) { fields.push('order_index = ?'); params.push(orderIndex); }
+            if (displayMode !== undefined) { fields.push('display_mode = ?'); params.push(displayMode); }
 
             if (fields.length > 0) {
                 params.push(id);

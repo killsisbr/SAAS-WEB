@@ -270,6 +270,92 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
+        /* === PIZZA CARD - CIRCULAR STYLE === */
+        .pizza-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .pizza-card {
+            text-align: center;
+            width: 220px;
+            padding: 20px 10px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: var(--border-width) var(--border-style) var(--dark);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pizza-card:hover {
+            transform: translateY(-4px);
+            box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 var(--dark);
+        }
+
+        .pizza-card-img-container {
+            position: relative;
+            margin: 0 auto 10px;
+        }
+
+        .pizza-card-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: 3px solid var(--dark);
+        }
+
+        .pizza-card-add {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 45px;
+            height: 45px;
+            line-height: 42px;
+            background: var(--primary-red);
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            border: 3px solid var(--dark);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pizza-card-add:hover {
+            transform: translateX(-50%) scale(1.1);
+            background: var(--yellow);
+            color: var(--dark);
+        }
+
+        .pizza-card-price {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin-top: 8px;
+        }
+
+        .pizza-card-name {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 5px 0;
+            color: var(--text-color);
+        }
+
+        .pizza-card-desc {
+            font-size: 0.75rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            padding: 0 5px;
+            line-height: 1.3;
+        }
     </style>
 </head>
 
@@ -386,54 +472,128 @@
             class="absolute -top-1 -right-1 w-6 h-6 bg-dark text-mainBg rounded-full text-xs font-black flex items-center justify-center border-2 border-brand">0</span>
     </button>
 
-    <!-- MODAL: DETALHES DO PRODUTO -->
+    <!-- MODAL: DETALHES DO PRODUTO (PIZZARIA) -->
     <div id="product-modal" class="modal-overlay fixed inset-0 p-6">
         <div class="paper-modal w-full max-w-sm rounded-custom overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
-            <div class="h-48 relative border-b-2 border-dark flex-shrink-0">
-                <img id="modal-img" src="" class="w-full h-full object-cover">
+            <!-- HEADER COM IMAGEM CIRCULAR -->
+            <div
+                class="relative bg-gradient-to-b from-zinc-200 to-zinc-100 pt-6 pb-4 flex flex-col items-center border-b-2 border-dark flex-shrink-0">
                 <button onclick="closeModal('product-modal')"
-                    class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4"
+                    class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                             d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-            </div>
-            <div class="p-8 overflow-y-auto no-scrollbar flex-1">
-                <h2 id="modal-title" class="bebas text-5xl text-brand mb-2 leading-none"></h2>
-                <p id="modal-desc" class="text-zinc-500 font-medium mb-10 text-sm"></p>
-
-                <div class="space-y-10">
-                    <div>
-                        <label
-                            class="bebas text-2xl block mb-4 opacity-70 underline decoration-brand decoration-4">Observações</label>
-                        <textarea id="modal-obs" placeholder="Ex: Bem passado, sem cebola..."
-                            class="w-full bg-zinc-500/5 border-2 border-dark p-4 rounded-custom font-bold focus:outline-none min-h-[50px] text-sm resize-none"></textarea>
+                <!-- Container de Imagem Circular (suporta split) -->
+                <div id="pizza-image-container"
+                    class="relative w-40 h-40 rounded-full border-4 border-dark shadow-xl overflow-hidden bg-zinc-200">
+                    <!-- Imagem unica (normal) - z-10 garante que fica por cima do split -->
+                    <img id="modal-img" src="" class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200">
+                    <!-- Container split (meio a meio) - escondido por padrao -->
+                    <div id="split-container" class="hidden absolute inset-0 flex">
+                        <div class="w-1/2 h-full overflow-hidden">
+                            <img id="split-img-left" src="" class="h-full w-[200%] object-cover object-left">
+                        </div>
+                        <div class="w-1/2 h-full overflow-hidden">
+                            <img id="split-img-right" src="" class="h-full w-[200%] object-cover object-right">
+                        </div>
+                        <!-- Linha divisoria -->
+                        <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-dark -translate-x-1/2"></div>
                     </div>
+                    <!-- Badge de Meio a Meio -->
+                    <div id="half-badge"
+                        class="hidden absolute -bottom-0 left-1/2 -translate-x-1/2 bg-brand text-white text-[10px] font-bold px-2 py-0.5 rounded-t-lg border-2 border-b-0 border-dark whitespace-nowrap z-10">
+                        1/2 + 1/2
+                    </div>
+                </div>
+                <h2 id="modal-title" class="bebas text-3xl text-brand mt-4 leading-none text-center px-4"></h2>
+                <p id="modal-desc" class="text-zinc-500 font-medium text-sm text-center px-6 mt-1"></p>
+
+            </div>
+
+            <div class="p-6 overflow-y-auto no-scrollbar flex-1">
+                <div class="space-y-6">
+                    <!-- SECAO DE TAMANHOS (P/M/G) -->
+                    <div id="sizes-section" class="hidden">
+                        <label class="bebas text-xl block mb-3 text-center uppercase tracking-wider">Escolha o
+                            Tamanho</label>
+                        <div id="sizes-container" class="flex gap-2 justify-center"></div>
+                    </div>
+
+                    <!-- BOTAO MEIO A MEIO -->
+                    <div id="half-section" class="hidden">
+                        <button type="button" onclick="toggleHalfHalf()" id="half-btn"
+                            class="w-full py-3 rounded-2xl border-2 border-dashed border-brand bebas text-xl text-brand flex items-center justify-center gap-2 hover:bg-brand/10 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9" stroke-width="2" />
+                                <line x1="12" y1="3" x2="12" y2="21" stroke-width="2" />
+                            </svg>
+                            <span id="half-btn-text">FAZER MEIO A MEIO</span>
+                        </button>
+                        <!-- Segundo sabor selecionado -->
+                        <div id="second-flavor-container"
+                            class="hidden mt-3 p-3 bg-brand/10 rounded-xl border-2 border-brand">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold">2o Sabor:</span>
+                                <span id="second-flavor-name" class="bebas text-lg text-brand">Selecionar...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OBSERVACOES -->
+                    <div>
+                        <label class="bebas text-xl block mb-2 opacity-70">Observacoes</label>
+                        <textarea id="modal-obs" placeholder="Ex: Bem passado, sem cebola..."
+                            class="w-full bg-zinc-500/5 border-2 border-dark p-3 rounded-xl font-bold focus:outline-none min-h-[40px] text-sm resize-none"></textarea>
+                    </div>
+
+                    <!-- ADICIONAIS / BORDAS -->
                     <div id="extras-section">
-                        <label
-                            class="bebas text-2xl block mb-6 border-b-2 border-dark/10 pb-2 uppercase tracking-tighter">MONTAR</label>
-                        <div class="space-y-5" id="extras-container"></div>
+                        <label class="bebas text-xl block mb-3 uppercase tracking-tight">Bordas e Adicionais</label>
+                        <div class="space-y-3" id="extras-container"></div>
                     </div>
                 </div>
             </div>
-            <div class="p-8 border-t-2 border-dark bg-zinc-500/5 flex-shrink-0">
-                <div class="flex items-center justify-between mb-8">
-                    <div
-                        class="flex items-center gap-8 bg-card border-2 border-dark rounded-custom p-3 px-8 shadow-inner">
+
+            <!-- FOOTER COM PRECO -->
+            <div class="p-4 border-t-2 border-dark bg-zinc-500/5 flex-shrink-0">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-6 bg-card border-2 border-dark rounded-xl p-2 px-6">
                         <button onclick="changeQty(-1)"
-                            class="bebas text-4xl font-bold opacity-30 hover:opacity-100 transition-opacity">-</button>
-                        <span id="modal-qty" class="bebas text-4xl w-10 text-center">1</span>
-                        <button onclick="changeQty(1)" class="bebas text-4xl font-bold text-brand">+</button>
+                            class="bebas text-3xl font-bold opacity-30 hover:opacity-100 transition-opacity">-</button>
+                        <span id="modal-qty" class="bebas text-3xl w-8 text-center">1</span>
+                        <button onclick="changeQty(1)" class="bebas text-3xl font-bold text-brand">+</button>
                     </div>
                     <div id="modal-price" class="bebas text-4xl text-textMain font-black"></div>
                 </div>
                 <button onclick="addToOrder()"
-                    class="neo-button w-full py-6 rounded-custom bebas text-3xl tracking-widest uppercase shadow-xl">ADICIONAR
-                    À LISTA</button>
+                    class="neo-button w-full py-5 rounded-xl bebas text-2xl tracking-widest uppercase shadow-xl">ADICIONAR
+                    A LISTA</button>
             </div>
         </div>
     </div>
+
+    <!-- MODAL: SELECAO DE SEGUNDO SABOR -->
+    <div id="half-modal" class="modal-overlay fixed inset-0 p-4 z-[250]">
+        <div class="paper-modal w-full max-w-sm mx-auto my-auto max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="p-4 border-b-2 border-dark flex justify-between items-center">
+                <h3 class="bebas text-3xl text-brand">Escolha o 2o Sabor</h3>
+                <button onclick="closeModal('half-modal')" class="neo-card p-2 rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <div id="half-flavors-list" class="space-y-2">
+                    <!-- Sabores serao injetados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- MODAL: CARRINHO -->
     <div id="cart-modal" class="modal-overlay fixed inset-0 items-end">
@@ -1200,6 +1360,17 @@
                     ];
                     console.log('Zonas de entrega forçadas (Frontend):', storeData.settings.deliveryZones);
 
+                    // Flatten produtos de todas as categorias para storeData.products
+                    storeData.products = [];
+                    if (storeData.categories) {
+                        storeData.categories.forEach(cat => {
+                            if (cat.products) {
+                                storeData.products.push(...cat.products);
+                            }
+                        });
+                    }
+                    console.log('storeData.products populado:', storeData.products.length, 'produtos');
+
                     renderMenu();
                 }
 
@@ -1615,18 +1786,24 @@
                 return;
             }
 
-            menu.innerHTML = storeData.categories.map(cat => `
-                <div class="category-section" data-category="${cat.id}">
-                    <div class="flex items-center gap-6 mb-8">
-                        <h2 class="bebas text-5xl bg-card inline-block px-6 border-2 border-dark rounded-custom italic">
-                            ${cat.name}
-                        </h2>
+            menu.innerHTML = storeData.categories.map(cat => {
+                const displayMode = cat.display_mode || 'default';
+                const isCircular = displayMode === 'circular';
+                const gridClass = isCircular ? 'pizza-grid' : 'grid gap-10';
+
+                return `
+                    <div class="category-section" data-category="${cat.id}">
+                        <div class="flex items-center gap-6 mb-8">
+                            <h2 class="bebas text-5xl bg-card inline-block px-6 border-2 border-dark rounded-custom italic">
+                                ${cat.name}
+                            </h2>
+                        </div>
+                        <div class="${gridClass}">
+                            ${cat.products.map(prod => isCircular ? renderProductCardCircular(prod) : renderProductCard(prod)).join('')}
+                        </div>
                     </div>
-                    <div class="grid gap-10">
-                        ${cat.products.map(prod => renderProductCard(prod)).join('')}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function renderProductCard(product) {
@@ -1655,6 +1832,35 @@
                             PEDIR AGORA
                         </button>
                     </div>
+                </div>
+            `;
+        }
+
+        // Card circular para pizzas
+        function renderProductCardCircular(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/400x400?text=Pizza';
+
+            // Se tem tamanhos, mostrar preco do maior (G)
+            let price = product.price;
+            let sizePrices = [];
+            try {
+                sizePrices = JSON.parse(product.size_prices || '[]');
+                if (sizePrices.length > 0) price = sizePrices[sizePrices.length - 1];
+            } catch (e) { }
+
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="pizza-card" onclick="openProductById('${product.id}')">
+                    <div class="pizza-card-img-container">
+                        <img src="${imgUrl}" alt="${product.name}" class="pizza-card-img"
+                             onerror="this.src='https://placehold.co/400x400?text=Pizza'">
+                        <div class="pizza-card-add">+</div>
+                    </div>
+                    <div class="pizza-card-price">R$ ${priceStr}</div>
+                    <div class="pizza-card-name">${product.name}</div>
+                    <div class="pizza-card-desc">${desc.substring(0, 80)}${desc.length > 80 ? '...' : ''}</div>
                 </div>
             `;
         }
@@ -1879,6 +2085,9 @@
 
         // ===== EXTRAS/ADICIONAIS =====
         let productAddons = [];
+        let selectedSize = null; // Tamanho selecionado (ex: 'P', 'M', 'G')
+        let productSizes = []; // Array de tamanhos disponiveis
+        let productSizePrices = {}; // Mapa de tamanho -> preco
 
 
 
@@ -1889,6 +2098,9 @@
             productAddons = Array.isArray(addons) ? addons : [];
             qty = 1;
             selectedExtras = [];
+            selectedSize = null;
+            productSizes = [];
+            productSizePrices = {};
 
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
@@ -1907,6 +2119,116 @@
             document.getElementById('modal-qty').innerText = qty;
             document.getElementById('modal-obs').value = '';
 
+            // ===== SECAO DE TAMANHOS =====
+            const sizesSection = document.getElementById('sizes-section');
+            const sizesContainer = document.getElementById('sizes-container');
+
+            // Verificar se produto tem tamanhos configurados
+            if (product && product.has_sizes && product.sizes) {
+                try {
+                    // Parse sizes e size_prices
+                    let sizes = typeof product.sizes === 'string' ? JSON.parse(product.sizes) : product.sizes;
+                    let sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices) : (product.size_prices || {});
+
+                    if (Array.isArray(sizes) && sizes.length > 0) {
+                        productSizes = sizes;
+                        productSizePrices = sizePrices;
+
+                        // Renderizar botoes de tamanho
+                        sizesContainer.innerHTML = sizes.map((size, idx) => {
+                            const sizePrice = sizePrices[size] || sizePrices[size.toLowerCase()] || price;
+                            const isFirst = idx === 0;
+                            return `
+                                <button type="button" 
+                                    onclick="selectSize('${size}', ${sizePrice})"
+                                    id="size-btn-${size}"
+                                    class="flex-1 py-4 px-6 rounded-2xl border-2 border-dark bebas text-2xl transition-all ${isFirst ? 'bg-brand text-white' : 'bg-card'}"
+                                >
+                                    ${size}
+                                    <span class="block text-sm font-normal opacity-70">R$ ${parseFloat(sizePrice).toFixed(2).replace('.', ',')}</span>
+                                </button>
+                            `;
+                        }).join('');
+
+                        // Selecionar primeiro tamanho por padrao
+                        const firstSize = sizes[0];
+                        const firstPrice = sizePrices[firstSize] || sizePrices[firstSize.toLowerCase()] || price;
+                        selectedSize = firstSize;
+                        currentItem.price = parseFloat(firstPrice);
+
+                        sizesSection.style.display = 'block';
+                    } else {
+                        sizesSection.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error('Erro ao parsear tamanhos:', e);
+                    sizesSection.style.display = 'none';
+                }
+            } else {
+                // Se nao tem tamanhos mas e categoria de pizza, mostrar tamanhos padrao
+                const productCat = storeData.categories.find(c => c.id === product?.category_id);
+                const catName = (productCat?.name || '').toLowerCase();
+                const isPizza = catName.includes('pizza');
+
+                if (isPizza) {
+                    // Tamanhos padrao para pizza
+                    productSizes = ['P', 'M', 'G'];
+                    productSizePrices = { 'P': price * 0.7, 'M': price, 'G': price * 1.3 };
+
+                    sizesContainer.innerHTML = productSizes.map((size, idx) => {
+                        const sizePrice = productSizePrices[size];
+                        const isFirst = idx === 1; // M como padrao
+                        return `
+                            <button type="button" 
+                                onclick="selectSize('${size}', ${sizePrice})"
+                                id="size-btn-${size}"
+                                class="flex-1 py-3 px-4 rounded-2xl border-2 border-dark bebas text-xl transition-all ${isFirst ? 'bg-brand text-white' : 'bg-card'}"
+                            >
+                                ${size}
+                                <span class="block text-xs font-normal opacity-70">R$ ${parseFloat(sizePrice).toFixed(2).replace('.', ',')}</span>
+                            </button>
+                        `;
+                    }).join('');
+
+                    // Selecionar M por padrao
+                    selectedSize = 'M';
+                    currentItem.price = productSizePrices['M'];
+
+                    sizesSection.style.display = 'block';
+                } else {
+                    sizesSection.style.display = 'none';
+                }
+            }
+
+            // ===== SECAO MEIO A MEIO =====
+            const halfSection = document.getElementById('half-section');
+            const productCat = storeData.categories.find(c => c.id === product?.category_id);
+            const catName = (productCat?.name || '').toLowerCase();
+            const isPizzaProduct = catName.includes('pizza');
+
+            // Resetar estado do meio a meio
+            isHalfHalf = false;
+            secondFlavor = null;
+
+            // Resetar split container - mostrar imagem unica
+            const modalImgEl = document.getElementById('modal-img');
+            const splitContainerEl = document.getElementById('split-container');
+            if (modalImgEl) modalImgEl.classList.remove('hidden');
+            if (splitContainerEl) splitContainerEl.classList.add('hidden');
+
+            document.getElementById('half-badge').classList.add('hidden');
+            document.getElementById('second-flavor-container').classList.add('hidden');
+            document.getElementById('half-btn-text').innerText = 'FAZER MEIO A MEIO';
+            document.getElementById('half-btn').classList.remove('bg-brand/10');
+
+
+            // Mostrar botao meio a meio apenas para pizzas (allow_half ou categoria pizza)
+            if (isPizzaProduct || product?.allow_half) {
+                halfSection.style.display = 'block';
+            } else {
+                halfSection.style.display = 'none';
+            }
+
             const container = document.getElementById('extras-container');
             const extrasSection = document.getElementById('extras-section');
 
@@ -1920,16 +2242,16 @@
                     container.innerHTML = productAddons.map(addon => `
                         <div class="flex items-center justify-between group cursor-pointer" 
                              onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}')">
-                            <div class="flex items-center gap-5">
-                                <div class="w-9 h-9 border-2 border-dark rounded-custom flex items-center justify-center bg-card transition-all" 
+                            <div class="flex items-center gap-3">
+                                <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
                                      id="check-${addon.id}">
-                                    <svg class="w-6 h-6 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </div>
-                                <span class="font-bold text-lg uppercase tracking-tight">${addon.name}</span>
+                                <span class="font-bold text-sm uppercase tracking-tight">${addon.name}</span>
                             </div>
-                            <span class="font-black text-brand text-lg">+ R$ ${(addon.price || 0).toFixed(2)}</span>
+                            <span class="font-black text-brand text-sm">+ R$ ${(addon.price || 0).toFixed(2)}</span>
                         </div>
                     `).join('');
                 } else {
@@ -1940,6 +2262,148 @@
             updateModalPrice();
             openModal('product-modal');
         }
+
+
+        // Funcao para selecionar tamanho
+        function selectSize(size, sizePrice) {
+            selectedSize = size;
+            currentItem.price = parseFloat(sizePrice);
+
+            // Atualizar visual dos botoes
+            productSizes.forEach(s => {
+                const btn = document.getElementById(`size-btn-${s}`);
+                if (btn) {
+                    if (s === size) {
+                        btn.classList.add('bg-brand', 'text-white');
+                        btn.classList.remove('bg-card');
+                    } else {
+                        btn.classList.remove('bg-brand', 'text-white');
+                        btn.classList.add('bg-card');
+                    }
+                }
+            });
+
+            updateModalPrice();
+        }
+
+        // ===== MEIO A MEIO =====
+        let isHalfHalf = false;
+        let secondFlavor = null;
+        let availableFlavors = []; // Lista de pizzas para segundo sabor
+
+        function toggleHalfHalf() {
+            if (isHalfHalf) {
+                // Desativar meio a meio
+                isHalfHalf = false;
+                secondFlavor = null;
+
+                // Resetar imagem para normal
+                const modalImg = document.getElementById('modal-img');
+                const splitContainer = document.getElementById('split-container');
+                modalImg.classList.remove('hidden');
+                splitContainer.classList.add('hidden');
+
+                // Resetar titulo original
+                document.getElementById('modal-title').innerText = currentItem.title;
+
+                document.getElementById('half-badge').classList.add('hidden');
+                document.getElementById('second-flavor-container').classList.add('hidden');
+                document.getElementById('half-btn-text').innerText = 'FAZER MEIO A MEIO';
+                document.getElementById('half-btn').classList.remove('bg-brand/10');
+                updateModalPrice();
+            } else {
+                // Abrir modal para selecionar segundo sabor
+                openHalfModal();
+            }
+        }
+
+
+        function openHalfModal() {
+            // Buscar lista de pizzas para meio a meio
+            const list = document.getElementById('half-flavors-list');
+
+            // Filtrar apenas produtos de categorias de pizza
+            const pizzaProducts = storeData.products.filter(p => {
+                const cat = storeData.categories.find(c => c.id === p.category_id);
+                if (!cat) return false;
+                const catName = (cat.name || '').toLowerCase();
+                return catName.includes('pizza') && p.id !== currentItem.id;
+            });
+
+            availableFlavors = pizzaProducts;
+
+            if (pizzaProducts.length === 0) {
+                list.innerHTML = '<p class="text-center opacity-50">Nenhum sabor disponivel</p>';
+            } else {
+                list.innerHTML = pizzaProducts.map(p => `
+                    <button type="button" onclick="selectSecondFlavor('${p.id}', '${p.name.replace(/'/g, "\\'")}')"
+                        class="w-full p-3 bg-card border-2 border-dark rounded-xl text-left hover:bg-brand/10 transition-colors flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-zinc-200 flex-shrink-0 overflow-hidden border-2 border-dark">
+                            ${p.images && p.images.length > 0
+                        ? `<img src="${p.images[0]}" class="w-full h-full object-cover">`
+                        : '<div class="w-full h-full flex items-center justify-center text-xs opacity-50">P</div>'}
+                        </div>
+                        <span class="bebas text-lg">${p.name}</span>
+                    </button>
+                `).join('');
+            }
+
+            openModal('half-modal');
+        }
+
+        function selectSecondFlavor(productId, productName) {
+            isHalfHalf = true;
+
+            // Buscar dados completos do segundo sabor
+            const secondProduct = storeData.products.find(p => p.id === productId);
+            const secondImg = secondProduct?.images?.[0] || 'https://placehold.co/200x200?text=Pizza';
+            const secondDesc = secondProduct?.description || '';
+
+            secondFlavor = {
+                id: productId,
+                name: productName,
+                img: secondImg,
+                description: secondDesc
+            };
+
+            // === ATUALIZAR IMAGEM DIVIDIDA ===
+            const modalImg = document.getElementById('modal-img');
+            const splitContainer = document.getElementById('split-container');
+            const splitImgLeft = document.getElementById('split-img-left');
+            const splitImgRight = document.getElementById('split-img-right');
+
+            // Imagem do primeiro sabor
+            const firstImg = currentItem.img || 'https://placehold.co/200x200?text=Pizza';
+
+            // Mostrar container split, esconder imagem unica
+            modalImg.classList.add('hidden');
+            splitContainer.classList.remove('hidden');
+
+            // Definir imagens
+            splitImgLeft.src = firstImg;
+            splitImgRight.src = secondImg;
+
+            // === ATUALIZAR TITULO ===
+            const originalTitle = currentItem.title;
+            document.getElementById('modal-title').innerText = `${originalTitle} + ${productName}`;
+
+            // === ATUALIZAR DESCRICAO (combinar ingredientes) ===
+            const firstDesc = currentItem.desc || '';
+            const combinedDesc = `1/2 ${firstDesc} | 1/2 ${secondDesc}`;
+            document.getElementById('modal-desc').innerText = combinedDesc;
+
+            // Atualizar UI
+            document.getElementById('half-badge').classList.remove('hidden');
+            document.getElementById('second-flavor-container').classList.remove('hidden');
+            document.getElementById('second-flavor-name').innerText = productName;
+            document.getElementById('half-btn-text').innerText = 'ALTERAR 2o SABOR';
+            document.getElementById('half-btn').classList.add('bg-brand/10');
+
+            closeModal('half-modal');
+            updateModalPrice();
+        }
+
+
 
         // ===== TEMAS =====
         function cycleTheme() {

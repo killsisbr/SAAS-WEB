@@ -305,6 +305,11 @@ async function loadRoutes() {
     const categoryAddonsRoutes = await import('./routes/category-addons.js');
     app.use('/api/category-addons', categoryAddonsRoutes.default(db));
 
+    // Pizza Borders
+    const pizzaBordersRoutes = await import('./routes/pizza-borders.js');
+    app.use('/api/pizza-borders', pizzaBordersRoutes.default(db));
+
+
     // Health check
     app.get('/api/health', (req, res) => {
         res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -31,6 +31,7 @@ class WhatsAppService {
         this.qrCodes = new Map(); // tenantId -> qrCode
         this.statuses = new Map(); // tenantId -> status
         this.welcomeLogs = new Map(); // tenantId -> { whatsappId -> timestamp }
+        this.recentMessages = new Map(); // tenantId -> { whatsappId -> { message, timestamp } }
 
         // Intervalo (em horas) para reenvio do welcome
         this.welcomeResendHours = parseFloat(process.env.WELCOME_RESEND_HOURS || '12');
@@ -229,6 +230,30 @@ class WhatsAppService {
         this.welcomeLogs.set(tenantId, log);
     }
 
+    // Verificar se já enviou mensagem similar recentemente (previne duplicatas)
+    hasRecentlySentMessage(tenantId, whatsappId, messageType = 'welcome') {
+        const recentLog = this.recentMessages.get(tenantId) || {};
+        const lastMessage = recentLog[`${whatsappId}_${messageType}`];
+
+        if (!lastMessage) return false;
+
+        // Considerar "recente" se enviou nos últimos 5 minutos
+        const RECENT_THRESHOLD = 5 * 60 * 1000; // 5 minutos
+        return (Date.now() - lastMessage.timestamp) < RECENT_THRESHOLD;
+    }
+
+    // Marcar mensagem como enviada
+    markMessageSent(tenantId, whatsappId, messageType = 'welcome') {
+        const recentLog = this.recentMessages.get(tenantId) || {};
+        recentLog[`${whatsappId}_${messageType}`] = {
+            timestamp: Date.now(),
+            type: messageType
+        };
+        this.recentMessages.set(tenantId, recentLog);
+        console.log(`[AntiDup] Marcado ${messageType} para ${whatsappId} (tenant: ${tenantId})`);
+    }
+
+
     // Buscar menu do tenant para contexto da IA (com cache de 5 minutos)
     async getMenuData(tenantId) {
         const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
@@ -400,6 +425,12 @@ class WhatsAppService {
                     if (msgLowerTrigger.includes(trigger.word.toLowerCase())) {
                         console.log(`[Trigger] Palavra-chave "${trigger.word}" detectada para ${whatsappId}`);
 
+                        // ANTI-DUPLICAÇÃO: Verificar se já enviou link recentemente
+                        if (this.hasRecentlySentMessage(tenantId, whatsappId, 'link')) {
+                            console.log(`[AntiDup] Link já enviado recentemente para ${whatsappId}, ignorando`);
+                            return; // Não enviar novamente
+                        }
+
                         // Preparar link da loja (com telefone ou LID)
                         let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, isLid ? lidValue : null);
 
@@ -411,6 +442,11 @@ class WhatsAppService {
 
                         await chat.sendMessage(response);
                         console.log(`[Trigger] Resposta enviada: ${response.substring(0, 50)}...`);
+
+                        // Marcar mensagem como enviada
+                        this.markMessageSent(tenantId, whatsappId, 'link');
+                        this.markWelcomeSent(tenantId, whatsappId); // Também marcar welcome para evitar envio duplo
+
                         return; // Nao continuar processamento
                     }
                 }
@@ -424,8 +460,17 @@ class WhatsAppService {
 
             // Enviar welcome se necessario (modo link)
             if (this.shouldSendWelcome(tenantId, whatsappId)) {
+                // ANTI-DUPLICAÇÃO: Verificar se já enviou link/welcome recentemente
+                if (this.hasRecentlySentMessage(tenantId, whatsappId, 'link') ||
+                    this.hasRecentlySentMessage(tenantId, whatsappId, 'welcome')) {
+                    console.log(`[AntiDup] Welcome/Link já enviado recentemente para ${whatsappId}, ignorando`);
+                    return;
+                }
+
                 await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings, contact.pushname, isLid ? lidValue : null);
                 this.markWelcomeSent(tenantId, whatsappId);
+                this.markMessageSent(tenantId, whatsappId, 'welcome');
+                this.markMessageSent(tenantId, whatsappId, 'link'); // Marcar link também
             }
 
         } catch (err) {

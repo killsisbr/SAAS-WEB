@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorias - DeliveryHub</title>
+    <title>Bordas de Pizza - DeliveryHub</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,11 +23,8 @@
             --card: #ffffff;
             --text: #1a1a1a;
             --text-muted: #666666;
-            --border: #1a1a1a;
             --success: #22c55e;
-            --warning: #f59e0b;
             --danger: #ef4444;
-            --info: #06b6d4;
             --shadow-offset: 6px;
             --radius: 20px;
         }
@@ -111,7 +108,7 @@
             flex: 1;
             padding: 32px;
             overflow-y: auto;
-            max-width: 1200px;
+            max-width: 900px;
         }
 
         .header {
@@ -166,59 +163,51 @@
             box-shadow: 4px 4px 0 var(--dark);
         }
 
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .category-card {
+        .border-card {
             background: var(--card);
             border: 3px solid var(--dark);
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px 24px;
             display: flex;
             align-items: center;
             gap: 16px;
             box-shadow: 4px 4px 0 var(--dark);
+            margin-bottom: 16px;
             transition: 0.2s;
         }
 
-        .category-card:hover {
-            transform: translateY(-4px);
+        .border-card:hover {
+            transform: translateY(-2px);
         }
 
-        .category-icon {
-            width: 60px;
-            height: 60px;
+        .border-icon {
+            width: 50px;
+            height: 50px;
             background: var(--secondary);
             border: 2px solid var(--dark);
-            border-radius: 12px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--dark);
-            box-shadow: 2px 2px 0 var(--dark);
+            font-size: 1.3rem;
         }
 
-        .category-info {
+        .border-info {
             flex: 1;
         }
 
-        .category-name {
+        .border-name {
             font-weight: 800;
-            font-size: 1.2rem;
-            margin-bottom: 4px;
+            font-size: 1.1rem;
         }
 
-        .category-count {
-            font-size: 0.9rem;
-            color: var(--text-muted);
+        .border-price {
+            color: var(--primary);
+            font-weight: 700;
         }
 
         .btn-icon {
-            padding: 8px;
+            padding: 8px 12px;
             border-radius: 8px;
             border: 2px solid var(--dark);
             background: white;
@@ -236,7 +225,38 @@
             color: white;
         }
 
-        /* Modal */
+        .toggle-btn {
+            width: 50px;
+            height: 28px;
+            border-radius: 14px;
+            border: 2px solid var(--dark);
+            background: #ccc;
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--success);
+        }
+
+        .toggle-btn::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            border: 2px solid var(--dark);
+        }
+
+        .toggle-btn.active::after {
+            left: 24px;
+        }
+
         .modal {
             position: fixed;
             inset: 0;
@@ -258,7 +278,7 @@
             border-radius: 20px;
             padding: 32px;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             box-shadow: 10px 10px 0 var(--dark);
         }
 
@@ -292,6 +312,18 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 display: none;
@@ -309,7 +341,8 @@
                 <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
                 <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
                 <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
-                <a href="categorias" class="nav-item active"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <a href="bordas" class="nav-item active"><i class="fas fa-circle-notch"></i> Bordas</a>
                 <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
                 <div class="nav-label">Configuracoes</div>
                 <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
@@ -319,44 +352,33 @@
         <main class="main">
             <div class="header">
                 <div>
-                    <h1>Categorias</h1>
-                    <p>Organize seus produtos</p>
+                    <h1>Bordas de Pizza</h1>
+                    <p>Gerencie as opcoes de borda para pizzas</p>
                 </div>
                 <a href="config" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
             </div>
 
             <div style="margin-bottom: 24px;">
-                <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> NOVA
-                    CATEGORIA</button>
+                <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> NOVA BORDA</button>
             </div>
 
-            <div id="categoriesList" class="categories-grid"></div>
+            <div id="bordersList"></div>
         </main>
     </div>
 
     <!-- Modal -->
-    <div class="modal" id="categoryModal">
+    <div class="modal" id="borderModal">
         <div class="modal-content">
-            <h2 id="modalTitle">Nova Categoria</h2>
-            <form id="categoryForm">
-                <input type="hidden" id="categoryId">
+            <h2 id="modalTitle">Nova Borda</h2>
+            <form id="borderForm">
+                <input type="hidden" id="borderId">
                 <div class="form-group">
-                    <label>Nome da Categoria</label>
-                    <input type="text" id="categoryName" required placeholder="Ex: Bebidas">
+                    <label>Nome da Borda</label>
+                    <input type="text" id="borderName" required placeholder="Ex: Catupiry">
                 </div>
                 <div class="form-group">
-                    <label>Icone (FontAwesome)</label>
-                    <input type="text" id="categoryIcon" placeholder="fas fa-beer">
-                    <small style="color: var(--text-muted);">Use classes do FontAwesome 6</small>
-                </div>
-                <div class="form-group">
-                    <label>Modo de Exibicao</label>
-                    <select id="categoryDisplayMode" style="width: 100%; padding: 14px; background: var(--bg); border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 1rem;">
-                        <option value="default">Padrao (Cards Retangulares)</option>
-                        <option value="circular">Circular (Estilo Pizza)</option>
-                        <option value="compact">Compacto (Lista)</option>
-                    </select>
-                    <small style="color: var(--text-muted);">Define como os produtos serao exibidos na loja</small>
+                    <label>Preco Adicional (R$)</label>
+                    <input type="number" id="borderPrice" step="0.01" min="0" placeholder="5.00">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
@@ -370,92 +392,104 @@
         const token = localStorage.getItem('token');
         if (!token) window.location.href = '/login';
 
-        // Extrair slug da URL para contexto do tenant
         const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
         const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
 
-        let categories = [];
+        let borders = [];
 
-        async function loadCategories() {
+        async function loadBorders() {
             try {
-                const res = await fetch('/api/categories', { headers: API_HEADERS });
-                if (res.ok) categories = await res.json();
+                const res = await fetch('/api/pizza-borders', { headers: API_HEADERS });
+                if (res.ok) borders = await res.json();
                 render();
             } catch (e) { console.error(e); }
         }
 
         function render() {
-            const list = document.getElementById('categoriesList');
-            if (!categories.length) {
-                list.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600;">Nenhuma categoria encontrada.</div>';
+            const list = document.getElementById('bordersList');
+            if (!borders.length) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-circle-notch"></i>
+                        <h3>Nenhuma borda cadastrada</h3>
+                        <p>Adicione bordas como Catupiry, Cheddar, etc.</p>
+                    </div>
+                `;
                 return;
             }
-            list.innerHTML = categories.map(c => `
-                <div class="category-card">
-                    <div class="category-icon"><i class="${c.icon || 'fas fa-folder'}"></i></div>
-                    <div class="category-info">
-                        <div class="category-name">${c.name}</div>
-                        <div class="category-count">${c.product_count || 0} produtos</div>
+            list.innerHTML = borders.map(b => `
+                <div class="border-card">
+                    <div class="border-icon"><i class="fas fa-circle-notch"></i></div>
+                    <div class="border-info">
+                        <div class="border-name">${b.name}</div>
+                        <div class="border-price">+ R$ ${(b.price || 0).toFixed(2).replace('.', ',')}</div>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <button class="btn-icon" onclick="editCategory('${c.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon btn-delete" onclick="deleteCategory('${c.id}')"><i class="fas fa-trash"></i></button>
-                    </div>
+                    <div class="toggle-btn ${b.is_active ? 'active' : ''}" onclick="toggleActive('${b.id}', ${!b.is_active})"></div>
+                    <button class="btn-icon" onclick="editBorder('${b.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon btn-delete" onclick="deleteBorder('${b.id}')"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
         function openModal() {
-            document.getElementById('modalTitle').textContent = 'Nova Categoria';
-            document.getElementById('categoryForm').reset();
-            document.getElementById('categoryId').value = '';
-            document.getElementById('categoryDisplayMode').value = 'default';
-            document.getElementById('categoryModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = 'Nova Borda';
+            document.getElementById('borderForm').reset();
+            document.getElementById('borderId').value = '';
+            document.getElementById('borderModal').classList.add('active');
         }
 
         function closeModal() {
-            document.getElementById('categoryModal').classList.remove('active');
+            document.getElementById('borderModal').classList.remove('active');
         }
 
-        function editCategory(id) {
-            const c = categories.find(x => x.id === id);
-            if (!c) return;
-            document.getElementById('modalTitle').textContent = 'Editar Categoria';
-            document.getElementById('categoryId').value = c.id;
-            document.getElementById('categoryName').value = c.name;
-            document.getElementById('categoryIcon').value = c.icon || '';
-            document.getElementById('categoryDisplayMode').value = c.display_mode || 'default';
-            document.getElementById('categoryModal').classList.add('active');
+        function editBorder(id) {
+            const b = borders.find(x => x.id === id);
+            if (!b) return;
+            document.getElementById('modalTitle').textContent = 'Editar Borda';
+            document.getElementById('borderId').value = b.id;
+            document.getElementById('borderName').value = b.name;
+            document.getElementById('borderPrice').value = b.price || 0;
+            document.getElementById('borderModal').classList.add('active');
         }
 
-        async function deleteCategory(id) {
-            if (!confirm('Deletar esta categoria?')) return;
+        async function toggleActive(id, isActive) {
             try {
-                const res = await fetch(`/api/categories/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await fetch(`/api/pizza-borders/${id}`, {
+                    method: 'PUT',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive })
+                });
+                loadBorders();
+            } catch (e) { alert('Erro ao atualizar'); }
+        }
+
+        async function deleteBorder(id) {
+            if (!confirm('Deletar esta borda?')) return;
+            try {
+                const res = await fetch(`/api/pizza-borders/${id}`, { method: 'DELETE', headers: API_HEADERS });
                 if (!res.ok) { const d = await res.json(); alert(d.error || 'Erro ao deletar'); return; }
-                loadCategories();
+                loadBorders();
             } catch (e) { alert('Erro'); }
         }
 
-        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+        document.getElementById('borderForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('categoryId').value;
-            const data = { 
-                name: document.getElementById('categoryName').value, 
-                icon: document.getElementById('categoryIcon').value,
-                displayMode: document.getElementById('categoryDisplayMode').value
+            const id = document.getElementById('borderId').value;
+            const data = {
+                name: document.getElementById('borderName').value,
+                price: parseFloat(document.getElementById('borderPrice').value) || 0
             };
-            const url = id ? `/api/categories/${id}` : '/api/categories';
+            const url = id ? `/api/pizza-borders/${id}` : '/api/pizza-borders';
             const method = id ? 'PUT' : 'POST';
 
             try {
                 await fetch(url, { method, headers: { ...API_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 closeModal();
-                loadCategories();
+                loadBorders();
             } catch (e) { alert('Erro'); }
         });
 
-        loadCategories();
+        loadBorders();
     </script>
 </body>
 

@@ -299,10 +299,15 @@ export default function (db) {
     // ========================================
     router.post('/', authMiddleware(db), tenantMiddleware(db), checkLimits(db, 'products'), async (req, res) => {
         try {
-            const { name, description, price, categoryId, images, isAvailable, isFeatured, addons, imageSettings } = req.body;
+            const { name, description, price, categoryId, images, isAvailable, isFeatured, addons, imageSettings, has_sizes, sizes, size_prices } = req.body;
 
-            if (!name || !price || !categoryId) {
-                return res.status(400).json({ error: 'Nome, preco e categoria sao obrigatorios' });
+            // Validar: price obrigatorio apenas se NAO tem tamanhos
+            const hasSizes = has_sizes || (sizes && JSON.parse(sizes).length > 0);
+            if (!name || !categoryId) {
+                return res.status(400).json({ error: 'Nome e categoria sao obrigatorios' });
+            }
+            if (!hasSizes && (!price && price !== 0)) {
+                return res.status(400).json({ error: 'Preco e obrigatorio para produtos sem tamanhos' });
             }
 
             // Verificar categoria
@@ -325,21 +330,24 @@ export default function (db) {
             // Criar produto
             const productId = uuidv4();
             await db.run(`
-                INSERT INTO products (id, tenant_id, category_id, name, description, price, images, is_available, is_featured, order_index, addons, image_settings)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO products (id, tenant_id, category_id, name, description, price, images, is_available, is_featured, order_index, addons, image_settings, has_sizes, sizes, size_prices)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 productId,
                 req.tenantId,
                 categoryId,
                 name,
                 description || null,
-                price,
+                price || 0,
                 JSON.stringify(images || []),
                 isAvailable !== false ? 1 : 0,
                 isFeatured ? 1 : 0,
                 orderIndex,
                 JSON.stringify(addons || []),
-                JSON.stringify(imageSettings || {})
+                JSON.stringify(imageSettings || {}),
+                hasSizes ? 1 : 0,
+                sizes || null,
+                size_prices || null
             ]);
 
             const product = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
@@ -353,6 +361,7 @@ export default function (db) {
             res.status(500).json({ error: 'Erro ao criar produto' });
         }
     });
+
 
     // ========================================
     // PUT /api/products/:id - Atualizar produto
