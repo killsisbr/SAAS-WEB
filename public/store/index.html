@@ -488,9 +488,9 @@
                             d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                <!-- Container de Imagem Circular (suporta split) -->
+                <!-- Container de Imagem (redondo apenas para pizza) -->
                 <div id="pizza-image-container"
-                    class="relative w-40 h-40 rounded-full border-4 border-dark shadow-xl overflow-hidden bg-zinc-200">
+                    class="relative w-40 h-40 border-4 border-dark shadow-xl overflow-hidden bg-zinc-200 rounded-xl">
                     <!-- Imagem unica (normal) - z-10 garante que fica por cima do split -->
                     <img id="modal-img" src="" class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200">
                     <!-- Container split (meio a meio) - escondido por padrao -->
@@ -2236,8 +2236,21 @@
             // Resetar split container - mostrar imagem unica
             const modalImgEl = document.getElementById('modal-img');
             const splitContainerEl = document.getElementById('split-container');
+            const imageContainer = document.getElementById('pizza-image-container');
+
             if (modalImgEl) modalImgEl.classList.remove('hidden');
             if (splitContainerEl) splitContainerEl.classList.add('hidden');
+
+            // Aplicar rounded-full apenas para pizzas, senao rounded-xl
+            if (imageContainer) {
+                if (isPizzaProduct) {
+                    imageContainer.classList.remove('rounded-xl');
+                    imageContainer.classList.add('rounded-full');
+                } else {
+                    imageContainer.classList.remove('rounded-full');
+                    imageContainer.classList.add('rounded-xl');
+                }
+            }
 
             document.getElementById('half-badge').classList.add('hidden');
             document.getElementById('second-flavor-container').classList.add('hidden');
