@@ -223,6 +223,8 @@
             border-right: var(--border-width) var(--border-style) var(--dark);
             transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
         #sidebar.open {
@@ -281,8 +283,8 @@
 
         .pizza-card {
             text-align: center;
-            width: 220px;
-            padding: 20px 10px;
+            width: 280px;
+            padding: 24px 14px;
             background: var(--card-bg);
             border-radius: var(--radius);
             border: var(--border-width) var(--border-style) var(--dark);
@@ -298,18 +300,19 @@
 
         .pizza-card-img-container {
             position: relative;
-            margin: 0 auto 10px;
+            margin: 0 auto 12px;
         }
 
         .pizza-card-img {
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             object-fit: cover;
             margin: 0 auto;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             border: 3px solid var(--dark);
         }
+
 
         .pizza-card-add {
             position: absolute;
@@ -1808,8 +1811,20 @@
 
         function renderProductCard(product) {
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
-            const price = product.price.toFixed(2).replace('.', ',');
+
+            // Se tem tamanhos, pegar o menor preco
+            let price = product.price || 0;
+            try {
+                const sizePrices = JSON.parse(product.size_prices || '{}');
+                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
+                    const values = Object.values(sizePrices);
+                    if (values.length > 0) price = Math.min(...values);
+                }
+            } catch (e) { }
+
+            const priceStr = price.toFixed(2).replace('.', ',');
             const desc = product.description || '';
+
 
             return `
                 <div class="neo-card rounded-custom overflow-hidden product-item group" 
@@ -1824,7 +1839,7 @@
                     <div class="p-8 bg-card/50">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="bebas text-4xl uppercase tracking-tighter">${product.name}</h3>
-                            <span class="bebas text-3xl text-brand">R$ ${price}</span>
+                            <span class="bebas text-3xl text-brand">R$ ${priceStr}</span>
                         </div>
                         ${desc ? `<p class="text-sm opacity-60 mb-4 line-clamp-2">${desc}</p>` : ''}
                         <button onclick="openProductById('${product.id}')"
@@ -1840,12 +1855,19 @@
         function renderProductCardCircular(product) {
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x400?text=Pizza';
 
-            // Se tem tamanhos, mostrar preco do maior (G)
-            let price = product.price;
-            let sizePrices = [];
+            // Se tem tamanhos, mostrar preco do menor (M ou primeiro disponivel)
+            let price = product.price || 0;
             try {
-                sizePrices = JSON.parse(product.size_prices || '[]');
-                if (sizePrices.length > 0) price = sizePrices[sizePrices.length - 1];
+                const sizePrices = JSON.parse(product.size_prices || '{}');
+                // sizePrices pode ser objeto {'M': 35, 'G': 45} ou array
+                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
+                    // Objeto - pegar o menor preco (M)
+                    const values = Object.values(sizePrices);
+                    if (values.length > 0) price = Math.min(...values);
+                } else if (Array.isArray(sizePrices) && sizePrices.length > 0) {
+                    // Array - pegar o primeiro
+                    price = sizePrices[0];
+                }
             } catch (e) { }
 
             const priceStr = price.toFixed(2).replace('.', ',');
@@ -1864,6 +1886,7 @@
                 </div>
             `;
         }
+
 
         // Buscar produto por ID
         function findProductById(id) {
