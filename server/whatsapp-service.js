@@ -306,7 +306,18 @@ class WhatsAppService {
     // Handler de mensagens
     async handleMessage(tenantId, message, settings) {
         try {
-            const chat = await message.getChat();
+            let chat;
+            try {
+                chat = await message.getChat();
+            } catch (chatErr) {
+                console.log(`[WhatsApp] Erro ao obter chat (ignorando): ${chatErr.message}`);
+                return;
+            }
+
+            if (!chat) {
+                console.log('[WhatsApp] Chat não encontrado, ignorando mensagem');
+                return;
+            }
 
             // Ignorar mensagens do proprio bot (evita loops)
             if (message.fromMe) {
@@ -417,6 +428,7 @@ class WhatsAppService {
             const triggers = currentSettings.triggers || [];
             console.log(`[Triggers] Tenant ${tenantId} tem ${triggers.length} gatilhos configurados`);
 
+            let triggerMatched = false;
             if (triggers.length > 0) {
                 const msgLowerTrigger = messageBody.toLowerCase().trim();
 
@@ -433,6 +445,7 @@ class WhatsAppService {
 
                         // Preparar link da loja (com telefone ou LID)
                         let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, isLid ? lidValue : null);
+                        console.log(`[Trigger] Link construído: ${orderLink}`);
 
                         // Substituir variaveis na resposta
                         let response = trigger.response
@@ -440,26 +453,30 @@ class WhatsAppService {
                             .replace(/\{restaurante\}/gi, tenant?.name || 'Restaurante')
                             .replace(/\{nome\}/gi, contact.pushname || 'Cliente');
 
-                        await chat.sendMessage(response);
-                        console.log(`[Trigger] Resposta enviada: ${response.substring(0, 50)}...`);
+                        // Enviar mensagem com tratamento de erro
+                        try {
+                            await chat.sendMessage(response);
+                            console.log(`[Trigger] Resposta enviada com sucesso: ${response.substring(0, 50)}...`);
+                        } catch (sendErr) {
+                            console.error(`[Trigger] ERRO ao enviar mensagem: ${sendErr.message}`);
+                            // Não marcar como enviada se falhou
+                            return;
+                        }
 
                         // Marcar mensagem como enviada
                         this.markMessageSent(tenantId, whatsappId, 'link');
                         this.markWelcomeSent(tenantId, whatsappId); // Também marcar welcome para evitar envio duplo
 
+                        triggerMatched = true;
                         return; // Nao continuar processamento
                     }
                 }
             }
 
-            // Modo Link: Verificar se bot basico esta habilitado
-            if (!currentSettings.whatsappBotEnabled) {
-                console.log(`Bot desabilitado para tenant ${tenantId}`);
-                return;
-            }
-
-            // Enviar welcome se necessario (modo link)
-            if (this.shouldSendWelcome(tenantId, whatsappId)) {
+            // ============ RESPOSTA PADRÃO - PRIMEIRA MENSAGEM DO DIA ============
+            // Se não houve gatilho correspondente, verificar se é primeira mensagem do dia
+            // Isso funciona MESMO SEM gatilhos configurados
+            if (!triggerMatched && this.shouldSendWelcome(tenantId, whatsappId)) {
                 // ANTI-DUPLICAÇÃO: Verificar se já enviou link/welcome recentemente
                 if (this.hasRecentlySentMessage(tenantId, whatsappId, 'link') ||
                     this.hasRecentlySentMessage(tenantId, whatsappId, 'welcome')) {
@@ -467,10 +484,18 @@ class WhatsAppService {
                     return;
                 }
 
+                console.log(`[AutoWelcome] Enviando link automático para ${whatsappId} (primeira mensagem do dia)`);
                 await this.sendWelcomeMessage(tenantId, chat, sanitizedNumber, currentSettings, contact.pushname, isLid ? lidValue : null);
                 this.markWelcomeSent(tenantId, whatsappId);
                 this.markMessageSent(tenantId, whatsappId, 'welcome');
-                this.markMessageSent(tenantId, whatsappId, 'link'); // Marcar link também
+                this.markMessageSent(tenantId, whatsappId, 'link');
+                return;
+            }
+
+            // Modo Link (legado): Verificar se bot basico esta habilitado para respostas adicionais
+            if (!currentSettings.whatsappBotEnabled) {
+                console.log(`Bot desabilitado para tenant ${tenantId}, resposta padrão já enviada se aplicável`);
+                return;
             }
 
         } catch (err) {
@@ -588,30 +613,41 @@ class WhatsAppService {
     }
 
     async sendWelcomeMessage(tenantId, chat, sanitizedNumber, settings, customerName = 'Cliente', lidValue = null) {
-        const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
-        if (!tenant) return;
+        try {
+            const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+            if (!tenant) {
+                console.log(`[Welcome] Tenant ${tenantId} não encontrado`);
+                return false;
+            }
 
-        const tenantSettings = JSON.parse(tenant.settings || '{}');
-        const restaurantName = tenant.name || 'Restaurante';
-        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue);
+            const tenantSettings = JSON.parse(tenant.settings || '{}');
+            const restaurantName = tenant.name || 'Restaurante';
+            const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue);
+            console.log(`[Welcome] Link construído: ${orderLink}`);
 
-        // Usar mensagem customizada ou fallback padrao
-        let welcomeMessage;
-        if (tenantSettings.botMessages?.welcome) {
-            welcomeMessage = tenantSettings.botMessages.welcome
-                .replace(/\{restaurante\}/gi, restaurantName)
-                .replace(/\{link\}/gi, orderLink)
-                .replace(/\{nome\}/gi, customerName || 'Cliente');
-        } else {
-            // Mensagem padrao
-            welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +
-                `Eu sou o robo de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
-                `Para comecar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
-                `Dica: Seu pedido ja estara vinculado ao seu WhatsApp!`;
+            // Usar mensagem customizada ou fallback padrao
+            let welcomeMessage;
+            if (tenantSettings.botMessages?.welcome) {
+                welcomeMessage = tenantSettings.botMessages.welcome
+                    .replace(/\{restaurante\}/gi, restaurantName)
+                    .replace(/\{link\}/gi, orderLink)
+                    .replace(/\{nome\}/gi, customerName || 'Cliente');
+            } else {
+                // Mensagem padrao
+                welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +
+                    `Eu sou o robo de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
+                    `Para comecar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
+                    `Dica: Seu pedido ja estara vinculado ao seu WhatsApp!`;
+            }
+
+            console.log(`[Welcome] Enviando mensagem para ${sanitizedNumber}...`);
+            await chat.sendMessage(welcomeMessage);
+            console.log(`[Welcome] SUCESSO - Enviado para ${sanitizedNumber} (tenant ${tenantId})`);
+            return true;
+        } catch (err) {
+            console.error(`[Welcome] ERRO ao enviar mensagem: ${err.message}`);
+            return false;
         }
-
-        await chat.sendMessage(welcomeMessage);
-        console.log(`Welcome enviado para ${sanitizedNumber} (tenant ${tenantId})`);
     }
 
     /**
