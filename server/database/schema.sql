@@ -159,6 +159,9 @@ CREATE TABLE IF NOT EXISTS products (
     addons TEXT DEFAULT '[]', -- JSON legado
     image_settings TEXT DEFAULT '{}', -- JSON (zoom, posicao, etc)
     nutrition_info TEXT, -- JSON
+    has_sizes INTEGER DEFAULT 0, -- Indica se produto tem tamanhos (P/M/G)
+    sizes TEXT DEFAULT '[]', -- JSON array ex: ["P", "M", "G"]
+    size_prices TEXT DEFAULT '{}', -- JSON object ex: {"P": 25, "M": 35, "G": 45}
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
