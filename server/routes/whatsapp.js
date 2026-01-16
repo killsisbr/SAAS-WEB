@@ -11,24 +11,26 @@ import { getFollowUpService } from '../services/follow-up.js';
 
 export default function (db) {
     const router = Router();
-    const whatsappService = getWhatsAppService(db);
 
-    // Auto-reconectar todos os WhatsApps ativos ao iniciar servidor
-    // Executar apos pequeno delay para garantir que o servidor esta pronto
-    setTimeout(async () => {
-        await whatsappService.autoReconnectAll();
+    // Função auxiliar para obter serviço de forma segura
+    const getService = () => {
+        const service = getWhatsAppService();
+        if (!service) {
+            throw new Error('WhatsApp service não inicializado');
+        }
+        return service;
+    };
 
-        // Iniciar servico de follow-up
-        const followUpService = getFollowUpService(db);
-        followUpService.init();
-    }, 5000);
+    // Auto-reconectar e Follow-up são inicializados no server.js
+    // Não duplicar aqui para evitar conflitos
+
 
     // ========================================
     // POST /api/whatsapp/initialize - Iniciar WhatsApp
     // ========================================
     router.post('/initialize', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            await whatsappService.initializeForTenant(req.tenantId);
+            await getService().initializeForTenant(req.tenantId);
             res.json({ success: true, message: 'WhatsApp inicializado' });
         } catch (error) {
             console.error('Erro ao inicializar WhatsApp:', error);
@@ -41,8 +43,21 @@ export default function (db) {
     // ========================================
     router.get('/status', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const status = whatsappService.getStatus(req.tenantId);
-            res.json(status);
+            const service = getService();
+            const rawStatus = service.getStatus(req.tenantId);
+            const qrCode = await service.getQRCodeDataURL(req.tenantId);
+
+            // Interface do frontend espera strings em lowercase e campos específicos
+            const status = rawStatus.toLowerCase();
+            const connected = status === 'ready';
+            const qrAvailable = !!qrCode;
+
+            res.json({
+                status,
+                connected,
+                qrAvailable,
+                qrCode: qrCode || null
+            });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -53,7 +68,7 @@ export default function (db) {
     // ========================================
     router.get('/qr', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const qrDataUrl = await whatsappService.getQRCodeDataURL(req.tenantId);
+            const qrDataUrl = await getService().getQRCodeDataURL(req.tenantId);
 
             if (!qrDataUrl) {
                 return res.json({
@@ -73,7 +88,7 @@ export default function (db) {
     // ========================================
     router.post('/disconnect', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            await whatsappService.disconnect(req.tenantId);
+            await getService().disconnect(req.tenantId);
             res.json({ success: true, message: 'WhatsApp desconectado' });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -85,7 +100,7 @@ export default function (db) {
     // ========================================
     router.post('/restart', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            await whatsappService.restart(req.tenantId);
+            await getService().restart(req.tenantId);
             res.json({ success: true, message: 'WhatsApp reiniciado' });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -103,7 +118,7 @@ export default function (db) {
                 return res.status(400).json({ error: 'whatsappId e orderData sao obrigatorios' });
             }
 
-            const sent = await whatsappService.sendOrderConfirmation(req.tenantId, whatsappId, orderData);
+            const sent = await getService().sendOrderConfirmation(req.tenantId, whatsappId, orderData);
 
             res.json({ success: sent });
         } catch (error) {
@@ -122,7 +137,7 @@ export default function (db) {
                 return res.status(400).json({ error: 'orderData e obrigatorio' });
             }
 
-            const sent = await whatsappService.sendOrderToGroup(req.tenantId, orderData);
+            const sent = await getService().sendOrderToGroup(req.tenantId, orderData);
 
             res.json({ success: sent });
         } catch (error) {
@@ -177,19 +192,10 @@ export default function (db) {
     // ========================================
     router.get('/groups', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const client = whatsappService.clients.get(req.tenantId);
-
-            if (!client) {
-                return res.status(400).json({ error: 'WhatsApp nao conectado' });
-            }
-
-            const chats = await client.getChats();
-            const groups = chats.filter(chat => chat.isGroup).map(g => ({
-                name: g.name,
-                id: g.id._serialized
-            }));
-
-            res.json(groups);
+            // Baileys não suporta getChats() como whatsapp-web.js
+            // Retornar lista vazia por enquanto - grupos precisam ser configurados manualmente
+            console.log('[WhatsApp] Listagem de grupos não suportada na versão Baileys');
+            res.json([]);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

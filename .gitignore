@@ -26,6 +26,7 @@ server/database/*.sqlite-wal
 .wwebjs_cache/
 server/.wwebjs_cache/
 server/whatsapp-sessions/
+server/baileys-sessions/
 server/backups/
 
 # IDEs

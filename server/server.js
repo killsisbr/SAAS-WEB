@@ -14,7 +14,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { getCacheService } from './services/cache-service.js';
 import { getBackupService } from './services/backup-service.js';
-import { getWhatsAppService } from './whatsapp-service.js';
+import { initWhatsAppService, getWhatsAppService } from './whatsapp-service.js';
 import { getFollowUpService } from './services/follow-up.js';
 
 // ES Modules fix
@@ -423,18 +423,24 @@ async function start() {
         backupService.startAutosave(24); // Backup diário
         console.log('[Backup] Serviço de autosave iniciado');
 
-        // Auto-reconectar WhatsApp
-        try {
-            const whatsapp = getWhatsAppService(db);
-            await whatsapp.autoReconnectAll();
-            console.log('[WhatsApp] Auto-reconnect concluído');
+        // Auto-reconectar WhatsApp (apenas se habilitado via env)
+        const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
 
-            // Inicializar Follow-up (depende do WhatsApp estar pronto)
-            const followUp = getFollowUpService(db);
-            followUp.init();
-            console.log('[Follow-up] Serviço inicializado');
-        } catch (err) {
-            console.warn('[WhatsApp/FollowUp] Erro na inicializacao:', err.message);
+        if (whatsappAutoConnect) {
+            try {
+                const whatsapp = initWhatsAppService(db);
+                await whatsapp.autoReconnectAll();
+                console.log('[WhatsApp] Auto-reconnect concluído (Baileys)');
+
+                // Inicializar Follow-up (depende do WhatsApp estar pronto)
+                const followUp = getFollowUpService(db);
+                followUp.init();
+                console.log('[Follow-up] Serviço inicializado');
+            } catch (err) {
+                console.warn('[WhatsApp/FollowUp] Erro na inicializacao:', err.message);
+            }
+        } else {
+            console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
         }
 
         // Iniciar servidor
@@ -457,3 +463,4 @@ async function start() {
 }
 
 start();
+// Restart: testando WhatsApp com Fiorella habilitado + correções Puppeteer
