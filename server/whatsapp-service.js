@@ -447,9 +447,31 @@ class WhatsAppService {
         }
 
         const settings = JSON.parse(tenant?.settings || '{}');
-        const baseUrl = settings.siteUrl || process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
-        const slug = tenant?.slug || 'loja';
+        const storedUrl = settings.siteUrl || settings.domain;
+        const envBaseUrl = process.env.BASE_URL || process.env.APP_DOMAIN;
+        const envDomain = process.env.DOMAIN;
 
+        let baseUrl = '';
+
+        // Se houver uma URL no banco, mas for localhost e tivermos uma env de produção, priorizamos a env
+        const isStoredLocal = storedUrl && (storedUrl.includes('localhost') || storedUrl.includes('127.0.0.1'));
+
+        if (storedUrl && !isStoredLocal) {
+            baseUrl = storedUrl;
+        } else if (envBaseUrl) {
+            baseUrl = envBaseUrl;
+        } else if (envDomain) {
+            const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+            baseUrl = `${protocol}://${envDomain}`;
+        } else {
+            // Fallback para o que estiver no banco (mesmo que seja localhost) ou localhost padrão
+            baseUrl = storedUrl || `http://localhost:${process.env.PORT || 3000}`;
+        }
+
+        // Garantir que não termina com barra
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        const slug = tenant?.slug || 'loja';
         let link = `${baseUrl}/loja/${slug}`;
 
         if (sanitizedNumber) {
@@ -459,6 +481,8 @@ class WhatsAppService {
         if (lidValue) {
             link += (link.includes('?') ? '&' : '?') + `lid=${lidValue}`;
         }
+
+        console.log(`[LinkBuilder] Tenant: ${tenant?.slug}, Stored: ${storedUrl}, Env: ${envDomain}, Final: ${baseUrl}`);
 
         return link;
     }

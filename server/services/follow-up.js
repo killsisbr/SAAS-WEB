@@ -116,7 +116,7 @@ class FollowUpService {
                     continue;
                 }
 
-                const message = this.buildInactiveMessage(customer, tenant);
+                const message = await this.buildInactiveMessage(customer, tenant);
                 await this.sendFollowUp(tenantId, customer.phone, message, FOLLOW_UP_TYPES.INACTIVE_CUSTOMER);
             }
         } catch (error) {
@@ -296,26 +296,41 @@ class FollowUpService {
     /**
      * Construir mensagem para cliente inativo
      */
-    buildInactiveMessage(customer, tenant) {
+    async buildInactiveMessage(customer, tenant) {
         const name = customer.name || 'cliente';
         const restaurantName = tenant?.name || 'Restaurante';
         const days = Math.floor(customer.days_inactive);
         const settings = JSON.parse(tenant?.settings || '{}');
-        const domain = settings.domain || process.env.APP_DOMAIN || 'localhost:3000';
-        const protocol = domain.includes('localhost') ? 'http' : 'https';
+
+        // Harmonizar com whatsapp-service.js
+        let baseUrl = settings.siteUrl || settings.domain || process.env.BASE_URL || process.env.APP_DOMAIN;
+
+        if (!baseUrl && process.env.DOMAIN) {
+            const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+            baseUrl = `${protocol}://${process.env.DOMAIN}`;
+        }
+
+        if (!baseUrl) {
+            baseUrl = `http://localhost:${process.env.PORT || 3000}`;
+        }
+
+        // Remover trailing slash se houver
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        const storeLink = `${baseUrl}/loja/${tenant?.slug}`;
 
         if (days <= 14) {
             return `Ola ${name}! Sentimos sua falta no ${restaurantName}!\n\n` +
                 `Que tal um pedido hoje? Estamos esperando por voce!\n\n` +
-                `Faca seu pedido: ${protocol}://${domain}/loja/${tenant?.slug}`;
+                `Faca seu pedido: ${storeLink}`;
         } else if (days <= 30) {
             return `${name}, faz um tempinho que voce nao aparece por aqui!\n\n` +
                 `O ${restaurantName} esta com saudade! Volte logo!\n` +
-                `${protocol}://${domain}/loja/${tenant?.slug}`;
+                `${storeLink}`;
         } else {
             return `Ola ${name}! Lembra da gente? Somos o ${restaurantName}!\n\n` +
                 `Que tal matar a saudade? Estamos te esperando!\n` +
-                `${protocol}://${domain}/loja/${tenant?.slug}`;
+                `${storeLink}`;
         }
     }
 

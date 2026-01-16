@@ -439,11 +439,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Link da Loja</label>
+                    <label>URL Base da Loja (Usada nos links do Bot)</label>
                     <div style="display: flex; gap: 12px;">
-                        <input type="text" id="storeLink" readonly>
-                        <button class="btn btn-secondary" onclick="copyLink()"><i class="fas fa-copy"></i></button>
+                        <input type="text" id="siteUrl" placeholder="https://seu-dominio.com">
+                        <button class="btn btn-secondary" onclick="loadStoreLink()" title="Auto-detectar"><i class="fas fa-magic"></i></button>
                     </div>
+                    <small style="color: var(--text-muted);">Defina o endereço público da sua loja. Deixe em branco para usar o automático.</small>
                 </div>
 
                 <div style="text-align: right; display: flex; gap: 12px; justify-content: flex-end;">
@@ -632,6 +633,7 @@
                     isBotEnabled = data.settings.whatsappBotEnabled || false;
                     document.getElementById('botToggle').classList.toggle('active', isBotEnabled);
                     document.getElementById('groupId').value = data.settings.whatsappGroupId || '';
+                    document.getElementById('siteUrl').value = data.settings.siteUrl || '';
                 }
             } catch (e) { }
         }
@@ -648,7 +650,8 @@
                     headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         whatsappBotEnabled: isBotEnabled,
-                        whatsappGroupId: document.getElementById('groupId').value
+                        whatsappGroupId: document.getElementById('groupId').value,
+                        siteUrl: document.getElementById('siteUrl').value.trim()
                     })
                 });
                 alert('Configurações salvas!');

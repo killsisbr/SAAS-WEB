@@ -21,6 +21,40 @@ export default function (db) {
         return service;
     };
 
+    // Middleware interno para sincronizar o siteUrl automaticamente
+    // Isso garante que o bot use o endereço correto (IP ou Domínio) que o administrador está usando
+    router.use(async (req, res, next) => {
+        // Apenas para requisições GET e se o tenant estiver disponível
+        if (req.method === 'GET' && req.tenantId && req.tenant) {
+            try {
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+                const host = req.headers['host'];
+                const currentOrigin = `${protocol}://${host}`;
+
+                // Ignorar localhost se possível, exceto se for o único disponível
+                const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+                const settings = JSON.parse(req.tenant.settings || '{}');
+
+                // Só atualiza se for um host não-local ou se não houver siteUrl definido
+                // ou se o siteUrl existente for diferente do currentOrigin (para garantir que o bot use o endereço correto)
+                if (!settings.siteUrl || (!isLocal && settings.siteUrl !== currentOrigin)) {
+                    settings.siteUrl = currentOrigin;
+                    await db.run(
+                        'UPDATE tenants SET settings = ? WHERE id = ?',
+                        [JSON.stringify(settings), req.tenantId]
+                    );
+                    // Atualiza o objeto tenant na requisição para que as rotas subsequentes vejam a mudança
+                    req.tenant.settings = JSON.stringify(settings);
+                    console.log(`[WhatsApp] Auto-detectado siteUrl para tenant ${req.tenantId}: ${currentOrigin}`);
+                }
+            } catch (err) {
+                console.error('[WhatsApp] Erro ao sincronizar siteUrl:', err);
+            }
+        }
+        next();
+    });
+
     // Auto-reconectar e Follow-up são inicializados no server.js
     // Não duplicar aqui para evitar conflitos
 
@@ -150,7 +184,7 @@ export default function (db) {
     // ========================================
     router.put('/settings', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const { whatsappBotEnabled, whatsappGroupId, botMessages, aiBot, triggers } = req.body;
+            const { whatsappBotEnabled, whatsappGroupId, siteUrl, botMessages, aiBot, triggers } = req.body;
 
             // Buscar tenant atual
             const tenant = await db.get('SELECT settings FROM tenants WHERE id = ?', [req.tenantId]);
@@ -162,6 +196,9 @@ export default function (db) {
             }
             if (whatsappGroupId !== undefined) {
                 settings.whatsappGroupId = whatsappGroupId;
+            }
+            if (siteUrl !== undefined) {
+                settings.siteUrl = siteUrl;
             }
             // Salvar mensagens do bot
             if (botMessages !== undefined) {
