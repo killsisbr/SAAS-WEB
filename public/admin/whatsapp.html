@@ -414,6 +414,10 @@
                         style="display: none;">
                         <i class="fas fa-power-off"></i> DESCONECTAR
                     </button>
+                    <button class="btn" id="btnReset" onclick="resetConnection()"
+                        style="display: none; background-color: #dc2626; color: white; border: 2px solid #991b1b;">
+                        <i class="fas fa-trash-alt"></i> RESETAR (NOVO QR)
+                    </button>
                 </div>
             </div>
 
@@ -442,9 +446,11 @@
                     <label>URL Base da Loja (Usada nos links do Bot)</label>
                     <div style="display: flex; gap: 12px;">
                         <input type="text" id="siteUrl" placeholder="https://seu-dominio.com">
-                        <button class="btn btn-secondary" onclick="loadStoreLink()" title="Auto-detectar"><i class="fas fa-magic"></i></button>
+                        <button class="btn btn-secondary" onclick="loadStoreLink()" title="Auto-detectar"><i
+                                class="fas fa-magic"></i></button>
                     </div>
-                    <small style="color: var(--text-muted);">Defina o endereço público da sua loja. Deixe em branco para usar o automático.</small>
+                    <small style="color: var(--text-muted);">Defina o endereço público da sua loja. Deixe em branco para
+                        usar o automático.</small>
                 </div>
 
                 <div style="text-align: right; display: flex; gap: 12px; justify-content: flex-end;">
@@ -561,6 +567,7 @@
                 btnConnect.style.display = 'none';
                 btnRestart.style.display = 'inline-flex';
                 btnDisconnect.style.display = 'inline-flex';
+                btnReset.style.display = 'inline-flex';
                 if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
             } else if (data.qrAvailable || data.status === 'initializing') {
                 badge.textContent = 'AGUARDANDO SCAN';
@@ -570,6 +577,7 @@
                 btnConnect.style.display = 'none';
                 btnRestart.style.display = 'inline-flex';
                 btnDisconnect.style.display = 'none';
+                btnReset.style.display = 'inline-flex';
                 if (data.qrAvailable) loadQRCode();
             } else {
                 badge.textContent = 'DESCONECTADO';
@@ -579,6 +587,7 @@
                 btnConnect.style.display = 'inline-flex';
                 btnRestart.style.display = 'none';
                 btnDisconnect.style.display = 'none';
+                btnReset.style.display = 'inline-flex';
             }
         }
 
@@ -623,6 +632,35 @@
                 await fetch('/api/whatsapp/disconnect', { method: 'POST', headers: API_HEADERS });
                 loadStatus();
             } catch (e) { alert('Erro'); }
+        }
+
+        async function resetConnection() {
+            if (!confirm('ATENÇÃO: Isso irá apagar a sessão atual e desconectar o bot.\nVocê precisará escanear o QR Code novamente.\n\nDeseja continuar?')) return;
+
+            const btn = document.getElementById('btnReset');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner spinner"></i> RESETANDO...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/whatsapp/reset', { method: 'POST', headers: API_HEADERS });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Conexão resetada! Aguarde o novo QR Code aparecer.');
+                    // Forçar recarregamento do status
+                    pollInterval = setInterval(loadStatus, 3000);
+                    loadStatus();
+                } else {
+                    alert('Erro: ' + (data.error || 'Falha ao resetar'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao resetar conexão');
+            }
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
 
         async function loadSettings() {

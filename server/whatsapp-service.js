@@ -583,6 +583,41 @@ class WhatsAppService {
     }
 
     /**
+     * Hard Reset - Desconectar e APAGAR arquivos de sessão
+     */
+    async hardReset(tenantId) {
+        console.log(`[WhatsApp] Executando Hard Reset para tenant ${tenantId}...`);
+
+        // 1. Tentar desconectar graciosamente
+        await this.disconnect(tenantId);
+
+        // 2. Aguardar
+        await new Promise(r => setTimeout(r, 1000));
+
+        // 3. Forçar remoção da pasta da sessão
+        const authDir = path.join(SESSIONS_DIR, `session-${tenantId}`);
+        try {
+            if (fs.existsSync(authDir)) {
+                console.log(`[WhatsApp] Removendo diretório de sessão: ${authDir}`);
+                fs.rmSync(authDir, { recursive: true, force: true });
+            }
+        } catch (err) {
+            console.error(`[WhatsApp] Erro ao remover sessão no hard reset: ${err.message}`);
+        }
+
+        // 4. Limpar status
+        this.statuses.delete(tenantId);
+        this.qrCodes.delete(tenantId);
+        this.clients.delete(tenantId);
+
+        // 5. Reinicializar
+        await new Promise(r => setTimeout(r, 1000));
+        await this.initializeForTenant(tenantId); // Isso deve gerar novo QR Code
+
+        return { success: true };
+    }
+
+    /**
      * Enviar confirmação de pedido
      */
     async sendOrderConfirmation(tenantId, whatsappId, orderData) {

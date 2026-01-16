@@ -130,6 +130,18 @@ export default function (db) {
     });
 
     // ========================================
+    // POST /api/whatsapp/reset - HARD RESET (Apagar e novo QR)
+    // ========================================
+    router.post('/reset', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        try {
+            await getService().hardReset(req.tenantId);
+            res.json({ success: true, message: 'Conexão resetada com sucesso. Novo QR Code será gerado.' });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // ========================================
     // POST /api/whatsapp/restart - Reiniciar
     // ========================================
     router.post('/restart', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
