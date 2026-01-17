@@ -229,6 +229,7 @@ export default function (db, broadcast) {
                         price: product.price,
                         quantity: item.quantity,
                         addons: item.addons || [],
+                        observation: item.observation || '', // Observação do item
                         total: itemTotal + (addonsTotal * item.quantity)
                     });
                 }
