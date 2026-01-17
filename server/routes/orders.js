@@ -11,7 +11,15 @@ import { verifyOrderToken } from '../services/whatsapp-bot.js';
 
 export default function (db, broadcast) {
     const router = Router();
-    const whatsappService = getWhatsAppService(db);
+
+    // Função auxiliar para obter serviço de forma segura
+    const getService = () => {
+        const service = getWhatsAppService();
+        if (!service) {
+            throw new Error('WhatsApp service nao inicializado');
+        }
+        return service;
+    };
 
     // ========================================
     // GET /api/orders/lid-mapping/:lid - Buscar telefone pelo LID
@@ -125,8 +133,12 @@ export default function (db, broadcast) {
                 tenantId, customerName, customerPhone, items,
                 deliveryType, address, paymentMethod, observation,
                 deliveryFee: clientDeliveryFee, // Taxa de entrega calculada pelo front-end
-                orderToken // Token JWT do WhatsApp
+                orderToken, // Token JWT do WhatsApp
+                whatsappId // ID do WhatsApp (pode ser PID)
             } = req.body;
+
+            // DEBUG: Log dos dados recebidos
+            console.log(`[Orders] Recebido: customerPhone=${customerPhone}, whatsappId=${whatsappId}`);
 
             // Verificar tenant primeiro
             const tenant = await db.get('SELECT * FROM tenants WHERE id = ? AND status = ?', [tenantId, 'ACTIVE']);
@@ -137,7 +149,7 @@ export default function (db, broadcast) {
             const tenantSettings = JSON.parse(tenant.settings || '{}');
 
             // ========================================
-            // Validacao de Token WhatsApp (se habilitado)
+            // Validação de Token WhatsApp (se habilitado)
             // ========================================
             let phoneFromToken = null;
             if (tenantSettings.requireWhatsAppToken) {
@@ -161,12 +173,29 @@ export default function (db, broadcast) {
                 phoneFromToken = decoded.phone;
             }
 
-            // Usar telefone do token se disponivel
-            const finalPhone = phoneFromToken || customerPhone;
+            // ========================================
+            // Validar se customerPhone é um telefone válido ou PID
+            // Telefone BR: 10-13 dígitos / PID: 15+ dígitos
+            // ========================================
+            let validPhone = customerPhone;
+            if (customerPhone) {
+                const cleanPhone = customerPhone.replace(/\D/g, '');
+                const isValidBrazilianPhone = cleanPhone.length >= 10 && cleanPhone.length <= 13;
+                if (!isValidBrazilianPhone) {
+                    console.log(`[Orders] customerPhone parece ser PID (${cleanPhone.length} dígitos), ignorando como telefone`);
+                    validPhone = null; // Não é um telefone válido, é um PID
+                }
+            }
 
-            // Validacoes
-            if (!customerName || !finalPhone || !items || items.length === 0) {
+            // Usar telefone do token se disponível, senão telefone validado
+            const finalPhone = phoneFromToken || validPhone;
+
+            // Validações - permitir pedido mesmo sem telefone se tiver whatsappId
+            if (!customerName || !items || items.length === 0) {
                 return res.status(400).json({ error: 'Dados incompletos' });
+            }
+            if (!finalPhone && !whatsappId) {
+                return res.status(400).json({ error: 'Telefone ou WhatsApp ID é obrigatório' });
             }
 
             // Verificar blacklist
@@ -276,78 +305,9 @@ export default function (db, broadcast) {
                 broadcast(tenantId, 'new-order', order);
             }
 
-            // Enviar confirmacao via WhatsApp (se cliente veio do bot)
-            const { whatsappId } = req.body;
-            if (whatsappId) {
-                try {
-                    // Se é LID, tentar buscar o telefone mapeado para usar como fallback
-                    let confirmationTarget = whatsappId;
-                    if (whatsappId.includes('@lid')) {
-                        const lid = whatsappId.replace('@lid', '');
-                        const mapping = await db.get(
-                            'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
-                            [tenantId, lid]
-                        );
-                        if (mapping && mapping.phone) {
-                            // Usar telefone do mapeamento
-                            confirmationTarget = mapping.phone + '@c.us';
-                            console.log(`[LID->Phone] Usando telefone mapeado: ${lid} -> ${mapping.phone}`);
-                        } else if (customerPhone) {
-                            // Fallback: usar o telefone do pedido
-                            let cleanPhone = customerPhone.replace(/\D/g, '');
-                            if (!cleanPhone.startsWith('55') && cleanPhone.length <= 11) {
-                                cleanPhone = '55' + cleanPhone;
-                            }
-                            confirmationTarget = cleanPhone + '@c.us';
-                            console.log(`[LID->Phone] Usando telefone do pedido: ${lid} -> ${cleanPhone}`);
-
-                            // ✨ AUTO-CADASTRO: Salvar mapeamento LID->Telefone para futuras comunicações
-                            try {
-                                await whatsappService.saveLidPhoneMapping(tenantId, lid, cleanPhone);
-                                console.log(`[AutoCadastro] ✅ Salvo mapeamento: ${lid} -> ${cleanPhone}`);
-                            } catch (err) {
-                                console.error(`[AutoCadastro] ❌ Erro ao salvar mapeamento:`, err.message);
-                            }
-                        }
-                    }
-
-                    console.log(`[Confirmacao] Tentando enviar para: ${confirmationTarget}`);
-
-                    // Enviar confirmacao para o cliente
-                    await whatsappService.sendOrderConfirmation(tenantId, confirmationTarget, {
-                        order_number: orderNumber,
-                        items: itemsWithDetails,
-                        delivery_fee: deliveryFee,
-                        total,
-                        customer_name: customerName,
-                        customer_phone: customerPhone,
-                        address,
-                        payment_method: paymentMethod
-                    });
-                    console.log(`Confirmacao WhatsApp enviada para ${confirmationTarget}`);
-                } catch (err) {
-                    console.error('Erro ao enviar confirmacao WhatsApp:', err.message);
-                }
-            }
-
-            // Enviar para grupo de entregas
-            try {
-                await whatsappService.sendOrderToGroup(tenantId, {
-                    order_number: orderNumber,
-                    items: itemsWithDetails,
-                    total,
-                    delivery_fee: deliveryFee,
-                    customer_name: customerName,
-                    customer_phone: customerPhone,
-                    address: address || null, // Objeto completo com lat, lng, street, number, etc.
-                    payment_method: paymentMethod,
-                    change_for: req.body.payment_change || null,
-                    observation: observation || null
-                });
-            } catch (err) {
-                console.error('Erro ao enviar para grupo WhatsApp:', err.message);
-            }
-
+            // ========================================
+            // RESPOSTA IMEDIATA - Não bloquear o cliente
+            // ========================================
             res.status(201).json({
                 success: true,
                 order: {
@@ -356,6 +316,80 @@ export default function (db, broadcast) {
                     total
                 }
             });
+
+            // ========================================
+            // ENVIOS ASSÍNCRONOS (fire-and-forget)
+            // São executados após a resposta ao cliente
+            // ========================================
+
+            // Enviar confirmação via WhatsApp para o cliente
+            // ESTRATÉGIA: Sempre formatar corretamente para @s.whatsapp.net
+            let confirmationTarget = null;
+
+            if (whatsappId) {
+                // Extrair número do whatsappId (remover @c.us, @s.whatsapp.net, etc)
+                let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
+
+                // Verificar se é PID (15+ dígitos) ou telefone (10-13 dígitos)
+                if (phone.length >= 15) {
+                    // É um PID - passar para o service que vai buscar o mapeamento
+                    confirmationTarget = phone + '@s.whatsapp.net';
+                    console.log(`[Confirmacao] Usando PID: ${confirmationTarget}`);
+                } else {
+                    // É um telefone - adicionar código do país se necessário
+                    if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
+                        phone = '55' + phone;
+                    }
+                    confirmationTarget = phone + '@s.whatsapp.net';
+                    console.log(`[Confirmacao] Usando telefone formatado: ${confirmationTarget}`);
+                }
+            } else if (validPhone) {
+                // Cliente não veio do bot - usar telefone digitado (já validado)
+                let cleanPhone = validPhone.replace(/\D/g, '');
+                if (!cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+                    cleanPhone = '55' + cleanPhone;
+                }
+                confirmationTarget = cleanPhone + '@s.whatsapp.net';
+                console.log(`[Confirmacao] Usando telefone do checkout: ${confirmationTarget}`);
+            }
+
+            if (confirmationTarget) {
+                getService().sendOrderConfirmation(tenantId, confirmationTarget, {
+                    order_number: orderNumber,
+                    items: itemsWithDetails,
+                    delivery_fee: deliveryFee,
+                    total,
+                    customer_name: customerName,
+                    customer_phone: customerPhone,
+                    address,
+                    payment_method: paymentMethod
+                }).then(() => {
+                    console.log(`[Confirmacao] ✅ WhatsApp enviado para ${confirmationTarget}`);
+                }).catch(err => {
+                    console.error('[Confirmacao] Erro:', err.message);
+                });
+            } else {
+                console.log(`[Confirmacao] ⚠️ Sem destino para enviar confirmação`);
+            }
+
+            // Enviar para grupo de entregas
+            getService().sendOrderToGroup(tenantId, {
+                order_number: orderNumber,
+                items: itemsWithDetails,
+                total,
+                delivery_fee: deliveryFee,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                address: address || null, // Objeto completo com lat, lng, street, number, etc.
+                payment_method: paymentMethod,
+                change_for: req.body.payment_change || null,
+                observation: observation || null
+            }).then(() => {
+                console.log(`[Grupo] ✅ Pedido #${orderNumber} enviado para grupo`);
+            }).catch(err => {
+                console.error('Erro ao enviar para grupo WhatsApp:', err.message);
+            });
+
         } catch (error) {
             console.error('Create order error:', error);
             res.status(500).json({ error: 'Erro ao criar pedido' });

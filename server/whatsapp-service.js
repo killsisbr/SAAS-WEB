@@ -60,6 +60,33 @@ class WhatsAppService {
         this.reconnectAttempts = new Map(); // tenantId -> attempts
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 30000; // 30 segundos
+
+        // Garantir que a tabela de mapeamento existe
+        this.ensurePidJidTable();
+    }
+
+    /**
+     * Criar tabela pid_jid_mappings se não existir
+     */
+    async ensurePidJidTable() {
+        try {
+            await this.db.run(`
+                CREATE TABLE IF NOT EXISTS pid_jid_mappings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tenant_id TEXT NOT NULL,
+                    pid TEXT NOT NULL,
+                    jid TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(tenant_id, pid)
+                )
+            `);
+            await this.db.run(`
+                CREATE INDEX IF NOT EXISTS idx_pid_jid_mappings ON pid_jid_mappings(tenant_id, pid)
+            `);
+            console.log('[WhatsApp] Tabela pid_jid_mappings verificada/criada');
+        } catch (err) {
+            console.error('[WhatsApp] Erro ao criar tabela pid_jid_mappings:', err.message);
+        }
     }
 
     /**
@@ -254,11 +281,14 @@ class WhatsAppService {
                 // Ignorar mensagens do proprio bot
                 if (msg.key.fromMe) continue;
 
-                // Ignorar mensagens de grupos
-                if (msg.key.remoteJid?.endsWith('@g.us')) continue;
-
                 // Ignorar mensagens de status
                 if (msg.key.remoteJid === 'status@broadcast') continue;
+
+                // Processar comandos de grupos ANTES de ignorar
+                if (msg.key.remoteJid?.endsWith('@g.us')) {
+                    await this.handleGroupCommand(tenantId, msg, sock);
+                    continue; // Não processar como mensagem normal
+                }
 
                 await this.handleMessage(tenantId, msg, settings, sock);
             }
@@ -322,8 +352,8 @@ class WhatsAppService {
                             return;
                         }
 
-                        // Preparar link da loja
-                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null);
+                        // Preparar link da loja (passa jid para salvar mapeamento)
+                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, jid);
                         console.log(`[Trigger] Link construído: ${orderLink}`);
 
                         // Substituir variaveis na resposta
@@ -378,6 +408,107 @@ class WhatsAppService {
     }
 
     /**
+     * Handler de comandos em grupos - processa .grupodefine
+     */
+    async handleGroupCommand(tenantId, message, sock) {
+        try {
+            const groupJid = message.key.remoteJid;
+
+            // Extrair texto da mensagem
+            const messageBody = message.message?.conversation ||
+                message.message?.extendedTextMessage?.text ||
+                '';
+
+            if (!messageBody) return;
+
+            const command = messageBody.trim().toLowerCase();
+
+            // Comando .grupodefine - Define este grupo para receber pedidos
+            if (command === '.grupodefine') {
+                console.log(`[GroupCommand] Comando .grupodefine recebido no grupo ${groupJid}`);
+
+                // Buscar tenant e atualizar settings
+                const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+                if (!tenant) {
+                    console.log(`[GroupCommand] Tenant ${tenantId} não encontrado`);
+                    return;
+                }
+
+                const settings = JSON.parse(tenant.settings || '{}');
+                settings.whatsappGroupId = groupJid;
+
+                // Salvar no banco
+                await this.db.run(
+                    'UPDATE tenants SET settings = ? WHERE id = ?',
+                    [JSON.stringify(settings), tenantId]
+                );
+
+                console.log(`[GroupCommand] ✅ Grupo ${groupJid} definido para tenant ${tenantId}`);
+
+                // Enviar confirmação no grupo
+                const confirmMessage = `✅ *Grupo configurado com sucesso!*\n\n` +
+                    `Este grupo foi definido para receber notificações de novos pedidos.\n\n` +
+                    `📋 *ID do Grupo:* \`${groupJid}\`\n` +
+                    `🏪 *Loja:* ${tenant.name}`;
+
+                await this.safeSendMessage(tenantId, groupJid, confirmMessage, sock);
+            }
+
+            // Comando .gruporemover - Remove este grupo das notificações
+            if (command === '.gruporemover') {
+                console.log(`[GroupCommand] Comando .gruporemover recebido no grupo ${groupJid}`);
+
+                const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+                if (!tenant) return;
+
+                const settings = JSON.parse(tenant.settings || '{}');
+
+                if (settings.whatsappGroupId === groupJid) {
+                    delete settings.whatsappGroupId;
+
+                    await this.db.run(
+                        'UPDATE tenants SET settings = ? WHERE id = ?',
+                        [JSON.stringify(settings), tenantId]
+                    );
+
+                    console.log(`[GroupCommand] ✅ Grupo ${groupJid} removido do tenant ${tenantId}`);
+
+                    const confirmMessage = `❌ *Grupo removido!*\n\n` +
+                        `Este grupo não receberá mais notificações de pedidos.`;
+
+                    await this.safeSendMessage(tenantId, groupJid, confirmMessage, sock);
+                }
+            }
+
+            // Comando .grupostatus - Verifica se o grupo está configurado
+            if (command === '.grupostatus') {
+                const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+                if (!tenant) return;
+
+                const settings = JSON.parse(tenant.settings || '{}');
+
+                let statusMessage;
+                if (settings.whatsappGroupId === groupJid) {
+                    statusMessage = `✅ *Este grupo está configurado*\n\n` +
+                        `📋 Pedidos serão enviados aqui.\n` +
+                        `🏪 Loja: ${tenant.name}`;
+                } else if (settings.whatsappGroupId) {
+                    statusMessage = `⚠️ *Outro grupo está configurado*\n\n` +
+                        `Use \`.grupodefine\` para mudar para este grupo.`;
+                } else {
+                    statusMessage = `❌ *Nenhum grupo configurado*\n\n` +
+                        `Use \`.grupodefine\` para configurar este grupo.`;
+                }
+
+                await this.safeSendMessage(tenantId, groupJid, statusMessage, sock);
+            }
+
+        } catch (err) {
+            console.error('[GroupCommand] Erro:', err.message);
+        }
+    }
+
+    /**
      * Enviar mensagem de forma segura - Baileys version
      */
     async safeSendMessage(tenantId, jid, message, sock = null) {
@@ -413,7 +544,7 @@ class WhatsAppService {
 
             const tenantSettings = JSON.parse(tenant.settings || '{}');
             const restaurantName = tenant.name || 'Restaurante';
-            const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null);
+            const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, jid);
             console.log(`[Welcome] Link construído: ${orderLink}`);
 
             // Usar mensagem customizada ou fallback padrao
@@ -440,8 +571,9 @@ class WhatsAppService {
 
     /**
      * Construir link do pedido
+     * @param {string} jid - JID completo do cliente (para salvar mapeamento)
      */
-    async buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue = null) {
+    async buildOrderLink(tenantId, tenant, sanitizedNumber, lidValue = null, jid = null) {
         if (!tenant) {
             tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
         }
@@ -476,6 +608,19 @@ class WhatsAppService {
 
         if (sanitizedNumber) {
             link += `?whatsapp=${sanitizedNumber}`;
+
+            // IMPORTANTE: Salvar mapeamento PID -> JID para poder responder depois
+            if (jid) {
+                try {
+                    await this.db.run(`
+                        INSERT OR REPLACE INTO pid_jid_mappings (tenant_id, pid, jid, created_at)
+                        VALUES (?, ?, ?, datetime('now'))
+                    `, [tenantId, sanitizedNumber, jid]);
+                    console.log(`[PID->JID] Salvo mapeamento: ${sanitizedNumber} -> ${jid}`);
+                } catch (err) {
+                    console.error(`[PID->JID] Erro ao salvar mapeamento:`, err.message);
+                }
+            }
         }
 
         if (lidValue) {
@@ -618,26 +763,161 @@ class WhatsAppService {
     }
 
     /**
+     * Salvar mapeamento LID -> Telefone
+     */
+    async saveLidPhoneMapping(tenantId, lid, phone) {
+        try {
+            const cleanPhone = String(phone).replace(/\D/g, '');
+            const id = `lid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+            await this.db.run(
+                `INSERT INTO lid_phone_mappings (id, lid, phone, tenant_id) 
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT(lid, tenant_id) DO UPDATE SET phone = ?, updated_at = CURRENT_TIMESTAMP`,
+                [id, lid, cleanPhone, tenantId, cleanPhone]
+            );
+            return true;
+        } catch (err) {
+            console.error('[WhatsApp] Erro ao salvar mapeamento LID:', err.message);
+            return false;
+        }
+    }
+
+    /**
      * Enviar confirmação de pedido
+     * IMPORTANTE: Prioriza customer_phone do orderData (telefone real)
+     * porque whatsappId pode ser PID/LID que não funciona para envio
      */
     async sendOrderConfirmation(tenantId, whatsappId, orderData) {
         try {
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+            const settings = JSON.parse(tenant?.settings || '{}');
             const restaurantName = tenant?.name || 'Restaurante';
 
-            const message = `✅ *Pedido Confirmado!*\n\n` +
-                `Olá! Seu pedido #${orderData.orderNumber || orderData.id} foi recebido!\n\n` +
-                `📋 *Resumo:*\n${orderData.items?.map(i => `- ${i.quantity}x ${i.name}`).join('\n') || 'Itens do pedido'}\n\n` +
-                `💰 *Total:* R$ ${orderData.total?.toFixed(2) || '0.00'}\n\n` +
-                `Obrigado por pedir no ${restaurantName}!`;
+            // Montar mensagem de confirmação (formato premium)
+            let itemsList = '';
+            let subtotal = 0;
+            const items = orderData.items || [];
 
-            // Formatar JID
-            let jid = whatsappId;
-            if (!jid.includes('@')) {
-                if (!jid.startsWith('55') && jid.length >= 10) {
-                    jid = '55' + jid;
+            items.forEach(item => {
+                const qty = item.quantity || item.qty || 1;
+                const price = item.price || 0;
+                const name = item.name || item.title || 'Item';
+                const itemTotal = item.total || (price * qty);
+                subtotal += itemTotal;
+                itemsList += `• ${qty}x ${name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+
+                if (item.addons && item.addons.length > 0) {
+                    item.addons.forEach(addon => {
+                        const addonTotal = (addon.price || 0) * qty;
+                        subtotal += addonTotal;
+                        itemsList += `  + ${addon.name} - R$ ${addonTotal.toFixed(2).replace('.', ',')}\n`;
+                    });
                 }
-                jid = jid + '@s.whatsapp.net';
+            });
+
+            const deliveryFee = orderData.delivery_fee || 0;
+            const total = parseFloat(orderData.total || 0);
+            const finalTotal = total > 0 ? total : (subtotal + deliveryFee);
+
+            const summaryLines = [];
+            summaryLines.push('✅ *Pedido Confirmado!*');
+            summaryLines.push('');
+            summaryLines.push(`Número do pedido: #${orderData.order_number || orderData.orderNumber}`);
+            summaryLines.push('');
+            summaryLines.push('Itens:');
+            summaryLines.push(itemsList.trim());
+            if (deliveryFee > 0) {
+                summaryLines.push(`• Taxa de entrega - R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+            }
+            summaryLines.push(`*Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
+            summaryLines.push('');
+
+            // Dados do PIX se for pagamento PIX
+            const paymentMethod = (orderData.payment_method || '').toUpperCase();
+            const pixKey = settings.pixKey || settings.pix_key || '';
+            const pixName = settings.pixName || settings.pix_holder_name || '';
+
+            if (paymentMethod.includes('PIX') && pixKey) {
+                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
+                summaryLines.push('*DADOS PARA PAGAMENTO PIX*');
+                summaryLines.push('');
+                summaryLines.push(`Chave PIX: ${pixKey}`);
+                if (pixName) {
+                    summaryLines.push(`Titular: ${pixName}`);
+                }
+                summaryLines.push('');
+                summaryLines.push('_Pague agora para agilizar o preparo!_');
+                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
+                summaryLines.push('');
+            }
+
+            summaryLines.push(`*Seu pedido será preparado e entregue em breve!*`);
+            summaryLines.push(`Obrigado por pedir no ${restaurantName}!`);
+
+            const message = summaryLines.join('\n');
+
+            // ESTRATÉGIA: Buscar JID salvo no mapeamento PID->JID
+            let jid = null;
+
+            if (whatsappId) {
+                // Extrair o número/PID do whatsappId (remover @c.us, @s.whatsapp.net, etc)
+                const pid = whatsappId.replace(/@.*$/, '');
+
+                // Verificar se parece ser um PID (15+ dígitos)
+                if (pid.length >= 15) {
+                    // Buscar JID salvo no mapeamento
+                    try {
+                        const mapping = await this.db.get(
+                            'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
+                            [tenantId, pid]
+                        );
+                        if (mapping && mapping.jid) {
+                            jid = mapping.jid;
+                            console.log(`[OrderConfirmation] Usando JID do mapeamento: ${pid} -> ${jid}`);
+                        } else {
+                            console.log(`[OrderConfirmation] ⚠️ Mapeamento não encontrado para PID: ${pid}`);
+                            // Tentar usar o whatsappId diretamente como fallback
+                            jid = whatsappId;
+                        }
+                    } catch (err) {
+                        console.error(`[OrderConfirmation] Erro ao buscar mapeamento:`, err.message);
+                        jid = whatsappId;
+                    }
+                } else {
+                    // Parece ser um telefone, formatar corretamente
+                    let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
+                    // Adicionar código do país se necessário
+                    if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
+                        phone = '55' + phone;
+                    }
+                    jid = phone + '@s.whatsapp.net';
+                    console.log(`[OrderConfirmation] Usando whatsappId como telefone: ${jid}`);
+                }
+            }
+
+            if (!jid) {
+                // Fallback: usar telefone do pedido se não tiver whatsappId
+                const customerPhone = orderData.customer_phone || orderData.customerPhone;
+                if (customerPhone) {
+                    let cleanPhone = String(customerPhone).replace(/\D/g, '');
+
+                    // Verificar se parece um telefone válido (não um PID)
+                    if (cleanPhone.length >= 10 && cleanPhone.length <= 13) {
+                        if (!cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+                            cleanPhone = '55' + cleanPhone;
+                        }
+                        jid = cleanPhone + '@s.whatsapp.net';
+                        console.log(`[OrderConfirmation] Usando telefone: ${cleanPhone}`);
+                    } else {
+                        console.log(`[OrderConfirmation] ⚠️ customerPhone parece ser PID: ${cleanPhone}`);
+                    }
+                }
+            }
+
+            if (!jid) {
+                console.log(`[OrderConfirmation] ⚠️ Sem destino válido para enviar confirmação`);
+                return false;
             }
 
             return await this.safeSendMessage(tenantId, jid, message);
@@ -661,13 +941,136 @@ class WhatsAppService {
                 return false;
             }
 
-            const message = `🆕 *NOVO PEDIDO #${orderData.orderNumber || orderData.id}*\n\n` +
-                `👤 Cliente: ${orderData.customerName || 'Cliente'}\n` +
-                `📱 WhatsApp: ${orderData.whatsappId || 'N/A'}\n\n` +
-                `📋 *Itens:*\n${orderData.items?.map(i => `- ${i.quantity}x ${i.name} - R$ ${(i.price * i.quantity).toFixed(2)}`).join('\n') || 'Itens do pedido'}\n\n` +
-                `💰 *Total:* R$ ${orderData.total?.toFixed(2) || '0.00'}\n` +
-                `📍 *Entrega:* ${orderData.deliveryType || 'A definir'}\n` +
-                `📝 *Obs:* ${orderData.notes || 'Nenhuma'}`;
+            // Montar mensagem do grupo (FORMATO PREMIUM)
+            let itemsList = '';
+            let subtotal = 0;
+
+            const items = orderData.items || [];
+            items.forEach(item => {
+                const qty = item.quantity || item.qty || 1;
+                const price = item.price || 0;
+                const name = item.name || item.title || 'Item';
+                const itemTotal = item.total || (price * qty);
+                subtotal += itemTotal;
+                itemsList += `• ${qty}x ${name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+
+                if (item.addons && item.addons.length > 0) {
+                    item.addons.forEach(addon => {
+                        const addonTotal = (addon.price || 0) * qty;
+                        subtotal += addonTotal;
+                        itemsList += `  + ${addon.name} - R$ ${addonTotal.toFixed(2).replace('.', ',')}\n`;
+                    });
+                }
+
+                if (item.observation) {
+                    itemsList += `  📝 Obs: ${item.observation}\n`;
+                }
+            });
+
+            const deliveryFee = orderData.delivery_fee || 0;
+            const total = parseFloat(orderData.total || 0);
+            const calculatedTotal = subtotal + deliveryFee;
+            const finalTotal = total > 0 ? total : calculatedTotal;
+
+            const groupLines = [];
+            groupLines.push(`🍔 *NOVO PEDIDO #${orderData.order_number || orderData.orderNumber || 'N/A'}*`);
+            groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
+            groupLines.push('📦 *ITENS DO PEDIDO*');
+            groupLines.push(itemsList.trim());
+            groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
+            groupLines.push('💰 *VALORES*');
+            groupLines.push(`Subtotal dos itens: R$ ${subtotal.toFixed(2).replace('.', ',')}`);
+
+            if (deliveryFee > 0) {
+                groupLines.push(`Taxa de entrega: R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+            } else {
+                groupLines.push('Taxa de entrega: R$ 0,00 (retirada)');
+            }
+
+            groupLines.push(`*TOTAL DO PEDIDO: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
+            groupLines.push('');
+            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
+            groupLines.push('👤 *DADOS DO CLIENTE*');
+            groupLines.push(`Nome: ${orderData.customer_name || orderData.customerName || 'Cliente'}`);
+
+            let addressText = '';
+            let mapsLink = '';
+            let addressObservation = '';
+
+            if (orderData.address && typeof orderData.address === 'object') {
+                const { street, number, neighborhood, city, complement, reference, lat, lng } = orderData.address;
+
+                let parts = [];
+                if (street) parts.push(street);
+                if (number) parts.push(number);
+                addressText = parts.join(', ');
+
+                if (neighborhood) addressText += ` - ${neighborhood}`;
+                if (city) addressText += ` - ${city}`;
+                if (complement) addressText += `\nComplemento: ${complement}`;
+
+                if (reference) addressObservation = reference;
+
+                if (lat && lng) {
+                    mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                }
+                groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
+            } else if (typeof orderData.address === 'string' && orderData.address.trim()) {
+                addressText = orderData.address;
+                groupLines.push(`Endereço: ${addressText}`);
+            } else {
+                groupLines.push(`📍 *RETIRADA NO LOCAL*`);
+            }
+
+            // Traduzir método de pagamento
+            const groupPaymentLabels = {
+                'PIX': 'PIX',
+                'CREDIT_CARD': 'Cartão',
+                'DEBIT_CARD': 'Cartão (Débito)',
+                'CASH': 'Dinheiro',
+                'LOCAL': 'Pagamento no Local'
+            };
+            const paymentMethod = orderData.payment_method || orderData.paymentMethod || 'N/A';
+            groupLines.push(`Pagamento: ${groupPaymentLabels[paymentMethod] || paymentMethod}`);
+
+            // Informação de troco
+            if (orderData.change_for !== null && orderData.change_for !== undefined) {
+                const valorPago = parseFloat(orderData.change_for);
+                if (valorPago === 0) {
+                    groupLines.push(`💵 *Troco*: Cliente deseja troco (valor não especificado)`);
+                } else if (valorPago > finalTotal) {
+                    const change = valorPago - finalTotal;
+                    groupLines.push(`💵 *Troco*: R$ ${change.toFixed(2).replace('.', ',')} (para R$ ${valorPago.toFixed(2).replace('.', ',')})`);
+                } else if (valorPago === finalTotal) {
+                    groupLines.push(`💵 *Troco*: Sem troco (valor exato)`);
+                }
+            }
+
+            // Link WhatsApp do cliente
+            let cleanPhone = (orderData.customer_phone || orderData.customerPhone || '').replace(/\D/g, '');
+            if (cleanPhone && !cleanPhone.startsWith('55')) {
+                cleanPhone = '55' + cleanPhone;
+            }
+            if (cleanPhone) {
+                groupLines.push(`📱 *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
+            }
+
+            // Link de localização do Google Maps
+            if (mapsLink) {
+                groupLines.push(`📍 *Localização*: ${mapsLink}`);
+            }
+
+            // Observações do local
+            const obsLocal = orderData.observation || addressObservation || orderData.notes;
+            if (obsLocal) {
+                groupLines.push(`📝 Observações do local: ${obsLocal}`);
+            }
+
+            groupLines.push('');
+
+            const message = groupLines.join('\n');
 
             return await this.safeSendMessage(tenantId, groupId, message);
         } catch (err) {

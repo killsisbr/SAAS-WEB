@@ -65,3 +65,154 @@ O projeto é um SaaS **Multi-Tenant** rodando em Node.js com SQLite (better-sqli
 - [ ] **E-mails Reais:** Integração com Nodemailer/SendGrid para convites de equipe e recuperação de senha.
 - [ ] **Follow-up Dashboard:** Visualizar métricas de reconquista (7, 15, 30 dias) no painel admin.
 - [ ] **Multi-Image CRUD:** Otimizar o upload e atribuição de imagens (baseado na lógica do projeto @CAMPESTRE).
+
+---
+
+## 📋 Padrões do Projeto
+
+### 📱 Formato de Mensagem WhatsApp (Grupo de Pedidos)
+
+Estrutura padrão para mensagens enviadas ao grupo de entregas:
+
+```
+🍔 *NOVO PEDIDO #[NUMERO]*
+
+━━━━━━━━━━━━━━━━━━━━
+📦 *ITENS DO PEDIDO*
+• [QTD]x [NOME] - R$ [VALOR]
+  + [ADICIONAL] - R$ [VALOR]
+  📝 Obs: [OBSERVACAO_ITEM]
+
+━━━━━━━━━━━━━━━━━━━━
+💰 *VALORES*
+Subtotal dos itens: R$ [SUBTOTAL]
+Taxa de entrega: R$ [TAXA] (ou "R$ 0,00 (retirada)")
+*TOTAL DO PEDIDO: R$ [TOTAL]*
+
+━━━━━━━━━━━━━━━━━━━━
+👤 *DADOS DO CLIENTE*
+Nome: [NOME]
+Endereço: [RUA], [NUMERO] - [BAIRRO] - [CIDADE]
+Pagamento: [METODO]
+💵 *Troco*: R$ [VALOR] (para R$ [VALOR_PAGO])
+📱 *WhatsApp do Cliente*: https://wa.me/[TELEFONE_COM_55]
+📍 *Localização*: https://www.google.com/maps?q=[LAT],[LNG]
+📝 Observações do local: [OBS]
+```
+
+**Regras:**
+- Separadores visuais: `━━━━━━━━━━━━━━━━━━━━` (20 caracteres)
+- Valores monetários: `R$ X,XX` (vírgula como separador decimal)
+- Telefone sempre com código do país: `55` + DDD + número
+- Links clicáveis na mesma linha (sem quebra)
+
+---
+
+### 💬 Formato de Mensagem WhatsApp (Confirmação ao Cliente)
+
+```
+✅ *Pedido Confirmado!*
+
+Número do pedido: #[NUMERO]
+
+Itens:
+• [QTD]x [NOME] - R$ [VALOR]
+  + [ADICIONAL] - R$ [VALOR]
+• Taxa de entrega - R$ [TAXA]
+Total: R$ [TOTAL]
+
+Informações do cliente:
+Nome: [NOME]
+Endereço: [ENDERECO]
+Observações do local: [OBS]
+Forma de pagamento: [METODO]
+
+━━━━━━━━━━━━━━━━━━━━
+*DADOS PARA PAGAMENTO PIX*
+
+Chave PIX: [CHAVE]
+Titular: [NOME]
+
+_Pague agora para agilizar o preparo!_
+━━━━━━━━━━━━━━━━━━━━
+
+*Seu pedido será preparado e entregue em breve!*
+```
+
+---
+
+### 🔧 Padrões de Código - WhatsApp Service
+
+| Funcionalidade | Método | Arquivo |
+|----------------|--------|---------|
+| Enviar para grupo | `sendOrderToGroup(tenantId, orderData)` | `whatsapp-service.js` |
+| Confirmação cliente | `sendOrderConfirmation(tenantId, whatsappId, orderData)` | `whatsapp-service.js` |
+| Mensagem segura | `safeSendMessage(tenantId, jid, message)` | `whatsapp-service.js` |
+| Mapear LID -> Tel | `saveLidPhoneMapping(tenantId, lid, phone)` | `whatsapp-service.js` |
+| Buscar LID -> Tel | `getLidPhoneMapping(tenantId, lid)` | `whatsapp-service.js` |
+
+**Comandos de Grupo:**
+- `.grupodefine` - Configura grupo atual para receber pedidos
+- `.gruporemover` - Remove configuração do grupo
+- `.grupostatus` - Verifica status da configuração
+
+---
+
+### 📦 Estrutura de orderData (Objeto de Pedido)
+
+```javascript
+{
+    order_number: 123,              // Número sequencial do pedido
+    customer_name: "Nome",          // Nome do cliente
+    customer_phone: "11999999999",  // Telefone (sem 55)
+    items: [
+        {
+            name: "Produto",        // ou title
+            quantity: 2,            // ou qty
+            price: 25.00,
+            total: 50.00,           // Valor já calculado (qty * price)
+            addons: [
+                { name: "Extra", price: 5.00 }
+            ],
+            observation: "Sem cebola"
+        }
+    ],
+    address: {
+        street: "Rua",
+        number: "123",
+        neighborhood: "Bairro",
+        city: "Cidade",
+        complement: "Ap 1",
+        reference: "Próximo ao mercado",
+        lat: -25.123,
+        lng: -50.456
+    },
+    delivery_fee: 10.00,
+    total: 60.00,
+    payment_method: "PIX",          // PIX, CASH, CREDIT_CARD, DEBIT_CARD, LOCAL
+    change_for: 100.00,             // Troco para (se CASH)
+    observation: "Observação geral"
+}
+```
+
+---
+
+### 🌐 Frontend - Abertura do WhatsApp ao Finalizar Pedido
+
+Após o cliente confirmar o pedido no checkout (`store/index.html`), o sistema:
+
+1. Salva o pedido via API (`POST /api/orders`)
+2. Recebe o `orderNumber` na resposta
+3. Monta mensagem formatada com resumo do pedido
+4. Abre `wa.me` com mensagem pré-preenchida para o restaurante
+
+```javascript
+const waUrl = `https://wa.me/55${storeWhatsApp}?text=${encodeURIComponent(mensagem)}`;
+window.open(waUrl, '_blank');
+```
+
+**Variáveis importantes:**
+- `storeWhatsApp` - Número do restaurante (de `storeData.settings.whatsapp`)
+- `whatsappFromUrl` - ID do cliente se veio do bot (`?whatsapp=`)
+- `lidFromUrl` - LID do cliente se veio do bot (`?lid=`)
+

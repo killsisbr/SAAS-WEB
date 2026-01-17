@@ -522,3 +522,20 @@ CREATE TABLE IF NOT EXISTS lid_phone_mappings (
 );
 
 CREATE INDEX IF NOT EXISTS idx_lid_mappings ON lid_phone_mappings(lid, tenant_id);
+
+-- ============================================================
+-- MAPEAMENTO PID PARA JID (WhatsApp resposta)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS pid_jid_mappings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL,
+    pid TEXT NOT NULL,
+    jid TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, pid),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_pid_jid_mappings ON pid_jid_mappings(tenant_id, pid);
+
