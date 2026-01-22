@@ -514,11 +514,20 @@ export async function analyzeMessage(message, menu, cart, db = null, tenantId = 
     }
     */
 
-    // 4. Se não achou NADA, verificar se é apenas saudação
-    const greetingRegex = /^(oi|ola|olá|opa|bom dia|boa tarde|boa noite|inicio|início|começar|comecar|menu|cardapio|cardápio)\b/i;
-    // Se não tem produtos, não tem ações (confirmou endereço, etc) e parecia uma saudação
-    if (foundProducts.length === 0 && actions.length === 0 && greetingRegex.test(message)) {
-        actions.push({ type: 'SHOW_MENU' });
+    // 4. Se não achou NADA, verificar se é apenas saudação ou pedido de menu explícito
+
+    // Saudações -> GREETING (Mostra Welcome Message com Link)
+    const greetingRegex = /^(oi|ola|olá|opa|bom dia|boa tarde|boa noite|inicio|início|começar|comecar)\b/i;
+
+    // Pedido explícito de cardápio -> SHOW_MENU (Mostra lista de texto)
+    const menuRegex = /^(menu|cardapio|cardápio)\b/i;
+
+    if (foundProducts.length === 0 && actions.length === 0) {
+        if (greetingRegex.test(message)) {
+            actions.push({ type: 'GREETING' });
+        } else if (menuRegex.test(message)) {
+            actions.push({ type: 'SHOW_MENU' });
+        }
     }
 
     return actions;

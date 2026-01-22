@@ -135,6 +135,11 @@ async function handleBrowsing(params, cart, actions) {
             case 'HELP':
                 return { text: getHelpMessage() };
 
+            case 'GREETING':
+                // Resetar estado de erro
+                cart.lastMessageWasError = false;
+                return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
+
             case 'ADD_PRODUCT':
                 // Nota: Já adicionado globalmente no processMessage
                 productAdded = true;
@@ -232,7 +237,7 @@ async function handleBrowsing(params, cart, actions) {
 
         cart.lastMessageWasError = true;
         return {
-            text: '🤔 *Não entendi o que você deseja.*\n\nTente escrever o nome do produto exatamente como está no cardápio, ou digite *cardápio* para ver as opções.'
+            text: getWelcomeMessage(settings, tenantSlug, customerId)
         };
     }
 
