@@ -508,7 +508,12 @@ export default function (db, broadcast) {
             // Parse JSON e verificar blacklist
             for (const order of orders) {
                 order.items = JSON.parse(order.items || '[]');
-                order.address = order.address ? JSON.parse(order.address) : null;
+                // Safe parse para endereço - pode ser JSON ou string simples
+                try {
+                    order.address = order.address ? JSON.parse(order.address) : null;
+                } catch (e) {
+                    order.address = order.address ? { street: order.address } : null;
+                }
 
                 const blacklisted = await db.get(
                     'SELECT id FROM blacklist WHERE tenant_id = ? AND phone = ?',
