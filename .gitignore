@@ -35,6 +35,10 @@ server/backups/
 *.swp
 *.swo
 
+# Temporary debug scripts
+check_*.js
+test_*.js
+
 # OS files
 .DS_Store
 Thumbs.db

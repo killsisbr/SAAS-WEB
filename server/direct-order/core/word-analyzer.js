@@ -499,13 +499,20 @@ export async function analyzeMessage(message, menu, cart, db = null, tenantId = 
     }
 
     // Detectar resposta numérica (escolha de opção)
-    const numericChoice = words.find(w => /^\d+$/.test(w));
-    if (numericChoice && foundProducts.length === 0) {
+    // DESATIVADO: Cliente pediu para remover seleção por número. Apenas por nome.
+    /*
+    const strictNumberRegex = /^(\d+)$|^(item|opcao|opção|numero|número)\s*(\d+)$/i;
+    const numberMatch = message.trim().match(strictNumberRegex);
+
+    if (numberMatch && foundProducts.length === 0) {
+        // Se deu match, o número está no grupo 1 ou 3
+        const numStr = numberMatch[1] || numberMatch[3];
         actions.push({
             type: 'NUMERIC_CHOICE',
-            value: parseInt(numericChoice)
+            value: parseInt(numStr)
         });
     }
+    */
 
     return actions;
 }

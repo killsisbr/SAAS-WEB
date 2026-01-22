@@ -383,13 +383,14 @@ async function handleAddress(params, cart, actions) {
         // Fallback: Se estiver fora da área ou não calcular, aceitar com taxa mínima
         if (feeResult.outOfRange || feeResult.addressNotFound) {
             cart.address = addressText; // Preservar o texto digitado
-            cart.pendingFee = 7.00; // Taxa mínima
+            const fallbackFee = settings?.deliveryFee || 7.00;
+            cart.pendingFee = fallbackFee;
             cart.pendingDist = feeResult.distance || 0;
 
             await customerService.updateAddress(db, tenantId, customerId, cart.address);
 
             return {
-                text: `*Endereço:* ${cart.address}\n⚠️ _Não conseguimos calcular a distância exata. Aplicamos a taxa mínima._\n*Taxa de Entrega:* R$ 7,00\n\nDigite *SIM* para confirmar.`
+                text: `*Endereço:* ${cart.address}\n⚠️ _Não conseguimos calcular a distância exata. Aplicamos a taxa padrão._\n*Taxa de Entrega:* R$ ${fallbackFee.toFixed(2).replace('.', ',')}\n\nDigite *SIM* para confirmar.`
             };
         }
 
