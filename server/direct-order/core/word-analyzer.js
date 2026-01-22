@@ -514,6 +514,13 @@ export async function analyzeMessage(message, menu, cart, db = null, tenantId = 
     }
     */
 
+    // 4. Se não achou NADA, verificar se é apenas saudação
+    const greetingRegex = /^(oi|ola|olá|opa|bom dia|boa tarde|boa noite|inicio|início|começar|comecar|menu|cardapio|cardápio)\b/i;
+    // Se não tem produtos, não tem ações (confirmou endereço, etc) e parecia uma saudação
+    if (foundProducts.length === 0 && actions.length === 0 && greetingRegex.test(message)) {
+        actions.push({ type: 'SHOW_MENU' });
+    }
+
     return actions;
 }
 
