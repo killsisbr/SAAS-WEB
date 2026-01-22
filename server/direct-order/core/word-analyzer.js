@@ -19,6 +19,22 @@ const MODIFIERS = {
     PREPARATION: ['mal', 'malpassado', 'ao ponto', 'bem passado', 'bempassado']
 };
 
+// Palavras que NUNCA devem ser consideradas para match de produtos
+// Inclui saudações, palavras comuns e termos que causam falsos positivos
+const IGNORED_WORDS = [
+    // Saudações
+    'bom', 'boa', 'dia', 'tarde', 'noite', 'oi', 'ola', 'olá', 'opa', 'eae', 'eai',
+    'obrigado', 'obrigada', 'vlw', 'valeu', 'muito', 'obg',
+    // Palavras comuns
+    'quero', 'gostaria', 'por', 'favor', 'pfv', 'pf', 'por favor',
+    'me', 've', 'manda', 'envia', 'traz', 'traga', 'preciso',
+    // Artigos e pronomes
+    'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'do', 'da', 'dos', 'das',
+    'pra', 'para', 'pro', 'no', 'na', 'nos', 'nas', 'esse', 'essa', 'isso',
+    // Palavras que causavam falso positivo
+    'dele', 'dela', 'deles', 'delas'
+];
+
 // Ingredientes conhecidos
 const KNOWN_INGREDIENTS = [
     'bacon', 'baicon', 'baco', 'queijo', 'cheddar', 'catupiry',
@@ -220,6 +236,14 @@ export async function findAllProducts(message, products, db, tenantId) {
                 const comboText = comboWords.join(' ');
                 const normCombo = normalizeText(comboText);
 
+                // PROTEÇÃO: Ignorar combos que são apenas saudações/palavras comuns
+                // Isso evita que "bom dia" dê match em "marmita media" (dia ⊂ media)
+                const nonIgnoredWords = comboWords.filter(w => !IGNORED_WORDS.includes(w));
+                if (nonIgnoredWords.length === 0) {
+                    // Todas as palavras são ignoradas, pular este combo
+                    continue;
+                }
+
                 // 1. Tentar mapeamento exato (banco) - DEVE ser exato para este combo
                 let match = null;
                 if (mappings[normCombo]) {
@@ -357,6 +381,12 @@ export function findProductFuzzy(words, products, isStrict = false) {
     const text = normalizedWords.join(' ');
     const textOriginal = words.join(' ');
 
+    // PROTEÇÃO: Se todas as palavras são saudações/comuns, não há produto para buscar
+    const relevantWords = normalizedWords.filter(w => !IGNORED_WORDS.includes(w));
+    if (relevantWords.length === 0) {
+        return null;
+    }
+
     let bestMatch = null;
     let maxScore = 0;
 
@@ -383,6 +413,12 @@ export function findProductFuzzy(words, products, isStrict = false) {
             }
 
             for (const w of normalizedWords) {
+                // PROTEÇÃO: Ignorar palavras de saudação/comuns no matching
+                // Isso evita que "dia" dê match parcial em "media"
+                if (IGNORED_WORDS.includes(w)) {
+                    continue;
+                }
+
                 // Verificar se é palavra crítica (número/medida)
                 const isCritical = criticalKeywords.some(k => w.includes(k));
 
