@@ -46,21 +46,36 @@ export async function processDirectOrder(params) {
         const menu = await loadMenu(db, tenantId);
         console.log(`[DirectOrder] 4. Menu carregado: ${menu.products?.length || 0} produtos`);
 
-        // Determinar URL base do cardápio (PARITY com whatsapp-bot.js:388-393)
-        // Prioridade 1: settings.storeLink (configurado no painel)
-        // Prioridade 2: settings.domain + /loja/slug
-        // Fallback: app.deliveryhub.com.br
-        let baseUrl;
-        if (settings.storeLink) {
-            // Exatamente como whatsapp-bot.js linha 389-390
-            baseUrl = settings.storeLink;
-        } else if (settings.domain) {
-            // Exatamente como whatsapp-bot.js linha 391-392
-            baseUrl = `https://${settings.domain}/loja/${tenant.slug}`;
+        // ===========================================================
+        // REPLICAR LÓGICA EXATA de whatsapp-service.js buildOrderLink()
+        // Linhas 636-692 - GARANTIR PARIDADE COM MODO LINK
+        // ===========================================================
+        const storedUrl = settings.siteUrl || settings.domain;
+        const envBaseUrl = process.env.BASE_URL || process.env.APP_DOMAIN;
+        const envDomain = process.env.DOMAIN;
+
+        let baseUrl = '';
+
+        // Se houver uma URL no banco, mas for localhost e tivermos uma env de produção, priorizamos a env
+        const isStoredLocal = storedUrl && (storedUrl.includes('localhost') || storedUrl.includes('127.0.0.1'));
+
+        if (storedUrl && !isStoredLocal) {
+            baseUrl = storedUrl;
+        } else if (envBaseUrl) {
+            baseUrl = envBaseUrl;
+        } else if (envDomain) {
+            const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+            baseUrl = `${protocol}://${envDomain}`;
         } else {
-            // Fallback para domínio padrão
-            baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
+            // Fallback para o que estiver no banco (mesmo que seja localhost) ou localhost padrão
+            baseUrl = storedUrl || `http://localhost:${process.env.PORT || 3000}`;
         }
+
+        // Garantir que não termina com barra
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        // Construir URL final: baseUrl + /loja/slug
+        const fullBaseUrl = `${baseUrl}/loja/${tenant.slug}`;
 
         // Processar mensagem
         console.log(`[DirectOrder] 5. Chamando processMessage...`);
@@ -74,7 +89,7 @@ export async function processDirectOrder(params) {
             db,
             location,  // Passar localização para o state-machine
             tenantSlug: tenant.slug,
-            baseUrl
+            baseUrl: fullBaseUrl  // URL completa: baseUrl + /loja/slug
         });
         console.log(`[DirectOrder] 6. processMessage retornou:`, result?.text?.substring(0, 50) || 'null');
 
