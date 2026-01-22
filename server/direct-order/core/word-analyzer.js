@@ -387,7 +387,15 @@ export function findProductFuzzy(words, products, isStrict = false) {
                 const isCritical = criticalKeywords.some(k => w.includes(k));
 
                 // Tenta achar a palavra no nome do produto
-                const foundInProduct = productWords.some(pw => pw.includes(w) || w.includes(pw));
+                let foundInProduct = false;
+
+                // FIX: Letras soltas ("a", "o") não podem dar match parcial (em "Marmita", "Prato")
+                // Só aceita se for match exato de palavra isolada (Ex: "Opção A") ou se for número
+                if (w.length <= 2 && !/^\d+$/.test(w)) {
+                    foundInProduct = productWords.some(pw => pw === w);
+                } else {
+                    foundInProduct = productWords.some(pw => pw.includes(w) || w.includes(pw));
+                }
 
                 if (foundInProduct) {
                     matchedWordsCount++;
