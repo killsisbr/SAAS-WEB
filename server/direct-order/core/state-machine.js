@@ -222,6 +222,23 @@ async function handleBrowsing(params, cart, actions) {
         return { text: `${cartView}\n${getMenuSubMessage()}` };
     }
 
+    // Se não entendeu nada (sem ações e sem produtos)
+    // E não é um comando conhecido (pois actions estaria preenchido)
+    if (actions.length === 0) {
+        // Anti-Spam de erros: Se o último já foi erro, silenciar agora.
+        if (cart.lastMessageWasError) {
+            return { text: null }; // Retorno com text nulo inibe envio de mensagem no index.js/whatsapp-service.js
+        }
+
+        cart.lastMessageWasError = true;
+        return {
+            text: '🤔 *Não entendi o que você deseja.*\n\nTente escrever o nome do produto exatamente como está no cardápio, ou digite *cardápio* para ver as opções.'
+        };
+    }
+
+    // Se entendeu algo, limpa a flag de erro
+    cart.lastMessageWasError = false;
+
     return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
 }
 

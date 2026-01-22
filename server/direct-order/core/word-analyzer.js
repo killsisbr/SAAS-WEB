@@ -343,6 +343,9 @@ export async function findAllProducts(message, products, db, tenantId) {
 /**
  * Encontrar produto por fuzzy match
  */
+/**
+ * Encontrar produto por fuzzy match (Sistema de Pontuação)
+ */
 export function findProductFuzzy(words, products, isStrict = false) {
     // Normalização prévia para sinônimos comuns
     const normalizedWords = words.map(w => {
@@ -354,85 +357,82 @@ export function findProductFuzzy(words, products, isStrict = false) {
     const text = normalizedWords.join(' ');
     const textOriginal = words.join(' ');
 
+    let bestMatch = null;
+    let maxScore = 0;
+
+    // Palavras chaves críticas que DEVEM dar match se presentes no input
+    const criticalKeywords = ['2', '2l', 'litros', 'lata', '350', '600', '1.5', 'ks'];
+
     for (const product of products) {
         const productName = normalizeText(product.name);
-
-        // No modo estrito (usado no n-gram), o match deve ser total para o combo
-        if (isStrict) {
-            // REJEITAR se o combo for APENAS número (ex: "2"), a menos que seja o nome exato do produto
-            const firstWord = normalizedWords[0];
-            const isFirstWordNumber = /^\d+$/.test(firstWord) || (NUMBER_MAP && NUMBER_MAP[firstWord]);
-
-            if (isFirstWordNumber && text !== productName && textOriginal !== productName) {
-                // Se o combo começa com número, o produto TAMBÉM deve começar com esse número
-                const productWords = productName.split(/\s+/);
-                if (productWords[0] !== firstWord) {
-                    continue;
-                }
-            }
-
-            // "coca 2l" vs "Coca-Cola 2 Litros"
-            // Verifica se o texto do combo e o nome do produto são muito similares
-            if (text === productName || productName === textOriginal) return product;
-
-            // Se o produto contém as palavras do combo
-            const productWords = productName.split(/\s+/);
-            const allComboWordsInProduct = normalizedWords.every(w => {
-                const parts = w.split(' ');
-                return parts.every(p => {
-                    // Para palavras muito curtas (1-2 chars), exige match exato de palavra
-                    if (p.length <= 2) {
-                        return productWords.some(pw => pw === p);
-                    }
-                    return productWords.includes(p) || productName.includes(p);
-                });
-            });
-
-            // Adicionalmente, o produto não deve ser significativamente maior que o combo se for estrito
-            // (evita "coca" casando com "Coca 2L" quando o combo é só "coca")
-            if (allComboWordsInProduct) {
-                // Se o combo é só uma palavra (ex: "coca"), mas o produto é "Coca 2L", 
-                // não aceitamos no modo estrito se houver outras opções ou se for ambiguo.
-                // Mas aqui, se TODAS as palavras do combo estão no produto, e o combo é o que temos, aceitamos.
-                // Exceto se o produto tiver palavras importantes que NÃO estão no combo (ex: "2 litros")
-                if (words.length < productWords.length) {
-                    // Se o produto tem "2" ou "litros" ou "350" e o combo não tem nada disso, rejeitamos o match estrito
-                    const importantKeywords = ['2', 'litros', 'l', '350', '600', 'lata', 'litro'];
-                    const productHasImportant = importantKeywords.some(k => productName.includes(k));
-                    const comboHasImportant = importantKeywords.some(k => text.includes(k));
-
-                    if (productHasImportant && !comboHasImportant) continue;
-                }
-
-                return product;
-            }
-
-            continue; // Pula para o próximo produto no modo estrito
-        }
-
-        // --- MODO NÃO-ESTRITO (Legado/Fallback) ---
-
-        // Match parcial (60% das palavras)
-        if (text.includes(productName) || productName.includes(text) || productName.includes(textOriginal)) {
-            return product;
-        }
-
         const productWords = productName.split(/\s+/);
-        const allInputWordsInProduct = normalizedWords.every(w => {
-            const subWords = w.split(' ');
-            return subWords.every(sw => productName.includes(sw));
-        });
+        let score = 0;
 
-        if (allInputWordsInProduct) {
-            return product;
-        }
+        // 1. Match Exato (Vitória automática ou score muito alto)
+        if (text === productName || productName === textOriginal) {
+            score = 100;
+        } else {
+            // 2. Análise por palavras
+            let matchedWordsCount = 0;
+            const inputHasCritical = normalizedWords.filter(w => criticalKeywords.some(k => w.includes(k)));
 
-        if (words.length > 3) {
-            const matches = productWords.filter(pw => normalizedWords.some(nw => nw.includes(pw) || pw.includes(nw)));
-            if (matches.length / productWords.length >= 0.7) {
-                return product;
+            // Penalidade inicial para diferenca de tamanho (evita "Coca" dar match alto em "Coca Cola 2 Litros Gigante")
+            // Prefere produtos com tamanho similar ao input
+            if (Math.abs(productWords.length - normalizedWords.length) > 2) {
+                score -= 10;
             }
+
+            for (const w of normalizedWords) {
+                // Verificar se é palavra crítica (número/medida)
+                const isCritical = criticalKeywords.some(k => w.includes(k));
+
+                // Tenta achar a palavra no nome do produto
+                const foundInProduct = productWords.some(pw => pw.includes(w) || w.includes(pw));
+
+                if (foundInProduct) {
+                    matchedWordsCount++;
+                    score += 10; // Ponto base por palavra
+                    if (isCritical) score += 15; // Bônus por acertar medida
+                } else {
+                    if (isCritical) {
+                        // PENALIDADE SEVERA: Input tem medida ("2l") mas produto não tem
+                        score -= 50;
+                    }
+                }
+            }
+
+            // Verificar o inverso: Palavras críticas no produto que NÃO estão no input
+            // Ex: Input "Coca", Produto "Coca 2L". O produto tem "2L" (crítico) mas input não.
+            // Isso deve diminuir o score para evitar que "Coca" selecione "Coca 2L" se houver "Coca Lata" ou "Coca" simples.
+            // Mas no modo não-estrito (busca vaga), as vezes queremos isso.
+            // No modo estrito (n-gram), seremos mais rigorosos.
+            if (isStrict) {
+                const productHasCritical = productWords.filter(pw => criticalKeywords.some(k => pw.includes(k)));
+                const missingCriticalInInput = productHasCritical.filter(pw => !normalizedWords.some(nw => nw.includes(pw) || pw.includes(nw)));
+
+                if (missingCriticalInInput.length > 0) {
+                    score -= 20;
+                }
+            }
+
+            // Ajuste percentual
+            const matchPercentage = matchedWordsCount / normalizedWords.length;
+            score += (matchPercentage * 20);
         }
+
+        // Atualizar melhor candidato
+        if (score > maxScore) {
+            maxScore = score;
+            bestMatch = product;
+        }
+    }
+
+    // Threshold de aceitação
+    // Modo estrito exige score maior para evitar falsos positivos em n-grams
+    const threshold = isStrict ? 25 : 15;
+
+    if (maxScore >= threshold) {
+        return bestMatch;
     }
 
     return null;
