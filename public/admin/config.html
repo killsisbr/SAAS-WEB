@@ -543,6 +543,74 @@
                         Alteracoes</button>
                 </div>
 
+                <!-- Card Modo de Pedido -->
+                <div class="card" style="border-color: #22c55e;">
+                    <div class="card-title">
+                        <i class="fas fa-shopping-cart" style="color: #22c55e;"></i> Modo de Pedido
+                        <span
+                            style="font-size: 0.7rem; background: #3b82f6; color: white; padding: 4px 8px; border-radius: 12px; margin-left: 8px;">LINK</span>
+                    </div>
+
+                    <div
+                        style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center;">
+                        <i class="fas fa-info-circle" style="color: #15803d; font-size: 1.5rem;"></i>
+                        <div>
+                            <strong style="color: #15803d; display: block; margin-bottom: 4px;">Escolha como os clientes
+                                fazem pedidos</strong>
+                            <span style="color: #166534; font-size: 0.9rem;">O bot pode enviar um link para o cardápio
+                                ou aceitar pedidos por conversa!</span>
+                        </div>
+                    </div>
+
+                    <label
+                        style="font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; display: block; margin-bottom: 8px;">MODO
+                        DE OPERAÇÃO</label>
+
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <!-- Modo Link -->
+                        <div id="modeLinkCard" onclick="selectOrderMode('link')"
+                            style="flex: 1; min-width: 280px; border: 3px solid #1a1a1a; border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.2s; position: relative;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <i class="fas fa-link" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 800; font-size: 1.2rem;">Modo Link</span>
+                            </div>
+                            <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.4;">
+                                Cliente recebe link do cardápio e faz pedido pela página web.
+                            </p>
+                        </div>
+
+                        <!-- Modo Direto -->
+                        <div id="modeDirectCard" onclick="selectOrderMode('direct')"
+                            style="flex: 1; min-width: 280px; border: 3px solid #1a1a1a; border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.2s; position: relative;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <i class="fas fa-comments" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 800; font-size: 1.2rem;">Modo Híbrido (Conversa + Link)</span>
+                            </div>
+                            <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.4;">
+                                O robô conversa pelo WhatsApp <strong>E TAMBÉM</strong> envia o link do cardápio.<br>
+                                <span style="font-size: 0.8rem; color: #166534;">(Recomendado: O cliente escolhe como
+                                    prefere pedir)</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top: 12px; font-size: 0.85rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-lightbulb"></i> <span id="modeHint">Dica: O modo direto é mais rápido para
+                            clientes frequentes!</span>
+                    </div>
+
+                    <input type="hidden" id="selectedOrderMode" value="link">
+
+                    <div style="margin-top: 24px; text-align: right;">
+                        <button class="btn"
+                            style="background: #22c55e; color: white; display: inline-flex; align-items: center; gap: 8px;"
+                            onclick="saveStoreData()">
+                            <i class="fas fa-save"></i> SALVAR MODO
+                        </button>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-title"><i class="fas fa-palette" style="color: #8b5cf6;"></i> Aparência da Loja
                     </div>
@@ -1261,6 +1329,11 @@
                             document.getElementById('logoTypeText').checked = true;
                             document.getElementById('logoUploadSection').style.display = 'none';
                         }
+
+                        // Carregar modo de pedido (enableDirect)
+                        // Se enableDirect for undefined ou true -> Direct. Se for false -> Link.
+                        const isDirect = currentSettings.enableDirect !== false;
+                        selectOrderMode(isDirect ? 'direct' : 'link');
                     }
                 }
             } catch (e) {
@@ -1321,7 +1394,9 @@
                     marqueeText: document.getElementById('marqueeText')?.value || '',
                     logoType: logoType,
                     logoUrl: logoUrl,
-                    logoSize: parseInt(document.getElementById('logoSize')?.value) || 100
+                    logoSize: parseInt(document.getElementById('logoSize')?.value) || 100,
+                    // Novo setting
+                    enableDirect: document.getElementById('selectedOrderMode').value === 'direct'
                 };
 
                 const res = await fetch(`/api/tenants/${currentTenantId}`, {
@@ -1546,6 +1621,39 @@
                 console.error('Erro upload logo:', e);
                 showToast('Erro ao fazer upload da logo', 'error');
                 return null;
+            }
+        }
+
+        // ===== ORDER MODE FUNCTION =====
+        function selectOrderMode(mode) {
+            const linkCard = document.getElementById('modeLinkCard');
+            const directCard = document.getElementById('modeDirectCard');
+            const input = document.getElementById('selectedOrderMode');
+            const hint = document.getElementById('modeHint');
+
+            // Reset styles
+            const inactiveStyle = "background: transparent; border-color: #1a1a1a; box-shadow: none;";
+            const activeStyle = "background: #ffb800; border-color: #1a1a1a; box-shadow: 4px 4px 0 #1a1a1a;";
+            // Direct active is white background? Or green? Let's use user screenshot style.
+            // Screenshot: Link is Yellow (Primary/Secondary). Direct is White.
+            // When Direct is active, maybe make it green?
+            // User screenshot shows 'Modo Link' selected and yellow. 'Modo Direto' is white.
+
+            input.value = mode;
+
+            if (mode === 'link') {
+                linkCard.style.cssText = linkCard.getAttribute('style') + activeStyle;
+                directCard.style.cssText = directCard.getAttribute('style') + inactiveStyle;
+                // Highlight text color?
+                hint.textContent = "Dica: O modo link é ideal para cardápios visuais e fotos grandes!";
+            } else {
+                linkCard.style.cssText = linkCard.getAttribute('style') + inactiveStyle;
+                // Make Direct Green when active? Or keeping yellow theme?
+                // Let's stick to yellow highlight for consistency, or maybe green since it's "Whatsapp".
+                // Screenshot used yellow for Link. I'll use Green for Direct to differentiate or Yellow for active.
+                // Let's use Yellow for active constant.
+                directCard.style.cssText = directCard.getAttribute('style') + activeStyle;
+                hint.textContent = "Dica: O modo direto é mais rápido para clientes frequentes!";
             }
         }
 

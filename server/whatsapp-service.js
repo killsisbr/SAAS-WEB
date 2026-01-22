@@ -106,9 +106,15 @@ class WhatsAppService {
             for (const tenant of tenants) {
                 const settings = JSON.parse(tenant.settings || '{}');
 
-                // Verificar se tem bot habilitado (IA ou basico)
-                if (settings.whatsappBotEnabled || settings.aiBot?.enabled) {
-                    console.log(`[WhatsApp] Auto-conectando tenant: ${tenant.name} (${tenant.id})`);
+                // Verificar se existe sessão salva no disco
+                const sessionDir = path.join(SESSIONS_DIR, `session-${tenant.id}`);
+                const hasSession = fs.existsSync(sessionDir) && fs.existsSync(path.join(sessionDir, 'creds.json'));
+
+                // Reconectar se:
+                // 1. Bot habilitado (básico ou IA) OU
+                // 2. Existe sessão salva no disco (foi conectado antes)
+                if (settings.whatsappBotEnabled || settings.aiBot?.enabled || hasSession) {
+                    console.log(`[WhatsApp] Auto-conectando tenant: ${tenant.name} (${tenant.id})${hasSession ? ' [sessão existente]' : ''}`);
 
                     try {
                         await this.initializeForTenant(tenant.id);
@@ -275,6 +281,7 @@ class WhatsAppService {
 
         // Handler de mensagens
         sock.ev.on('messages.upsert', async (m) => {
+            console.log(`[Baileys] messages.upsert recebido para tenant ${tenantId}, type: ${m.type}, msgs: ${m.messages?.length || 0}`);
             if (m.type !== 'notify') return;
 
             for (const msg of m.messages) {
@@ -303,6 +310,7 @@ class WhatsAppService {
      */
     async handleMessage(tenantId, message, settings, sock) {
         try {
+            console.log(`[handleMessage] === MENSAGEM RECEBIDA para tenant ${tenantId} ===`);
             const jid = message.key.remoteJid;
 
             // Extrair numero do JID
@@ -333,6 +341,51 @@ class WhatsAppService {
 
             // Debug: mostrar status do bot
             console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}`);
+
+            // ============ VERIFICAR MODO DE OPERAÇÃO ============
+            const orderMode = currentSettings.whatsappOrderMode || 'link'; // 'link' | 'direct' | 'ai'
+            console.log(`[OrderMode] Tenant ${tenantId} está usando modo: ${orderMode}`);
+
+            // MODO DIRETO: Pedidos conversacionais via WhatsApp
+            if (orderMode === 'direct') {
+                try {
+                    console.log(`[DirectOrder] Importando módulos...`);
+                    const { processDirectOrder } = await import('./direct-order/index.js');
+                    const { broadcast } = await import('./server.js');
+                    console.log(`[DirectOrder] Módulos importados, processando...`);
+
+                    // Detectar mensagem de localização
+                    const locationMessage = message.message?.locationMessage;
+                    let locationData = null;
+                    if (locationMessage) {
+                        locationData = {
+                            latitude: locationMessage.degreesLatitude,
+                            longitude: locationMessage.degreesLongitude
+                        };
+                        console.log(`[DirectOrder] Localização recebida: ${JSON.stringify(locationData)}`);
+                    }
+
+                    const result = await processDirectOrder({
+                        message: messageBody,
+                        jid,
+                        tenantId,
+                        customerName: pushName,
+                        sock,
+                        db: this.db,
+                        broadcast,  // Passar broadcast SSE para atualizar quadro
+                        location: locationData  // Passar localização se disponível
+                    });
+
+                    if (result?.response) {
+                        await this.safeSendMessage(tenantId, jid, result.response, sock);
+                        console.log(`[DirectOrder] Resposta enviada para ${jid}`);
+                    }
+                } catch (err) {
+                    console.error('[DirectOrder] Erro no processamento:', err.message);
+                    console.error('[DirectOrder] Stack:', err.stack);
+                }
+                return; // Não processar como modo link
+            }
 
             // ============ GATILHOS DE PALAVRAS-CHAVE ============
             const triggers = currentSettings.triggers || [];

@@ -39,6 +39,31 @@ server/backups/
 .DS_Store
 Thumbs.db
 
+
 # User Uploads
 public/uploads/
+
+# Test & Study Systems (Legacy)
+server/direct-order/tests/stress_test.db
+server/direct-order/tests/*.js
+server/test-*.mjs
+server/test-*.js
+server/reproduce-bug.mjs
+server/diagnose-*.js
+server/diagnose-*.cjs
+# One-off / Maintenance Scripts
+server/add-*.mjs
+server/fix-*.mjs
+server/fix-*.js
+server/fix-*.cjs
+server/migrate-*.mjs
+server/reset-*.mjs
+server/update-*.mjs
+server/check-*.mjs
+server/insert_*.mjs
+server/get_tenant_id.mjs
+server/organize-esfihas.mjs
+server/create-mapping.cjs
+server/test_output*.txt
+
 

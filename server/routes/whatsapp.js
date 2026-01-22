@@ -196,7 +196,10 @@ export default function (db) {
     // ========================================
     router.put('/settings', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
-            const { whatsappBotEnabled, whatsappGroupId, siteUrl, botMessages, aiBot, triggers } = req.body;
+            const {
+                whatsappBotEnabled, whatsappGroupId, siteUrl, botMessages, aiBot, triggers,
+                whatsappOrderMode, pixKey, deliveryFee  // Novos campos para modo direto
+            } = req.body;
 
             // Buscar tenant atual
             const tenant = await db.get('SELECT settings FROM tenants WHERE id = ?', [req.tenantId]);
@@ -223,6 +226,19 @@ export default function (db) {
             // Salvar gatilhos de palavras-chave
             if (triggers !== undefined) {
                 settings.triggers = triggers;
+            }
+            // Modo de pedido (link/direct/ai)
+            if (whatsappOrderMode !== undefined) {
+                settings.whatsappOrderMode = whatsappOrderMode;
+                console.log(`[WhatsApp] Modo de pedido alterado para: ${whatsappOrderMode}`);
+            }
+            // Chave PIX para pagamentos
+            if (pixKey !== undefined) {
+                settings.pixKey = pixKey;
+            }
+            // Taxa de entrega padrão
+            if (deliveryFee !== undefined) {
+                settings.deliveryFee = parseFloat(deliveryFee) || 0;
             }
 
             await db.run(

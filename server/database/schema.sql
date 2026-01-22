@@ -539,3 +539,20 @@ CREATE TABLE IF NOT EXISTS pid_jid_mappings (
 
 CREATE INDEX IF NOT EXISTS idx_pid_jid_mappings ON pid_jid_mappings(tenant_id, pid);
 
+-- ============================================================
+-- MAPEAMENTO DE PALAVRAS PARA PRODUTOS (Direct Order)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS product_mappings (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    keyword TEXT NOT NULL,            -- Palavra-chave normalizada
+    product_id TEXT NOT NULL,          -- ID do produto no cardápio
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, keyword),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_mappings_tenant ON product_mappings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_product_mappings_keyword ON product_mappings(tenant_id, keyword);

@@ -114,7 +114,18 @@ export default function (db, broadcast) {
                     id: customer.id,
                     name: customer.name,
                     phone: customer.phone,
-                    lastAddress: lastOrder?.address ? JSON.parse(lastOrder.address) : null
+                    lastAddress: (() => {
+                        if (!lastOrder?.address) return null;
+                        try {
+                            const parsed = JSON.parse(lastOrder.address);
+                            // Se for string pura (JSON vira string), converter para objeto
+                            if (typeof parsed === 'string') return { street: parsed };
+                            return parsed;
+                        } catch (e) {
+                            // Se falhar parse, é string pura antiga
+                            return { street: lastOrder.address };
+                        }
+                    })()
                 }
             });
         } catch (error) {

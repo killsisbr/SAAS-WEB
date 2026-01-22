@@ -249,6 +249,10 @@ async function loadRoutes() {
     const acaiRoutes = await import('./routes/acai.js');
     app.use('/api/acai', acaiRoutes.default(db));
 
+    // Product Mappings (Direct Order)
+    const mappingRoutes = await import('./routes/mappings.js');
+    app.use('/api/mappings', mappingRoutes.default(db));
+
     // Coupons
     const couponRoutes = await import('./routes/coupons.js');
     app.use('/api/coupons', couponRoutes.default(db));
@@ -366,7 +370,13 @@ app.get('/loja/:slug/admin', (req, res) => {
 });
 
 app.get('/loja/:slug/admin/*', (req, res) => {
-    const page = req.params[0] || 'index';
+    let page = req.params[0] || 'index';
+
+    // Remover .html se já estiver presente para evitar duplicação
+    if (page.endsWith('.html')) {
+        page = page.slice(0, -5);
+    }
+
     const filePath = path.join(__dirname, '..', 'public', 'admin', `${page}.html`);
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
@@ -432,10 +442,11 @@ async function start() {
                 await whatsapp.autoReconnectAll();
                 console.log('[WhatsApp] Auto-reconnect concluído (Baileys)');
 
-                // Inicializar Follow-up (depende do WhatsApp estar pronto)
-                const followUp = getFollowUpService(db);
-                followUp.init();
-                console.log('[Follow-up] Serviço inicializado');
+                // Follow-up DESABILITADO temporariamente
+                // const followUp = getFollowUpService(db);
+                // followUp.init();
+                // console.log('[Follow-up] Serviço inicializado');
+                console.log('[Follow-up] Serviço DESABILITADO');
             } catch (err) {
                 console.warn('[WhatsApp/FollowUp] Erro na inicializacao:', err.message);
             }

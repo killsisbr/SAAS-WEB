@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapeamentos - DeliveryHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --secondary: #ffb800;
+            --bg: #fff9f0;
+            --dark: #1a1a1a;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --border: #1a1a1a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --shadow-offset: 6px;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 20px 20px, rgba(16, 185, 129, 0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 3px solid var(--dark);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 var(--secondary);
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 24px 0 12px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            border-color: var(--dark);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background: var(--card);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            border: 2px solid var(--dark);
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .info-box i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .card {
+            background: var(--card);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mappings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mappings-table th,
+        .mappings-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .mappings-table th {
+            background: var(--bg);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .mappings-table tr:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .keyword-tag {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 2px solid var(--dark);
+        }
+
+        .product-badge {
+            background: var(--secondary);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid var(--dark);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 4px solid var(--dark);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 10px 10px 0 var(--dark);
+        }
+
+        .modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--bg);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="./" class="logo">DeliveryHub</a>
+            <nav>
+                <div class="nav-label">Menu</div>
+                <a href="./" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="quadro" class="nav-item"><i class="fas fa-columns"></i> Quadro de Pedidos</a>
+                <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
+                <a href="categorias" class="nav-item"><i class="fas fa-tags"></i> Categorias</a>
+                <div class="nav-label">WhatsApp Direto</div>
+                <a href="whatsapp" class="nav-item"><i class="fab fa-whatsapp"></i> Configurações</a>
+                <a href="mapeamentos" class="nav-item active"><i class="fas fa-link"></i> Mapeamentos</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div>
+                    <h1><i class="fas fa-link"></i> Mapeamentos</h1>
+                    <p style="color: var(--text-muted);">Configure palavras-chave para identificar produtos
+                        automaticamente</p>
+                </div>
+                <a href="whatsapp" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-lightbulb"></i>
+                <div>
+                    <strong>Como funciona?</strong><br>
+                    <small>Quando o cliente digitar "2 coca 2l", o bot encontrará automaticamente o produto
+                        mapeado!</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-plus-circle"></i> Adicionar Mapeamento</div>
+                <div class="filter-bar">
+                    <input type="text" id="newKeyword" placeholder="Palavra-chave (ex: coca 2l, x salada)">
+                    <select id="newProduct"
+                        style="min-width: 200px; padding: 12px; border: 3px solid var(--dark); border-radius: 12px;">
+                        <option value="">Selecione um produto...</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addMapping()">
+                        <i class="fas fa-plus"></i> ADICIONAR
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-list"></i> Mapeamentos Configurados
+                    <span id="mappingCount"
+                        style="font-size: 0.8rem; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; margin-left: auto;">0</span>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" id="searchFilter" placeholder="Buscar mapeamento..." oninput="filterMappings()">
+                </div>
+
+                <div id="mappingsContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-link"></i>
+                        <p>Nenhum mapeamento configurado</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: var(--warning);">
+                <div class="card-title" style="color: var(--warning);"><i class="fas fa-magic"></i> Auto-Gerar</div>
+                <p style="margin-bottom: 16px; color: var(--text-muted);">
+                    Gere mapeamentos automaticamente a partir dos nomes dos produtos.
+                </p>
+                <select id="autoGenProduct"
+                    style="width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 12px; margin-bottom: 16px;">
+                    <option value="">Selecione um produto...</option>
+                </select>
+                <button class="btn" style="background: var(--warning);" onclick="autoGenerate()">
+                    <i class="fas fa-wand-magic-sparkles"></i> GERAR AUTOMATICAMENTE
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
+        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
+        let mappings = [];
+        let products = [];
+
+        async function init() {
+            await loadProducts();
+            await loadMappings();
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products', { headers: API_HEADERS });
+                products = await res.json();
+
+                const options = products.map(p =>
+                    `<option value="${p.id}">${p.name} - R$ ${Number(p.price).toFixed(2)}</option>`
+                ).join('');
+
+                document.getElementById('newProduct').innerHTML = '<option value="">Selecione um produto...</option>' + options;
+                document.getElementById('autoGenProduct').innerHTML = '<option value="">Selecione um produto...</option>' + options;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadMappings() {
+            try {
+                const res = await fetch('/api/mappings', { headers: API_HEADERS });
+                mappings = await res.json();
+                renderMappings();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderMappings(filter = '') {
+            const container = document.getElementById('mappingsContainer');
+            let filtered = mappings;
+
+            if (filter) {
+                const f = filter.toLowerCase();
+                filtered = mappings.filter(m =>
+                    m.keyword.includes(f) || (m.product_name && m.product_name.toLowerCase().includes(f))
+                );
+            }
+
+            document.getElementById('mappingCount').textContent = filtered.length;
+
+            if (!filtered.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-link"></i>
+                        <p>${filter ? 'Nenhum resultado encontrado' : 'Nenhum mapeamento configurado'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="mappings-table">
+                    <thead>
+                        <tr>
+                            <th>Palavra-chave</th>
+                            <th>Produto</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(m => `
+                            <tr>
+                                <td><span class="keyword-tag">${m.keyword}</span></td>
+                                <td>
+                                    <span class="product-badge">${m.product_name || 'Produto removido'}</span>
+                                    ${m.product_price ? `<small style="color: var(--text-muted);"> R$ ${Number(m.product_price).toFixed(2)}</small>` : ''}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm" style="background: var(--danger); color: white;" onclick="deleteMapping('${m.keyword}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function filterMappings() {
+            const filter = document.getElementById('searchFilter').value;
+            renderMappings(filter);
+        }
+
+        async function addMapping() {
+            const keyword = document.getElementById('newKeyword').value.trim();
+            const productId = document.getElementById('newProduct').value;
+
+            if (!keyword || !productId) {
+                alert('Preencha a palavra-chave e selecione um produto!');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/mappings', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword, productId })
+                });
+
+                if (res.ok) {
+                    document.getElementById('newKeyword').value = '';
+                    await loadMappings();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Erro ao adicionar');
+                }
+            } catch (e) {
+                alert('Erro ao adicionar');
+            }
+        }
+
+        async function deleteMapping(keyword) {
+            if (!confirm(`Remover mapeamento "${keyword}"?`)) return;
+
+            try {
+                await fetch(`/api/mappings/${encodeURIComponent(keyword)}`, {
+                    method: 'DELETE',
+                    headers: API_HEADERS
+                });
+                await loadMappings();
+            } catch (e) {
+                alert('Erro ao remover');
+            }
+        }
+
+        async function autoGenerate() {
+            const productId = document.getElementById('autoGenProduct').value;
+            if (!productId) {
+                alert('Selecione um produto!');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/mappings/auto-generate/${productId}`, {
+                    method: 'POST',
+                    headers: API_HEADERS
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(`Gerados ${data.added} mapeamentos:\n${data.mappings.join(', ')}`);
+                    await loadMappings();
+                } else {
+                    alert(data.error || 'Erro');
+                }
+            } catch (e) {
+                alert('Erro ao gerar');
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
