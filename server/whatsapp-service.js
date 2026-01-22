@@ -281,15 +281,22 @@ class WhatsAppService {
 
         // Handler de mensagens
         sock.ev.on('messages.upsert', async (m) => {
-            console.log(`[Baileys] messages.upsert recebido para tenant ${tenantId}, type: ${m.type}, msgs: ${m.messages?.length || 0}`);
+            // Ignorar history sync (append) e outros tipos que não sejam notify
             if (m.type !== 'notify') return;
 
             for (const msg of m.messages) {
-                // Ignorar mensagens do proprio bot
-                if (msg.key.fromMe) continue;
+                // [CRITICAL] Ignorar mensagens do proprio bot
+                if (msg.key.fromMe) return;
 
-                // Ignorar mensagens de status
-                if (msg.key.remoteJid === 'status@broadcast') continue;
+                // Ignorar mensagens de status/broadcast
+                if (msg.key.remoteJid === 'status@broadcast') return;
+
+                // Ignorar mensagens muito antigas (evitar processar backlog em loop)
+                const msgTime = (msg.messageTimestamp || 0);
+                const now = Math.floor(Date.now() / 1000);
+                if (now - msgTime > 30) { // Ignorar mensagens com mais de 30s
+                    return;
+                }
 
                 // Processar comandos de grupos ANTES de ignorar
                 if (msg.key.remoteJid?.endsWith('@g.us')) {
