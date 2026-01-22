@@ -46,18 +46,32 @@ export async function processDirectOrder(params) {
         const menu = await loadMenu(db, tenantId);
         console.log(`[DirectOrder] 4. Menu carregado: ${menu.products?.length || 0} produtos`);
 
-        // Determinar URL base do cardápio (Domínio Customizado ou Padrão)
+        // Determinar URL base do cardápio (Ordem: Config > Custom Domain > Padrão)
         let baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
-        try {
-            const customDomain = await db.get(
-                'SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1',
-                [tenantId]
-            );
-            if (customDomain) {
-                baseUrl = `https://${customDomain.domain}`;
+
+        // 1. Verificar configuração explícita no painel (URL BASE DA LOJA)
+        if (settings.domainUrl || settings.storeUrl || settings.url) {
+            let customUrl = settings.domainUrl || settings.storeUrl || settings.url;
+            customUrl = customUrl.trim();
+            // Garantir protocolo
+            if (!customUrl.startsWith('http://') && !customUrl.startsWith('https://')) {
+                customUrl = 'https://' + customUrl;
             }
-        } catch (error) {
-            console.error('[DirectOrder] Erro ao buscar domínio customizado:', error);
+            baseUrl = customUrl;
+        }
+        // 2. Se não tiver config, tentar tabela de domínios customizados
+        else {
+            try {
+                const customDomain = await db.get(
+                    'SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1',
+                    [tenantId]
+                );
+                if (customDomain) {
+                    baseUrl = `https://${customDomain.domain}`;
+                }
+            } catch (error) {
+                console.error('[DirectOrder] Erro ao buscar domínio customizado:', error);
+            }
         }
 
         // Processar mensagem
