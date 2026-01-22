@@ -244,14 +244,14 @@ async function handleBrowsing(params, cart, actions) {
 
         cart.lastMessageWasError = true;
         return {
-            text: getWelcomeMessage(settings, tenantSlug, customerId)
+            text: getWelcomeMessage(settings, tenantSlug, customerId, params.baseUrl)
         };
     }
 
     // Se entendeu algo, limpa a flag de erro
     cart.lastMessageWasError = false;
 
-    return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
+    return { text: getWelcomeMessage(settings, tenantSlug, customerId, params.baseUrl) };
 }
 
 /**
@@ -698,12 +698,16 @@ async function finalizeOrder(params, cart) {
 
 // ============ Mensagens Auxiliares ============
 
-function getWelcomeMessage(settings, tenantSlug, customerId) {
+function getWelcomeMessage(settings, tenantSlug, customerId, baseUrl) {
     const msg = settings?.directOrderMessages?.welcome;
 
     // URL do cardápio (ajustar domínio conforme ambiente)
-    // TODO: Pegar do arquivo .env ou config se disponível. Por enquanto segue o padrão do server.js (/loja/:slug)
-    const catalogUrl = `https://app.deliveryhub.com.br/loja/${tenantSlug || ''}?p=${customerId || ''}`;
+    // Se baseUrl foi passado (via index.js -> domínio customizado ou padrão), usa ele.
+    // Fallback para hardcoded caso falhe.
+    const rootUrl = baseUrl || `https://app.deliveryhub.com.br/loja/${tenantSlug}`;
+
+    // Anexar parametro de customerId para auto-login
+    const catalogUrl = `${rootUrl}?p=${customerId || ''}`;
 
     if (msg) {
         // Se já tem mensagem customizada, apenas garantir que o link esteja lá ou adicionar

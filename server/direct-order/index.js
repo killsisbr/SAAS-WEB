@@ -46,6 +46,20 @@ export async function processDirectOrder(params) {
         const menu = await loadMenu(db, tenantId);
         console.log(`[DirectOrder] 4. Menu carregado: ${menu.products?.length || 0} produtos`);
 
+        // Determinar URL base do cardápio (Domínio Customizado ou Padrão)
+        let baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
+        try {
+            const customDomain = await db.get(
+                'SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1',
+                [tenantId]
+            );
+            if (customDomain) {
+                baseUrl = `https://${customDomain.domain}`;
+            }
+        } catch (error) {
+            console.error('[DirectOrder] Erro ao buscar domínio customizado:', error);
+        }
+
         // Processar mensagem
         console.log(`[DirectOrder] 5. Chamando processMessage...`);
         const result = await processMessage({
@@ -57,7 +71,8 @@ export async function processDirectOrder(params) {
             settings,
             db,
             location,  // Passar localização para o state-machine
-            tenantSlug: tenant.slug
+            tenantSlug: tenant.slug,
+            baseUrl
         });
         console.log(`[DirectOrder] 6. processMessage retornou:`, result?.text?.substring(0, 50) || 'null');
 
@@ -125,31 +140,31 @@ async function loadMenu(db, tenantId) {
 
     try {
         products = await db.all(`
-            SELECT p.*, c.name as category_name
-            FROM products p
-            LEFT JOIN categories c ON p.category_id = c.id
-            WHERE p.tenant_id = ? AND p.is_available = 1
-            ORDER BY c.order_index, p.name
-        `, [tenantId]);
+                SELECT p.*, c.name as category_name
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE p.tenant_id = ? AND p.is_available = 1
+                ORDER BY c.order_index, p.name
+            `, [tenantId]);
     } catch (err) {
         console.error('[DirectOrder] Erro ao carregar produtos:', err.message);
     }
 
     try {
         categories = await db.all(`
-            SELECT * FROM categories 
-            WHERE tenant_id = ? AND is_active = 1
-            ORDER BY order_index
-        `, [tenantId]);
+                SELECT * FROM categories 
+                WHERE tenant_id = ? AND is_active = 1
+                ORDER BY order_index
+            `, [tenantId]);
     } catch (err) {
         console.error('[DirectOrder] Erro ao carregar categorias:', err.message);
     }
 
     try {
         addons = await db.all(`
-            SELECT * FROM addon_groups
-            WHERE tenant_id = ?
-        `, [tenantId]);
+                SELECT * FROM addon_groups
+                WHERE tenant_id = ?
+            `, [tenantId]);
     } catch (err) {
         console.error('[DirectOrder] Erro ao carregar addons:', err.message);
     }
