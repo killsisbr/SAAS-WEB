@@ -706,8 +706,8 @@ function getWelcomeMessage(settings, tenantSlug, customerId, baseUrl) {
     // Fallback para hardcoded caso falhe.
     const rootUrl = baseUrl || `https://app.deliveryhub.com.br/loja/${tenantSlug}`;
 
-    // Anexar parametro de customerId para auto-login
-    const catalogUrl = `${rootUrl}?p=${customerId || ''}`;
+    // Anexar parametro de customerId para auto-login (usando 'whatsapp' para compatibilidade com modo link)
+    const catalogUrl = `${rootUrl}?whatsapp=${customerId || ''}`;
 
     if (msg) {
         // Se já tem mensagem customizada, apenas garantir que o link esteja lá ou adicionar
