@@ -23,7 +23,7 @@ import { CART_STATES, DEFAULT_CONFIG } from './config.js';
  * @returns {object} { response, orderCreated? }
  */
 export async function processDirectOrder(params) {
-    const { message, jid, tenantId, customerName, sock, db, broadcast, location } = params;
+    const { message, jid, tenantId, customerName, sock, db, broadcast, location, orderLink } = params;
 
     // Extrair número do JID
     const customerId = jid.replace('@s.whatsapp.net', '').replace('@c.us', '');
@@ -47,38 +47,13 @@ export async function processDirectOrder(params) {
         console.log(`[DirectOrder] 4. Menu carregado: ${menu.products?.length || 0} produtos`);
 
         // ===========================================================
-        // REPLICAR LÓGICA EXATA de whatsapp-service.js buildOrderLink()
-        // Linhas 636-692 - GARANTIR PARIDADE COM MODO LINK
+        // LINK UNIFICADO: Usar o orderLink passado por whatsapp-service.js
+        // Isso garante paridade com o Modo Link (usa buildOrderLink())
         // ===========================================================
-        const storedUrl = settings.siteUrl || settings.domain;
-        const envBaseUrl = process.env.BASE_URL || process.env.APP_DOMAIN;
-        const envDomain = process.env.DOMAIN;
-
-        let baseUrl = '';
-
-        // Se houver uma URL no banco, mas for localhost e tivermos uma env de produção, priorizamos a env
-        const isStoredLocal = storedUrl && (storedUrl.includes('localhost') || storedUrl.includes('127.0.0.1'));
-
-        if (storedUrl && !isStoredLocal) {
-            baseUrl = storedUrl;
-        } else if (envBaseUrl) {
-            baseUrl = envBaseUrl;
-        } else if (envDomain) {
-            const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-            baseUrl = `${protocol}://${envDomain}`;
-        } else {
-            // Fallback para o que estiver no banco (mesmo que seja localhost) ou localhost padrão
-            baseUrl = storedUrl || `http://localhost:${process.env.PORT || 3000}`;
-        }
-
-        // Garantir que não termina com barra
-        baseUrl = baseUrl.replace(/\/$/, '');
-
-        // Construir URL final: baseUrl + /loja/slug
-        const fullBaseUrl = `${baseUrl}/loja/${tenant.slug}`;
+        console.log(`[DirectOrder] 5. Usando orderLink recebido: ${orderLink}`);
 
         // Processar mensagem
-        console.log(`[DirectOrder] 5. Chamando processMessage...`);
+        console.log(`[DirectOrder] 6. Chamando processMessage...`);
         const result = await processMessage({
             message,
             customerId,
@@ -89,9 +64,9 @@ export async function processDirectOrder(params) {
             db,
             location,  // Passar localização para o state-machine
             tenantSlug: tenant.slug,
-            baseUrl: fullBaseUrl  // URL completa: baseUrl + /loja/slug
+            orderLink  // NOVO: Link já computado pelo whatsapp-service.js
         });
-        console.log(`[DirectOrder] 6. processMessage retornou:`, result?.text?.substring(0, 50) || 'null');
+        console.log(`[DirectOrder] 7. processMessage retornou:`, result?.text?.substring(0, 50) || 'null');
 
         // Se criou pedido
         if (result.orderCreated) {

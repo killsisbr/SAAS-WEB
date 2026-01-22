@@ -372,6 +372,11 @@ class WhatsAppService {
                         console.log(`[DirectOrder] Localização recebida: ${JSON.stringify(locationData)}`);
                     }
 
+                    // UNIFICAÇÃO: Usar a MESMA função buildOrderLink() que o Modo Link usa
+                    // Isso garante paridade entre os dois modos
+                    const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, jid);
+                    console.log(`[DirectOrder] Link gerado por buildOrderLink: ${orderLink}`);
+
                     const result = await processDirectOrder({
                         message: messageBody,
                         jid,
@@ -380,7 +385,8 @@ class WhatsAppService {
                         sock,
                         db: this.db,
                         broadcast,  // Passar broadcast SSE para atualizar quadro
-                        location: locationData  // Passar localização se disponível
+                        location: locationData,  // Passar localização se disponível
+                        orderLink  // NOVO: Link já computado pelo mesmo código do Modo Link
                     });
 
                     if (result?.response) {

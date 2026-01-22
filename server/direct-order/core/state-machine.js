@@ -24,7 +24,8 @@ export async function processMessage(params) {
         settings,
         db,
         location,  // Nova propriedade: { latitude, longitude } se disponível
-        tenantSlug
+        tenantSlug,
+        orderLink  // NOVO: Link completo já gerado por whatsapp-service.js buildOrderLink()
     } = params;
 
     const enableDirect = settings?.enableDirect !== false; // Default true
@@ -143,7 +144,7 @@ async function handleBrowsing(params, cart, actions) {
             case 'GREETING':
                 // Resetar estado de erro (já feito no topo do loop, mas reforçando intenção)
                 cart.lastMessageWasError = false;
-                return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
+                return { text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink) };
 
             case 'ADD_PRODUCT':
                 // Nota: Já adicionado globalmente no processMessage
@@ -244,14 +245,14 @@ async function handleBrowsing(params, cart, actions) {
 
         cart.lastMessageWasError = true;
         return {
-            text: getWelcomeMessage(settings, tenantSlug, customerId, params.baseUrl)
+            text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink)
         };
     }
 
     // Se entendeu algo, limpa a flag de erro
     cart.lastMessageWasError = false;
 
-    return { text: getWelcomeMessage(settings, tenantSlug, customerId, params.baseUrl) };
+    return { text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink) };
 }
 
 /**
@@ -698,16 +699,13 @@ async function finalizeOrder(params, cart) {
 
 // ============ Mensagens Auxiliares ============
 
-function getWelcomeMessage(settings, tenantSlug, customerId, baseUrl) {
+function getWelcomeMessage(settings, tenantSlug, customerId, orderLink) {
     const msg = settings?.directOrderMessages?.welcome;
 
-    // URL do cardápio (ajustar domínio conforme ambiente)
-    // Se baseUrl foi passado (via index.js -> domínio customizado ou padrão), usa ele.
-    // Fallback para hardcoded caso falhe.
-    const rootUrl = baseUrl || `https://app.deliveryhub.com.br/loja/${tenantSlug}`;
-
-    // Anexar parametro de customerId para auto-login (usando 'whatsapp' para compatibilidade com modo link)
-    const catalogUrl = `${rootUrl}?whatsapp=${customerId || ''}`;
+    // LINK UNIFICADO: orderLink já vem completo de whatsapp-service.js buildOrderLink()
+    // Já inclui https://dominio.com/loja/slug?whatsapp=telefone
+    // Não precisamos construir nada aqui!
+    const catalogUrl = orderLink || `https://app.deliveryhub.com.br/loja/${tenantSlug}?whatsapp=${customerId || ''}`;
 
     if (msg) {
         // Se já tem mensagem customizada, apenas garantir que o link esteja lá ou adicionar
