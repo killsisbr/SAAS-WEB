@@ -36,7 +36,7 @@ export async function processMessage(params) {
         // Para simplificar, retornamos a msg e paramos.
         // Se quiser permitir suporte/ajuda, teria que filtrar aqui.
         // Vamos retornar apenas a mensagem com link.
-        return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
+        return { text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink) };
     }
 
     // Obter ou criar carrinho
@@ -108,7 +108,7 @@ export async function processMessage(params) {
  * Handler: Estado de navegação/inicial
  */
 async function handleBrowsing(params, cart, actions) {
-    const { menu, settings, customerId, tenantId, db, customerName, tenantSlug } = params;
+    const { menu, settings, customerId, tenantId, db, customerName, tenantSlug, orderLink } = params;
     const messages = settings?.directOrderMessages || {};
 
     let productAdded = false;
