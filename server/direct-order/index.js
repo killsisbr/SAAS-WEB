@@ -46,33 +46,20 @@ export async function processDirectOrder(params) {
         const menu = await loadMenu(db, tenantId);
         console.log(`[DirectOrder] 4. Menu carregado: ${menu.products?.length || 0} produtos`);
 
-        // Determinar URL base do cardápio (Ordem: Config > Custom Domain > Padrão)
-        let baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
-
-        // 1. Verificar configuração explícita no painel (URL BASE DA LOJA -> settings.domain)
-        // Nota: whatsapp-bot.js usa settings.domain, então deve ser esse o campo correto.
-        if (settings.domain || settings.domainUrl || settings.storeUrl || settings.url) {
-            let customUrl = settings.domain || settings.domainUrl || settings.storeUrl || settings.url;
-            customUrl = customUrl.trim();
-            // Garantir protocolo
-            if (!customUrl.startsWith('http://') && !customUrl.startsWith('https://')) {
-                customUrl = 'https://' + customUrl;
-            }
-            baseUrl = customUrl;
-        }
-        // 2. Se não tiver config, tentar tabela de domínios customizados
-        else {
-            try {
-                const customDomain = await db.get(
-                    'SELECT domain FROM custom_domains WHERE tenant_id = ? AND verified = 1',
-                    [tenantId]
-                );
-                if (customDomain) {
-                    baseUrl = `https://${customDomain.domain}`;
-                }
-            } catch (error) {
-                console.error('[DirectOrder] Erro ao buscar domínio customizado:', error);
-            }
+        // Determinar URL base do cardápio (PARITY com whatsapp-bot.js:388-393)
+        // Prioridade 1: settings.storeLink (configurado no painel)
+        // Prioridade 2: settings.domain + /loja/slug
+        // Fallback: app.deliveryhub.com.br
+        let baseUrl;
+        if (settings.storeLink) {
+            // Exatamente como whatsapp-bot.js linha 389-390
+            baseUrl = settings.storeLink;
+        } else if (settings.domain) {
+            // Exatamente como whatsapp-bot.js linha 391-392
+            baseUrl = `https://${settings.domain}/loja/${tenant.slug}`;
+        } else {
+            // Fallback para domínio padrão
+            baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
         }
 
         // Processar mensagem
