@@ -114,6 +114,11 @@ async function handleBrowsing(params, cart, actions) {
 
     // Verificar ações especiais
     for (const action of actions) {
+        // Rastrear última ação para evitar repetições (ex: Oi -> Erro -> Oi de novo)
+        cart.lastActionType = action.type;
+        // Se entrou aqui, é uma ação válida, então resetamos o erro
+        cart.lastMessageWasError = false;
+
         switch (action.type) {
             case 'SHOW_MENU':
                 // Se for restaurante/marmitaria, mostrar buffet do dia
@@ -136,7 +141,7 @@ async function handleBrowsing(params, cart, actions) {
                 return { text: getHelpMessage() };
 
             case 'GREETING':
-                // Resetar estado de erro
+                // Resetar estado de erro (já feito no topo do loop, mas reforçando intenção)
                 cart.lastMessageWasError = false;
                 return { text: getWelcomeMessage(settings, tenantSlug, customerId) };
 
@@ -230,8 +235,10 @@ async function handleBrowsing(params, cart, actions) {
     // Se não entendeu nada (sem ações e sem produtos)
     // E não é um comando conhecido (pois actions estaria preenchido)
     if (actions.length === 0) {
-        // Anti-Spam de erros: Se o último já foi erro, silenciar agora.
-        if (cart.lastMessageWasError) {
+        // Anti-Spam de erros: 
+        // 1. Se o último já foi erro, silenciar agora.
+        // 2. Ou se a última ação foi SAUDAÇÃO (GREETING), não adianta mandar Boas Vindas de novo, então silencia.
+        if (cart.lastMessageWasError || cart.lastActionType === 'GREETING') {
             return { text: null }; // Retorno com text nulo inibe envio de mensagem no index.js/whatsapp-service.js
         }
 
