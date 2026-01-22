@@ -49,9 +49,10 @@ export async function processDirectOrder(params) {
         // Determinar URL base do cardápio (Ordem: Config > Custom Domain > Padrão)
         let baseUrl = `https://app.deliveryhub.com.br/loja/${tenant.slug}`;
 
-        // 1. Verificar configuração explícita no painel (URL BASE DA LOJA)
-        if (settings.domainUrl || settings.storeUrl || settings.url) {
-            let customUrl = settings.domainUrl || settings.storeUrl || settings.url;
+        // 1. Verificar configuração explícita no painel (URL BASE DA LOJA -> settings.domain)
+        // Nota: whatsapp-bot.js usa settings.domain, então deve ser esse o campo correto.
+        if (settings.domain || settings.domainUrl || settings.storeUrl || settings.url) {
+            let customUrl = settings.domain || settings.domainUrl || settings.storeUrl || settings.url;
             customUrl = customUrl.trim();
             // Garantir protocolo
             if (!customUrl.startsWith('http://') && !customUrl.startsWith('https://')) {
