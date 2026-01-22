@@ -222,7 +222,7 @@ async function handleBrowsing(params, cart, actions) {
         }
     }
 
-    if (productAdded || cart.items.length > 0) {
+    if (productAdded) {
         const cartView = cartService.formatCartView(tenantId, customerId);
         return { text: `${cartView}\n${getMenuSubMessage()}` };
     }
