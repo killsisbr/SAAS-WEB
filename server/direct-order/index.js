@@ -9,6 +9,9 @@ import * as customerService from './services/customer-service.js';
 import { formatMenu } from './core/word-analyzer.js';
 import { CART_STATES, DEFAULT_CONFIG } from './config.js';
 
+// Módulo de IA para logging e análise
+import { logConversation, AI_CONFIG } from '../ai-reinforcement/index.js';
+
 /**
  * Processar pedido direto via WhatsApp
  * @param {object} params - Parâmetros
@@ -68,8 +71,28 @@ export async function processDirectOrder(params) {
         });
         console.log(`[DirectOrder] 7. processMessage retornou:`, result?.text?.substring(0, 50) || 'null');
 
+        // ===========================================================
+        // SISTEMA ANTI-SPAM
+        // Verifica se deve enviar a mensagem ou silenciar (repetição)
+        // ===========================================================
+        if (result.text && !result.orderCreated) {
+            // Só aplicar anti-spam para mensagens normais (não para confirmação de pedido!)
+            const shouldSend = cartService.shouldSendMessage(tenantId, customerId, result.text, 2);
+
+            if (!shouldSend) {
+                console.log(`[DirectOrder] ⚠️ Anti-spam: mensagem silenciada (repetição sem alteração)`);
+                return { response: null }; // Silenciar - não enviar nada
+            }
+
+            // Registrar que a mensagem será enviada
+            cartService.registerSentMessage(tenantId, customerId, result.text);
+        }
+
         // Se criou pedido
         if (result.orderCreated) {
+            // Reset anti-spam após pedido criado (próxima interação deve funcionar normalmente)
+            cartService.resetAntiSpam(tenantId, customerId);
+
             // 1. Broadcast SSE para atualizar o quadro de pedidos em tempo real
             if (broadcast) {
                 try {
@@ -97,6 +120,30 @@ export async function processDirectOrder(params) {
                 } catch (err) {
                     console.error('[DirectOrder] Erro ao notificar grupo:', err.message);
                 }
+            }
+        }
+
+        // ===========================================================
+        // LOGGING PARA IA
+        // Registra a interação para análise posterior
+        // ===========================================================
+        if (AI_CONFIG.loggingEnabled) {
+            try {
+                const cart = cartService.getCart(tenantId, customerId);
+                await logConversation(db, {
+                    tenantId,
+                    customerId,
+                    customerMessage: message,
+                    messageType: location ? 'location' : 'text',
+                    botResponse: result.text,
+                    detectedActions: result.actions || [],
+                    matchedProducts: result.matchedProducts || [],
+                    cartState: cart.state,
+                    cartItems: cart.items,
+                    cartTotal: cart.total
+                });
+            } catch (logErr) {
+                console.error('[DirectOrder] Erro ao registrar para IA:', logErr.message);
             }
         }
 

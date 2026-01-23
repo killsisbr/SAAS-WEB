@@ -142,7 +142,18 @@ async function handleBrowsing(params, cart, actions) {
                 return { text: getHelpMessage() };
 
             case 'GREETING':
-                // Resetar estado de erro (já feito no topo do loop, mas reforçando intenção)
+                // Se já tem itens no carrinho, não manda boas-vindas, manda o carrinho
+                if (cart.items.length > 0) {
+                    const cartView = cartService.formatCartView(tenantId, customerId);
+                    return { text: `${cartView}\n${getMenuSubMessage()}` };
+                }
+
+                // Se já enviou boas vindas nesta sessão, não envia de novo
+                if (cart.welcomeSent) {
+                    return { text: null }; // Silencia
+                }
+
+                cart.welcomeSent = true;
                 cart.lastMessageWasError = false;
                 return { text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink) };
 
@@ -236,22 +247,39 @@ async function handleBrowsing(params, cart, actions) {
     // Se não entendeu nada (sem ações e sem produtos)
     // E não é um comando conhecido (pois actions estaria preenchido)
     if (actions.length === 0) {
+        // Se já tem itens no carrinho e não entendemos, melhor mostrar o carrinho
+        if (cart.items.length > 0) {
+            // Anti-Spam: Se o último já foi erro (e agora também é), silenciar
+            if (cart.lastMessageWasError) return { text: null };
+            cart.lastMessageWasError = true;
+
+            const cartView = cartService.formatCartView(tenantId, customerId);
+            return { text: `Desculpe, não entendi. 🤔\n\n${cartView}\n${getMenuSubMessage()}` };
+        }
+
         // Anti-Spam de erros: 
         // 1. Se o último já foi erro, silenciar agora.
         // 2. Ou se a última ação foi SAUDAÇÃO (GREETING), não adianta mandar Boas Vindas de novo, então silencia.
-        if (cart.lastMessageWasError || cart.lastActionType === 'GREETING') {
-            return { text: null }; // Retorno com text nulo inibe envio de mensagem no index.js/whatsapp-service.js
+        if (cart.lastMessageWasError || cart.lastActionType === 'GREETING' || cart.welcomeSent) {
+            return { text: null };
         }
 
         cart.lastMessageWasError = true;
+        cart.welcomeSent = true;
         return {
             text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink)
         };
     }
 
-    // Se entendeu algo, limpa a flag de erro
+    // Se entendeu algo (mas não deu return acima), limpa flag de erro
     cart.lastMessageWasError = false;
 
+    // Se chegou aqui com ações mas sem return, e já enviou boas-vindas, silencia se for genérico
+    if (cart.welcomeSent && !productAdded) {
+        return { text: null };
+    }
+
+    cart.welcomeSent = true;
     return { text: getWelcomeMessage(settings, tenantSlug, customerId, orderLink) };
 }
 

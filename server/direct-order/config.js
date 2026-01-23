@@ -54,12 +54,12 @@ export const NUMBER_MAP = {
  */
 export const INTENT_KEYWORDS = {
     MENU: ['cardapio', 'cardápio', 'menu', 'opções', 'opcoes'],
-    DELIVERY: ['entrega', 'entregar', 'entregam', 'levar'],
+    DELIVERY: ['f', 'finalizar', 'fechar', 'entrega', 'entregar', 'entregam', 'levar'],
     PICKUP: ['buscar', 'busco', 'pegar', 'retirada', 'retirar', 'vou buscar'],
     PIX: ['pix', 'chave', 'pix?'],
     CONFIRM: ['s', 'sim', 'isso', 'correto', 'confirmo', 'confirmar'],
     CANCEL: ['n', 'não', 'nao', 'cancelar', 'cancela'],
-    REMOVE_ITEM: ['c', 'remover', 'tira', 'tirar'],
+    REMOVE_ITEM: ['c', 'cancelar', 'remover', 'tira', 'tirar'],
     BACK: ['voltar', 'volta', 'retornar', 'v'],
     HELP: ['ajuda', 'help', 'suporte'],
     RESET: ['reiniciar', 'limpar', 'novo', 'pedir']

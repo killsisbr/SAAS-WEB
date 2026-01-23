@@ -556,3 +556,36 @@ CREATE TABLE IF NOT EXISTS product_mappings (
 
 CREATE INDEX IF NOT EXISTS idx_product_mappings_tenant ON product_mappings(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_product_mappings_keyword ON product_mappings(tenant_id, keyword);
+
+-- ============================================================
+-- PALAVRAS IGNORADAS POR TENANT (Auto-Melhoria IA)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ignored_words (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    word TEXT NOT NULL,
+    reason TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, word),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ignored_words_tenant ON ignored_words(tenant_id);
+
+-- ============================================================
+-- SINÔNIMOS POR TENANT (Auto-Melhoria IA)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS synonyms (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    word TEXT NOT NULL,
+    synonym TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, word, synonym),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_synonyms_tenant ON synonyms(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_synonyms_word ON synonyms(tenant_id, word);

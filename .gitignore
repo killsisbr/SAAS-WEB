@@ -17,17 +17,24 @@ yarn-error.log*
 *.log
 server/server_error.log
 
-# Database
+# Database (NUNCA enviar para VPS)
 server/database/*.sqlite
 server/database/*.sqlite-shm
 server/database/*.sqlite-wal
+server/database/legacy_*.sqlite
+*.db
 
-# WhatsApp / External Cache
+# WhatsApp / External Cache (sessões locais)
 .wwebjs_cache/
 server/.wwebjs_cache/
 server/whatsapp-sessions/
 server/baileys-sessions/
 server/backups/
+server/auth_info*/
+
+# Uploads locais
+server/uploads/
+public/uploads/
 
 # IDEs
 .vscode/
@@ -69,5 +76,8 @@ server/get_tenant_id.mjs
 server/organize-esfihas.mjs
 server/create-mapping.cjs
 server/test_output*.txt
-
-
+server/list-*.js
+server/reproduce-*.mjs
+server/reproduce-*.js
+server/debug-*.js
+server/debug-*.mjs

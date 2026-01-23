@@ -27,7 +27,12 @@ function createEmptyCart(customerId) {
         paymentMethod: null,
         change: null,
         createdAt: Date.now(),
-        lastActivity: Date.now()
+        lastActivity: Date.now(),
+        // Anti-spam: controle de mensagens repetidas
+        lastSentMessage: null,       // Última mensagem enviada
+        lastSentAt: null,            // Timestamp da última mensagem
+        lastCartHash: null,          // Hash do estado do carrinho (para detectar mudanças reais)
+        welcomeSent: false           // Flag para evitar repetição da mensagem de boas-vindas
     };
 }
 
@@ -251,16 +256,113 @@ export function getAllCarts() {
     return Object.fromEntries(carts);
 }
 
+// ============================================================
+// SISTEMA ANTI-SPAM
+// Evita enviar a mesma mensagem repetidamente quando não há alteração real
+// ============================================================
+
+/**
+ * Gerar hash do estado atual do carrinho
+ * Usado para detectar se houve alteração real (add/remove item, mudança de estado)
+ */
+export function generateCartHash(tenantId, customerId) {
+    const cart = getCart(tenantId, customerId);
+
+    // Componentes do hash: itens + estado + total + deliveryType
+    const hashData = {
+        items: cart.items.map(i => `${i.id}:${i.quantity}:${i.notes}`).join('|'),
+        state: cart.state,
+        total: cart.total,
+        deliveryType: cart.deliveryType,
+        address: cart.address,
+        observation: cart.observation
+    };
+
+    return JSON.stringify(hashData);
+}
+
+/**
+ * Verificar se a mensagem deve ser enviada (anti-spam)
+ * Retorna true se:
+ * - Houve alteração real no carrinho (hash diferente), OU
+ * - A mensagem é diferente da última enviada, OU
+ * - Passou mais de X minutos desde a última mensagem igual
+ * 
+ * @param {string} tenantId 
+ * @param {string} customerId 
+ * @param {string} messageToSend - Mensagem que seria enviada
+ * @param {number} repeatIntervalMinutes - Intervalo mínimo para repetir mesma mensagem (default: 2 min)
+ * @returns {boolean} true se deve enviar, false se deve silenciar (spam)
+ */
+export function shouldSendMessage(tenantId, customerId, messageToSend, repeatIntervalMinutes = 2) {
+    const cart = getCart(tenantId, customerId);
+    const currentHash = generateCartHash(tenantId, customerId);
+    const now = Date.now();
+
+    // 1. Se o carrinho mudou (hash diferente), SEMPRE enviar
+    if (cart.lastCartHash !== currentHash) {
+        console.log(`[AntiSpam] Carrinho alterado, enviando mensagem`);
+        return true;
+    }
+
+    // 2. Se a mensagem é diferente da última, enviar
+    if (cart.lastSentMessage !== messageToSend) {
+        console.log(`[AntiSpam] Mensagem diferente, enviando`);
+        return true;
+    }
+
+    // 3. Se passou tempo suficiente desde a última mensagem igual, enviar
+    const minInterval = repeatIntervalMinutes * 60 * 1000;
+    if (cart.lastSentAt && (now - cart.lastSentAt) > minInterval) {
+        console.log(`[AntiSpam] Intervalo de ${repeatIntervalMinutes}min passou, reenviando`);
+        return true;
+    }
+
+    // 4. Caso contrário, é spam - silenciar
+    console.log(`[AntiSpam] Mensagem repetida sem alteração, silenciando (última há ${Math.round((now - cart.lastSentAt) / 1000)}s)`);
+    return false;
+}
+
+/**
+ * Registrar que uma mensagem foi enviada
+ * Deve ser chamado APÓS enviar a mensagem com sucesso
+ */
+export function registerSentMessage(tenantId, customerId, message) {
+    const cart = getCart(tenantId, customerId);
+
+    cart.lastSentMessage = message;
+    cart.lastSentAt = Date.now();
+    cart.lastCartHash = generateCartHash(tenantId, customerId);
+
+    console.log(`[AntiSpam] Mensagem registrada, hash: ${cart.lastCartHash.substring(0, 50)}...`);
+}
+
+/**
+ * Forçar reset do anti-spam (ex: após ação importante do usuário)
+ */
+export function resetAntiSpam(tenantId, customerId) {
+    const cart = getCart(tenantId, customerId);
+    cart.lastSentMessage = null;
+    cart.lastSentAt = null;
+    cart.lastCartHash = null;
+}
+
 export default {
     getCart,
     hasCart,
     addItem,
     removeLastItem,
+    removeItem,
     setState,
     resetCart,
     formatCartView,
     formatOrderForGroup,
     calculateTotal,
     cleanupInactiveCarts,
+    // Anti-spam
+    shouldSendMessage,
+    registerSentMessage,
+    resetAntiSpam,
+    generateCartHash,
     CART_STATES
 };

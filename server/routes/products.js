@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { authMiddleware } from '../middleware/auth.js';
 import { tenantMiddleware, checkLimits } from '../middleware/tenant.js';
+import { createAutoMappings, removeAutoMappings } from '../services/auto-mapping-service.js';
 
 export default function (db) {
     const router = Router();
@@ -224,6 +225,13 @@ export default function (db) {
             product.addons = JSON.parse(product.addons || '[]');
             product.image_settings = JSON.parse(product.image_settings || '{}');
 
+            // AUTO-MAPPING: Criar mapeamentos automáticos
+            try {
+                await createAutoMappings(db, tenantId, productId, name);
+            } catch (mapErr) {
+                console.error('[Products] Erro no auto-mapping:', mapErr.message);
+            }
+
             res.status(201).json({ success: true, product });
         } catch (error) {
             console.error('Create product error:', error);
@@ -293,6 +301,13 @@ export default function (db) {
                 return res.status(404).json({ error: 'Produto nao encontrado' });
             }
 
+            // AUTO-MAPPING: Remover mapeamentos do produto deletado
+            try {
+                await removeAutoMappings(db, null, id); // tenantId null pois não temos req.tenantId aqui
+            } catch (mapErr) {
+                console.error('[Products] Erro ao remover auto-mappings:', mapErr.message);
+            }
+
             res.json({ success: true, message: 'Produto deletado' });
         } catch (error) {
             console.error('Delete product error:', error);
@@ -360,6 +375,13 @@ export default function (db) {
             product.images = JSON.parse(product.images || '[]');
             product.addons = JSON.parse(product.addons || '[]');
             product.image_settings = JSON.parse(product.image_settings || '{}');
+
+            // AUTO-MAPPING: Criar mapeamentos automáticos
+            try {
+                await createAutoMappings(db, req.tenantId, productId, name);
+            } catch (mapErr) {
+                console.error('[Products] Erro no auto-mapping:', mapErr.message);
+            }
 
             res.status(201).json({ success: true, product });
         } catch (error) {
@@ -434,6 +456,13 @@ export default function (db) {
 
             if (result.changes === 0) {
                 return res.status(404).json({ error: 'Produto nao encontrado' });
+            }
+
+            // AUTO-MAPPING: Remover mapeamentos do produto deletado
+            try {
+                await removeAutoMappings(db, req.tenantId, id);
+            } catch (mapErr) {
+                console.error('[Products] Erro ao remover auto-mappings:', mapErr.message);
             }
 
             res.json({ success: true, message: 'Produto deletado' });

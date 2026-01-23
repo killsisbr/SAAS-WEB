@@ -277,6 +277,10 @@ async function loadRoutes() {
     const backupRoutes = await import('./routes/backup.js');
     app.use('/api/backup', backupRoutes.default(db));
 
+    // AI Lessons (Auto-Melhoria)
+    const aiLessonsRoutes = await import('./routes/ai-lessons.js');
+    app.use('/api/ai', aiLessonsRoutes.default(db));
+
     // Upload
     const uploadRoutes = await import('./routes/upload.js');
     app.use('/api/upload', uploadRoutes.default(db));
@@ -452,6 +456,14 @@ async function start() {
             }
         } else {
             console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
+        }
+
+        // Inicializar módulo de IA (Reforço/Aprendizado)
+        try {
+            const { initializeAIModule } = await import('./ai-reinforcement/index.js');
+            await initializeAIModule(db);
+        } catch (err) {
+            console.warn('[AI-Reinforcement] Erro na inicialização:', err.message);
         }
 
         // Iniciar servidor

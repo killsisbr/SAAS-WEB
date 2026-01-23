@@ -311,6 +311,12 @@
                 <a href="produtos" class="nav-item"><i class="fas fa-box"></i> Produtos</a>
                 <a href="categorias" class="nav-item active"><i class="fas fa-tags"></i> Categorias</a>
                 <a href="adicionais" class="nav-item"><i class="fas fa-plus-circle"></i> Adicionais</a>
+
+                <div class="nav-label">IA & Automação</div>
+                <a href="whatsapp" class="nav-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                <a href="mapeamentos" class="nav-item"><i class="fas fa-link"></i> Mapeamentos</a>
+                <a href="ia-sugestoes" class="nav-item"><i class="fas fa-brain"></i> Sugestões IA</a>
+
                 <div class="nav-label">Configuracoes</div>
                 <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
             </nav>
@@ -351,7 +357,8 @@
                 </div>
                 <div class="form-group">
                     <label>Modo de Exibicao</label>
-                    <select id="categoryDisplayMode" style="width: 100%; padding: 14px; background: var(--bg); border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 1rem;">
+                    <select id="categoryDisplayMode"
+                        style="width: 100%; padding: 14px; background: var(--bg); border: 3px solid var(--dark); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 1rem;">
                         <option value="default">Padrao (Cards Retangulares)</option>
                         <option value="circular">Circular (Estilo Pizza)</option>
                         <option value="compact">Compacto (Lista)</option>
@@ -440,8 +447,8 @@
         document.getElementById('categoryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('categoryId').value;
-            const data = { 
-                name: document.getElementById('categoryName').value, 
+            const data = {
+                name: document.getElementById('categoryName').value,
                 icon: document.getElementById('categoryIcon').value,
                 displayMode: document.getElementById('categoryDisplayMode').value
             };
