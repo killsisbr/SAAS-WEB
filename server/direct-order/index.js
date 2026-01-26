@@ -242,7 +242,21 @@ async function loadMenu(db, tenantId) {
         }
     }
 
-    return { products, categories, addons, buffetItems, businessType };
+    // Carregar TODOS os itens de adicionais (não apenas buffet) para o analisador
+    let allAddons = [];
+    try {
+        allAddons = await db.all(`
+            SELECT i.id, i.name, i.price, i.is_available, g.name as group_name
+            FROM addon_items i
+            JOIN addon_groups g ON i.group_id = g.id
+            JOIN categories c ON g.category_id = c.id
+            WHERE c.tenant_id = ? AND i.is_available = 1
+        `, [tenantId]);
+    } catch (err) {
+        console.error('[DirectOrder] Erro ao carregar allAddons:', err.message);
+    }
+
+    return { products, categories, addons, buffetItems, businessType, allAddons };
 }
 
 /**

@@ -1,0 +1,31 @@
+Checking database at: D:\VENDA\IZAQUE CAMPESTRE\Saas-Restaurante\server\database\deliveryhub.sqlite
+
+Found 3 tenants:
+
+--- Tenant: Brutus Burger (demo_tenant_001) ---
+Status: ACTIVE
+Raw Settings: {"phone":"11999999999","whatsapp":"5511999999999","address":"Rua Demo 123","deliveryFee":5,"minOrder":25,"aiReinforcement":{"loggingEnabled":true,"dailyAnalysisEnabled":false,"autoApplyLessons":false,"geminiApiKey":"AIzaSyD4JiXqMFCuRxY5BaZtJFB9sHg-BhBCz1w","geminiModel":"gemini-2.0-flash"},"whatsappBotEnabled":true,"aiBot":{}}
+Settings:
+  whatsappBotEnabled: true
+  aiBot.enabled: undefined
+Session Exists (on disk): true
+Path: D:\VENDA\IZAQUE CAMPESTRE\Saas-Restaurante\server\baileys-sessions\session-demo_tenant_001
+-------------------------------------------
+--- Tenant: Sorveteria Qdelicia (sorveteria_001) ---
+Status: ACTIVE
+Raw Settings: {"phone":"11999999999","whatsapp":"5511999999999","address":"Rua da Sorveteria 123","deliveryFee":5,"minOrder":10,"whatsappBotEnabled":true,"aiBot":{}}
+Settings:
+  whatsappBotEnabled: true
+  aiBot.enabled: undefined
+Session Exists (on disk): false
+Path: D:\VENDA\IZAQUE CAMPESTRE\Saas-Restaurante\server\baileys-sessions\session-sorveteria_001
+-------------------------------------------
+--- Tenant: DEGUST (cd91ce85-3853-40ef-9b04-c1c46cb263d6) ---
+Status: ACTIVE
+Raw Settings: {"phone":"","whatsapp":"","address":null,"schedule":{},"deliveryFee":0,"deliveryFeePerKm":0,"minOrder":0,"pixKey":"","acceptCard":true,"acceptPix":true,"acceptCash":true,"whatsappOrderMode":"direct","storeLat":-25.2319563,"storeLng":-50.6020259,"deliveryZones":[],"allow_pickup":true,"whatsappBotEnabled":true,"aiBot":{}}
+Settings:
+  whatsappBotEnabled: true
+  aiBot.enabled: undefined
+Session Exists (on disk): true
+Path: D:\VENDA\IZAQUE CAMPESTRE\Saas-Restaurante\server\baileys-sessions\session-cd91ce85-3853-40ef-9b04-c1c46cb263d6
+-------------------------------------------

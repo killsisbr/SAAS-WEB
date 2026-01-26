@@ -170,40 +170,100 @@ export function matchesIntent(words, keywords) {
 
 /**
  * Extrair modificadores de um segmento de texto
- * Retorna { additions: [], removals: [], preparation: null }
+ * AGORA COM SUPORTE A ITEMS DO CARDÁPIO (ADICIONAIS PAGOS)
+ * Retorna { additions: [], removals: [], preparation: null, foundAddons: [] }
  */
-export function extractModifiers(words) {
-    const result = { additions: [], removals: [], preparation: null };
+export function extractModifiers(words, processedIndices, allAddons = []) {
+    const result = { additions: [], removals: [], preparation: null, foundAddons: [] };
+
+    // Se não passou set externo, cria um local (mas ideal é passar)
+    const indices = processedIndices || new Set();
 
     for (let i = 0; i < words.length; i++) {
+        if (indices.has(i)) continue;
+
         const word = words[i];
+
+        // --- DETECÇÃO DE PREPARO (mal passado, etc) ---
         const next = words[i + 1] || '';
 
-        // Remoções: "sem bacon", "tira cebola"
-        if (MODIFIERS.REMOVE.includes(word) && next) {
-            if (KNOWN_INGREDIENTS.includes(next)) {
-                result.removals.push(next);
-                i++; // Pular próxima palavra
-            }
-        }
-
-        // Adições: "com bacon", "adicional queijo"
-        if (MODIFIERS.ADD.includes(word) && next) {
-            if (KNOWN_INGREDIENTS.includes(next)) {
-                result.additions.push(next);
-                i++;
-            }
-        }
-
-        // Preparo: "mal passado", "ao ponto"
         if (word === 'mal' || word === 'malpassado') {
             result.preparation = 'mal passado';
+            indices.add(i);
+            continue;
         } else if (word === 'ao' && next === 'ponto') {
             result.preparation = 'ao ponto';
+            indices.add(i); indices.add(i + 1);
             i++;
+            continue;
         } else if (word === 'bem' && (next === 'passado' || next === 'passada')) {
             result.preparation = 'bem passado';
+            indices.add(i); indices.add(i + 1);
             i++;
+            continue;
+        }
+
+        // --- DETECÇÃO DE REMOÇÕES (sem, tirar) ---
+        if (MODIFIERS.REMOVE.includes(word) && next) {
+            // Verifica se próxima palavra é ingrediente conhecido ou qualquer coisa
+            // Para remoção, aceitamos mais livremente pois não impacta preço
+            result.removals.push(next);
+            indices.add(i); indices.add(i + 1);
+            i++;
+            continue;
+        }
+
+        // --- DETECÇÃO DE ADIÇÕES (com, mais, extra) ---
+        if (MODIFIERS.ADD.includes(word) && next) {
+            let matchedAddon = null;
+            let matchLength = 0;
+
+            // Tentar encontrar um addon válido nas próximas palavras (1 a 3 palavras)
+            // Ex: "com bacon" ou "com queijo cheddar"
+            if (allAddons.length > 0) {
+                for (let len = 3; len >= 1; len--) {
+                    if (i + 1 + len > words.length) continue;
+
+                    const comboWords = words.slice(i + 1, i + 1 + len);
+                    const comboText = comboWords.join(' ');
+                    const normCombo = normalizeText(comboText);
+
+                    // Busca exata ou fuzzy no nome do addon
+                    // (Poderia usar findProductFuzzy aqui também se quisesse ser muito robusto,
+                    // mas busca direta costuma bastar para adicionais)
+                    const found = allAddons.find(a => {
+                        const normName = normalizeText(a.name);
+                        return normName === normCombo || normName.includes(normCombo);
+                    });
+
+                    if (found) {
+                        matchedAddon = found;
+                        matchLength = len;
+                        break;
+                    }
+                }
+            }
+
+            if (matchedAddon) {
+                // É um adicional pago!
+                result.foundAddons.push(matchedAddon);
+                console.log(`[ExtractModifiers] 💰 Adicional pago detectado: ${matchedAddon.name} (+R$ ${matchedAddon.price})`);
+
+                // Marcar indices: "com" + palavras do addon
+                indices.add(i); // "com"
+                for (let k = 1; k <= matchLength; k++) {
+                    indices.add(i + k);
+                }
+
+                i += matchLength;
+            } else {
+                // Não achou no banco, trata como observação de texto simples
+                if (KNOWN_INGREDIENTS.includes(next) || next.length > 2) {
+                    result.additions.push(next);
+                    indices.add(i); indices.add(i + 1);
+                    i++;
+                }
+            }
         }
     }
 
@@ -257,11 +317,7 @@ export function splitIntoSegments(message) {
  * Encontrar TODOS os produtos em uma mensagem
  * @returns {Array<{product, quantity, notes, matchedKeyword}>}
  */
-/**
- * Encontrar todos os produtos usando lógica do Bot Legado (Iterativa + Combinações)
- * Referência: src/core/analisePalavras.js (processarBebidas/processarLanches)
- */
-export async function findAllProducts(message, products, db, tenantId) {
+export async function findAllProducts(message, products, db, tenantId, allAddons = []) {
     const foundProducts = [];
     const segments = splitIntoSegments(message);
 
@@ -297,13 +353,25 @@ export async function findAllProducts(message, products, db, tenantId) {
 
         console.log(`[WordAnalyzer] Words: ${JSON.stringify(words)}`);
 
-        // Extrair modificadores (simplificado: global por segmento por enquanto)
-        // const modifiers = extractModifiers(words);
-        // const notes = formatModifiersAsNotes(modifiers);
-        const notes = '';
-
         // Set para marcar índices já processados (evita duplicidade)
         const processedIndices = new Set();
+
+        // --- 1. Extrair modificadores (incluindo addons pagos) ---
+        const modifiers = extractModifiers(words, processedIndices, allAddons);
+
+        // Adicionar addons encontrados como produtos
+        for (const addon of modifiers.foundAddons) {
+            foundProducts.push({
+                product: addon,
+                quantity: 1, // Default 1 for addon found via "com X"
+                notes: '',
+                matchedKeyword: addon.name,
+                type: 'addon'
+            });
+        }
+
+        const notesFromModifiers = formatModifiersAsNotes(modifiers);
+        // Notas textuais (como "sem cebola", "bem passado") serão anexadas ao produto principal
 
         // Obter mapeamentos do banco uma única vez por segmento (para usar cache)
         const mappings = db ? await getMappings(db, tenantId) : {};
@@ -316,7 +384,6 @@ export async function findAllProducts(message, products, db, tenantId) {
             let matchLength = 0;
 
             // Tentativa de combinações (4 palavras ... 1 palavra)
-            // Prioriza frases mais longas (ex: "Coca 2L" > "Coca")
             for (let len = 4; len >= 1; len--) {
                 if (i + len > words.length) continue;
 
@@ -325,11 +392,8 @@ export async function findAllProducts(message, products, db, tenantId) {
                 const normCombo = normalizeText(comboText);
 
                 // PROTEÇÃO: Ignorar combos que são apenas saudações/palavras comuns
-                // Isso evita que "bom dia" dê match em "marmita media" (dia ⊂ media)
-                // Usa o Set mesclado (base + tenant)
                 const nonIgnoredWords = comboWords.filter(w => !ignoredWordsSet.has(w));
                 if (nonIgnoredWords.length === 0) {
-                    // Todas as palavras são ignoradas, pular este combo
                     continue;
                 }
 
@@ -341,7 +405,7 @@ export async function findAllProducts(message, products, db, tenantId) {
                     console.log(`[WordAnalyzer] ✨ Sinônimo encontrado: "${normCombo}" → produto ${productId}`);
                 }
 
-                // 1. Tentar mapeamento exato (banco) - DEVE ser exato para este combo
+                // 1. Tentar mapeamento exato (banco)
                 if (!match && mappings[normCombo]) {
                     match = { productId: mappings[normCombo], matchedKeyword: normCombo };
                 }
@@ -354,10 +418,8 @@ export async function findAllProducts(message, products, db, tenantId) {
                     }
                 }
 
-                // Se encontrou match, é o "melhor" para este start index 'i', pois estamos indo do maior pro menor
                 if (match) {
                     // NOVA PROTEÇÃO: Verificar se há termos de volume no segmento que NÃO foram consumidos pelo combo
-                    // Ex: Se o segmento é ["coca", "2", "l"] e o combo é apenas ["coca"], verificar se "2l" conflita
                     const remainingWordsInSegment = words.slice(i + len);
                     let segmentHasUnmappedVolume = false;
 
@@ -366,17 +428,13 @@ export async function findAllProducts(message, products, db, tenantId) {
                         const rnext = remainingWordsInSegment[k + 1] || '';
                         const rcombo = (rw + rnext).toLowerCase().replace(/\s/g, '');
 
-                        // Verificar se é um padrão de volume (2l, 600ml, litros, etc)
                         const volumePatterns = /^(\d+\.?\d*)(l|litro|litros|lts|ml)$/i;
                         const volumeWords = ['litros', 'litro', 'lts', 'ml'];
 
                         if (volumePatterns.test(rw) || volumePatterns.test(rcombo) || volumeWords.includes(rw)) {
-                            // O segmento tem um volume não consumido pelo combo
-                            // Verificar se o produto é uma bebida e não tem este volume específico
                             const product = products.find(p => p.id === match.productId);
                             if (product) {
                                 const productNameNorm = normalizeText(product.name);
-                                // Se o produto NÃO contém o volume mencionado, rejeitar o match
                                 if (!productNameNorm.includes(rw) && !productNameNorm.includes(rcombo)) {
                                     console.log(`[WordAnalyzer] ⛔ Rejeitando "${product.name}" - segmento tem volume "${rcombo || rw}" não presente no produto.`);
                                     segmentHasUnmappedVolume = true;
@@ -387,7 +445,6 @@ export async function findAllProducts(message, products, db, tenantId) {
                     }
 
                     if (segmentHasUnmappedVolume) {
-                        // Não aceitar este match, continuar procurando (ou nenhum match será encontrado)
                         continue;
                     }
 
@@ -401,13 +458,10 @@ export async function findAllProducts(message, products, db, tenantId) {
                 const product = products.find(p => p.id === bestMatch.productId);
 
                 if (product) {
-                    // Extrair quantidade - pode estar em dois lugares:
-                    // 1. Palavra ANTERIOR ao match (ex: "2 marmita" → "2" está antes)
-                    // 2. PRIMEIRA palavra do match (ex: "duas marmitas" → "duas" está no início do combo)
                     let quantity = 1;
                     let quantityExtracted = false;
 
-                    // Tentativa 1: Palavra anterior ao início do match (i - 1)
+                    // Tentativa 1: Palavra anterior
                     const prevIdx = i - 1;
                     if (prevIdx >= 0 && !processedIndices.has(prevIdx)) {
                         const prevWord = words[prevIdx];
@@ -421,7 +475,7 @@ export async function findAllProducts(message, products, db, tenantId) {
                         }
                     }
 
-                    // Tentativa 2: Primeira palavra do match (para casos como "duas marmitas grandes")
+                    // Tentativa 2: Primeira palavra do match
                     if (!quantityExtracted && matchLength > 1) {
                         const firstMatchWord = words[i];
                         const extracted = extractQuantity([firstMatchWord]);
@@ -433,53 +487,15 @@ export async function findAllProducts(message, products, db, tenantId) {
                         }
                     }
 
-                    // Evitar adicionar produto se for apenas um número isolado que deu match errado
-                    // (Ex: "2" dando match em algo, mas já foi usado como quantidade)
-                    // ... (logica coberta pelo processedIndices.has(i))
-
-                    // NOVO: Verificar se sobrou alguma medida conflitante no resto do segmento
-                    // (Ex: Se mandou "Coca 2L", não deixar "Coca" dar match em "Coca Lata" ignorando o "2L")
-                    const segmentRemainingWords = words.slice(i + matchLength);
-                    let contextConflict = false;
-
-                    const productMeasures = product.name.split(/\s+/).map(findMeasureGroup).filter(m => m !== null);
-                    if (productMeasures.length > 0) {
-                        for (let j = 0; j < segmentRemainingWords.length; j++) {
-                            const uw = segmentRemainingWords[j];
-                            const unext = segmentRemainingWords[j + 1] || '';
-                            const ucombo = (uw + unext).toLowerCase().replace(/\s/g, '');
-
-                            // Tenta individual e combo (ex: "2" + "l" = "2l")
-                            const um1 = findMeasureGroup(uw);
-                            const um2 = findMeasureGroup(ucombo);
-                            const um = um2 || um1;
-
-                            // PRIORIDADE: Se encontrou uma medida conflitante, é conflito!
-                            if (um && productMeasures.some(pm => pm.category === um.category && pm.index !== um.index)) {
-                                console.log(`[WordAnalyzer] 🚨 Conflito: "${product.name}" conflita com termo "${um2 ? ucombo : uw}" no segmento.`);
-                                contextConflict = true;
-                                break;
-                            }
-
-                            // Se encontramos um número que NÃO é parte de uma medida (combo não deu match),
-                            // provavelmente é o início de outro produto (Ex: "2 pequenas, 1 grande").
-                            // Só paramos se o próximo termo não forma uma medida.
-                            if (/^\d+$/.test(uw) && !um2) {
-                                break;
-                            }
-                        }
-                    }
-
-                    if (contextConflict) {
-                        bestMatch = null;
-                        continue;
-                    }
+                    // --- ANEXAR NOTAS DETECTADAS ---
+                    const finalNotes = notesFromModifiers;
 
                     foundProducts.push({
                         product,
                         quantity,
-                        notes, // Nota: Modificadores ainda globais, pode melhorar no futuro
-                        matchedKeyword: bestMatch.matchedKeyword
+                        notes: finalNotes,
+                        matchedKeyword: bestMatch.matchedKeyword,
+                        type: 'product'
                     });
 
                     console.log(`[WordAnalyzer] ✅ ADD: ${quantity}x ${product.name} (Match: "${words.slice(i, i + matchLength).join(' ')}")`);
@@ -488,24 +504,14 @@ export async function findAllProducts(message, products, db, tenantId) {
                     for (let k = 0; k < matchLength; k++) {
                         processedIndices.add(i + k);
                     }
-
-                    // Avançar índice principal (menos 1 pois o loop fará i++)
-                    // Na verdade, o 'continue' do loop principal já checa processedIndices, 
-                    // mas podemos avançar manualmente para eficiência
-                    // i += matchLength - 1; 
                 }
             }
         } // Close words loop
 
         // --- PÓS-PROCESSAMENTO DO SEGMENTO ---
-        // Verificar palavras que sobraram (não viraram produto)
-        // e anexar como observação do último produto encontrado
-
         const unconsumedWords = [];
         for (let i = 0; i < words.length; i++) {
             if (!processedIndices.has(i)) {
-                // NOVO: Filtrar palavras que estão em ignoredWordsSet
-                // Isso evita que "bom" de "bom dia" ou "bom ppap" seja adicionado como observação
                 if (!ignoredWordsSet.has(words[i])) {
                     unconsumedWords.push(words[i]);
                 }
@@ -513,52 +519,31 @@ export async function findAllProducts(message, products, db, tenantId) {
         }
 
         if (unconsumedWords.length > 0 && foundProducts.length > 0) {
-            // Filtrar palavras "lixo" que não são obrigatoriamente observações
             const extraIgnoreWords = ['quero', 'gostaria', 'me', 've', 'uma', 'um', 'uns', 'umas', 'por', 'favor', 'para', 'com', 'sem', 'e', 'mais'];
-
             const filteredWords = unconsumedWords.filter(w => !extraIgnoreWords.includes(w));
 
-            if (filteredWords.length === 0) {
-                // Não há palavras válidas para observação, pular
-                continue;
-            }
+            if (filteredWords.length === 0) continue;
 
             const rawNote = filteredWords.join(' ').trim();
-
-            // NOVO: Requisitos mais rigorosos para considerar como observação válida:
-            // 1. Deve ter pelo menos 3 caracteres
-            // 2. Não pode ser apenas um número
-            // 3. Deve ter pelo menos uma palavra "significativa" (não apenas conectores)
-
-            const isValidNote =
-                rawNote.length >= 3 &&
-                !/^\d+$/.test(rawNote) &&  // Não é apenas número
-                filteredWords.length > 0;
+            const isValidNote = rawNote.length >= 3 && !/^\d+$/.test(rawNote) && filteredWords.length > 0;
 
             if (isValidNote) {
-                const lastProduct = foundProducts[foundProducts.length - 1];
+                // Find last MAIN product
+                const lastProduct = foundProducts.filter(p => p.type === 'product').pop();
 
-                // Evitar duplicar notas
-                if (!lastProduct.notes) lastProduct.notes = '';
-
-                // Se já tem nota, adiciona vírgula
-                if (lastProduct.notes.length > 0) lastProduct.notes += ', ';
-
-                lastProduct.notes += rawNote;
-                console.log(`[WordAnalyzer] 📝 Obs anexada a "${lastProduct.product.name}": "${rawNote}"`);
+                if (lastProduct) {
+                    if (!lastProduct.notes) lastProduct.notes = '';
+                    if (lastProduct.notes.length > 0) lastProduct.notes += ', ';
+                    lastProduct.notes += rawNote;
+                    console.log(`[WordAnalyzer] 📝 Obs texto anexada a "${lastProduct.product.name}": "${rawNote}"`);
+                }
             }
         }
-
-
-
     }
 
     return foundProducts;
 }
 
-/**
- * Encontrar produto por fuzzy match
- */
 /**
  * Encontrar produto por fuzzy match (Sistema de Pontuação)
  */
@@ -718,10 +703,6 @@ export function findProductFuzzy(words, products, isStrict = false, ignoredWords
             }
 
             // Verificar o inverso: Palavras críticas no produto que NÃO estão no input
-            // Ex: Input "Coca", Produto "Coca 2L". O produto tem "2L" (crítico) mas input não.
-            // Isso deve diminuir o score para evitar que "Coca" selecione "Coca 2L" se houver "Coca Lata" ou "Coca" simples.
-            // Mas no modo não-estrito (busca vaga), as vezes queremos isso.
-            // No modo estrito (n-gram), seremos mais rigorosos.
             if (isStrict) {
                 const productHasCritical = productWords.filter(pw => criticalKeywords.some(k => pw.includes(k)));
                 const missingCriticalInInput = productHasCritical.filter(pw => !normalizedWords.some(nw => nw.includes(pw) || pw.includes(nw)));
@@ -744,7 +725,6 @@ export function findProductFuzzy(words, products, isStrict = false, ignoredWords
     }
 
     // Threshold de aceitação
-    // Modo estrito exige score maior para evitar falsos positivos em n-grams
     const threshold = isStrict ? 25 : 15;
 
     if (maxScore >= threshold) {
@@ -763,82 +743,46 @@ export function findProductById(id, products) {
 
 /**
  * Analisar mensagem e retornar ações detectadas
- * VERSÃO MELHORADA: Suporta múltiplos produtos
+ * VERSÃO MELHORADA: Suporta múltiplos produtos e addons
  */
 export async function analyzeMessage(message, menu, cart, db = null, tenantId = null) {
     const words = tokenize(message);
     const actions = [];
 
     // Detectar intenções especiais primeiro
-    if (matchesIntent(words, INTENT_KEYWORDS.MENU)) {
-        actions.push({ type: 'SHOW_MENU' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.PIX)) {
-        actions.push({ type: 'SHOW_PIX' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.REMOVE_ITEM)) {
-        actions.push({ type: 'REMOVE_ITEM' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.DELIVERY)) {
-        actions.push({ type: 'DELIVERY' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.PICKUP)) {
-        actions.push({ type: 'PICKUP' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.CONFIRM)) {
-        actions.push({ type: 'CONFIRM' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.CANCEL)) {
-        actions.push({ type: 'CANCEL' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.BACK)) {
-        actions.push({ type: 'BACK' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.HELP)) {
-        actions.push({ type: 'HELP' });
-    }
-    if (matchesIntent(words, INTENT_KEYWORDS.RESET)) {
-        actions.push({ type: 'RESET' });
-    }
+    if (matchesIntent(words, INTENT_KEYWORDS.MENU)) actions.push({ type: 'SHOW_MENU' });
+    if (matchesIntent(words, INTENT_KEYWORDS.PIX)) actions.push({ type: 'SHOW_PIX' });
+    if (matchesIntent(words, INTENT_KEYWORDS.REMOVE_ITEM)) actions.push({ type: 'REMOVE_ITEM' });
+    if (matchesIntent(words, INTENT_KEYWORDS.DELIVERY)) actions.push({ type: 'DELIVERY' });
+    if (matchesIntent(words, INTENT_KEYWORDS.PICKUP)) actions.push({ type: 'PICKUP' });
+    if (matchesIntent(words, INTENT_KEYWORDS.CONFIRM)) actions.push({ type: 'CONFIRM' });
+    if (matchesIntent(words, INTENT_KEYWORDS.CANCEL)) actions.push({ type: 'CANCEL' });
+    if (matchesIntent(words, INTENT_KEYWORDS.BACK)) actions.push({ type: 'BACK' });
+    if (matchesIntent(words, INTENT_KEYWORDS.HELP)) actions.push({ type: 'HELP' });
+    if (matchesIntent(words, INTENT_KEYWORDS.RESET)) actions.push({ type: 'RESET' });
 
     // Detectar MÚLTIPLOS produtos
     const products = menu?.products || [];
-    const foundProducts = await findAllProducts(message, products, db, tenantId);
+    const allAddons = menu?.allAddons || [];
+
+    // Passar allAddons para busca
+    const foundProducts = await findAllProducts(message, products, db, tenantId, allAddons);
 
     for (const found of foundProducts) {
         actions.push({
             type: 'ADD_PRODUCT',
             product: found.product,
             quantity: found.quantity,
-            notes: found.notes
+            notes: found.notes,
+            itemType: found.type || 'product' // Pass the detected type (product or addon)
         });
     }
 
-    // Detectar resposta numérica (escolha de opção)
-    // DESATIVADO: Cliente pediu para remover seleção por número. Apenas por nome.
-    /*
-    const strictNumberRegex = /^(\d+)$|^(item|opcao|opção|numero|número)\s*(\d+)$/i;
-    const numberMatch = message.trim().match(strictNumberRegex);
-
-    if (numberMatch && foundProducts.length === 0) {
-        // Se deu match, o número está no grupo 1 ou 3
-        const numStr = numberMatch[1] || numberMatch[3];
-        actions.push({
-            type: 'NUMERIC_CHOICE',
-            value: parseInt(numStr)
-        });
-    }
-    */
-
-    // 4. Se não achou NADA, verificar se é apenas saudação ou pedido de menu explícito
-
-    // Saudações -> GREETING (Mostra Welcome Message com Link)
-    const greetingRegex = /^(oi|ola|olá|opa|bom dia|boa tarde|boa noite|inicio|início|começar|comecar)\b/i;
-
-    // Pedido explícito de cardápio -> SHOW_MENU (Mostra lista de texto)
-    const menuRegex = /^(menu|cardapio|cardápio)\b/i;
-
+    // 4. Se não achou NADA (e sem produtos), verificar saudação/menu
     if (foundProducts.length === 0 && actions.length === 0) {
+        const greetingRegex = /^(oi|ola|olá|opa|bom dia|boa tarde|boa noite|inicio|início|começar|comecar)\b/i;
+        const menuRegex = /^(menu|cardapio|cardápio)\b/i;
+
         if (greetingRegex.test(message)) {
             actions.push({ type: 'GREETING' });
         } else if (menuRegex.test(message)) {

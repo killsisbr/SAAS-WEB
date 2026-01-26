@@ -60,7 +60,7 @@ export async function processMessage(params) {
         // Isso permite adicionar itens mesmo estando no meio da coleta de endereço/pagamento
         for (const action of actions) {
             if (action.type === 'ADD_PRODUCT') {
-                cartService.addItem(tenantId, customerId, action.product, action.quantity, action.notes, 'product');
+                cartService.addItem(tenantId, customerId, action.product, action.quantity, action.notes, action.itemType || 'product');
             }
         }
 
@@ -518,6 +518,12 @@ async function handleObservation(params, cart, actions) {
 
     if (message.trim().length > 0 && message.toLowerCase() !== 'n') {
         cart.observation = message.trim();
+    }
+
+    // LÓGICA DE RETIRADA: Pular etapa de pagamento
+    if (cart.deliveryType === 'pickup') {
+        cart.paymentMethod = 'PAGAR_NA_RETIRADA'; // Define método padrão
+        return await finalizeOrder(params, cart);
     }
 
     cartService.setState(tenantId, customerId, CART_STATES.PAYMENT);
