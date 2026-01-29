@@ -78,7 +78,8 @@ export function addItem(tenantId, customerId, product, quantity = 1, notes = '',
         price: Number(product.price) || 0,
         quantity: Number(quantity) || 1,
         notes: notes || '',
-        type
+        type,
+        addons: product.addons || [] // Copiar addons se existirem
     };
 
     cart.items.push(item);
@@ -117,7 +118,15 @@ export function removeItem(tenantId, customerId, productId) {
  */
 export function calculateTotal(cart) {
     return cart.items.reduce((sum, item) => {
-        return sum + (item.price * item.quantity);
+        let itemTotal = (item.price * item.quantity);
+
+        // Somar addons se existirem
+        if (item.addons && Array.isArray(item.addons)) {
+            const addonsTotal = item.addons.reduce((acc, addon) => acc + (Number(addon.price) || 0), 0);
+            itemTotal += (addonsTotal * item.quantity);
+        }
+
+        return sum + itemTotal;
     }, 0);
 }
 

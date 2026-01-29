@@ -222,17 +222,17 @@ export default function (db, broadcast) {
             for (const item of items) {
                 const product = await db.get('SELECT * FROM products WHERE id = ?', [item.productId]);
                 if (product) {
-                    const itemTotal = product.price * item.quantity;
+                    const itemTotal = Number(product.price) * Number(item.quantity);
                     subtotal += itemTotal;
 
                     // Calcular adicionais
                     let addonsTotal = 0;
                     if (item.addons && Array.isArray(item.addons)) {
                         for (const addon of item.addons) {
-                            addonsTotal += addon.price || 0;
+                            addonsTotal += Number(addon.price) || 0;
                         }
                     }
-                    subtotal += addonsTotal * item.quantity;
+                    subtotal += addonsTotal * Number(item.quantity);
 
                     itemsWithDetails.push({
                         productId: product.id,

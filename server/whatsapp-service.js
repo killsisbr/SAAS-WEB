@@ -308,7 +308,7 @@ class WhatsAppService {
             }
         });
 
-        // Armazenar socket
+        // Armazenar sockettt
         this.clients.set(tenantId, sock);
     }
 
