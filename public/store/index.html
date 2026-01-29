@@ -2853,14 +2853,15 @@
 
         function toggleExtra(id, price, name) {
             const idx = selectedExtras.findIndex(e => e.id === id);
+            const safePrice = parseFloat(price) || 0;
             if (idx > -1) selectedExtras.splice(idx, 1);
-            else selectedExtras.push({ id, price, name });
+            else selectedExtras.push({ id, price: safePrice, name });
             updateModalPrice();
         }
 
         function updateModalPrice() {
-            const basePrice = currentItem?.price || 0;
-            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
+            const basePrice = parseFloat(currentItem?.price) || 0;
+            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
             const total = (basePrice + extrasTotal) * qty;
 
             // Tenta atualizar ambos os IDs posiveis
@@ -2915,7 +2916,8 @@
                 return;
             }
 
-            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
+            const extrasTotal = selectedExtras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
+            const basePrice = parseFloat(currentItem.price) || 0;
 
             // Montar item do carrinho com suporte a meio a meio
             const cartItem = {
@@ -2923,7 +2925,7 @@
                 qty,
                 obs: document.getElementById('modal-obs').value,
                 extras: [...selectedExtras],
-                totalPrice: (currentItem.price + extrasTotal) * qty,
+                totalPrice: (basePrice + extrasTotal) * qty,
                 // Dados de meio a meio
                 isHalfHalf: isHalfHalf,
                 secondFlavor: secondFlavor ? { ...secondFlavor } : null
@@ -3446,7 +3448,7 @@
             }
 
             // Montar resumo de confirmacao PREMIUM
-            let total = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+            let total = cart.reduce((acc, item) => acc + (parseFloat(item.totalPrice) || 0), 0);
             const subtotal = total;
             const finalTotal = checkoutType === 'entrega' ? (total + (deliveryOutOfRange ? 0 : deliveryFee)) : total;
 
