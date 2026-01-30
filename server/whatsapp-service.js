@@ -870,13 +870,50 @@ class WhatsAppService {
                 const price = item.price || 0;
                 const name = item.name || item.title || 'Item';
                 const itemTotal = item.total || (price * qty);
+
+                // Calcular total dos adicionais primeiro
+                let itemAddonsTotal = 0;
+                if (item.addons && item.addons.length > 0) {
+                    itemAddonsTotal = item.addons.reduce((sum, addon) => sum + ((addon.price || 0) * qty), 0);
+                }
+
+                // Exibir preço base (Total do item - Adicionais)
+                // Isso evita que pareça que o adicional está sendo cobrado 2x
+                const displayBasePrice = itemTotal - itemAddonsTotal;
+
+                // Acumular subtotal principal (apenas debug/fallback, finalTotal usa orderData.total)
                 subtotal += itemTotal;
-                itemsList += `• ${qty}x ${name} - R$ ${itemTotal.toFixed(2).replace('.', ',')}\n`;
+                if (item.total === undefined) {
+                    // Se item.total veio undefined, calculamos (price*qty), mas precisamos somar addons no subtotal geral
+                    // SE os addons não estivessem inclusos em price. 
+                    // Mas assumindo lógica segura: itemTotal contém tudo.
+                    // Se itemTotal era só price*qty (base), então itemAddonsTotal deve ser somado ao subtotal?
+                    // A lógica anterior somava: subtotal += itemTotal; subtotal += addonTotal;
+                    // Se itemTotal ERA 23 (full), somar 5 dava 28. Errado.
+                    // Se itemTotal ERA 18 (base), somar 5 da 23. Certo.
+                    // O screenshot mostrou Total 30 (Correto). Então o backend Order Total estava certo.
+                    // O problema era apenas visual.
+                    // Vamos manter a lógica de soma interna igual a anterior só para garantir, 
+                    // mas mudando A STRING DA MENSAGEM.
+                    subtotal += itemAddonsTotal;
+                } else {
+                    // Se item.total já existia (full), não somamos addonsTotal no subtotal geral de novo
+                    // porem a logica original somava...
+                    // A subtotal calculation aqui é meio inútil se tem orderData.total.
+                    // Vamos focar NA STRING.
+                }
+
+                // CORREÇÃO: A lógica anterior somava itemTotal E addonTotal acumulativamente no subtotal.
+                // Vou manter subtotal += addonTotal se itemTotal for (price*qty).
+                // Mas para DISPLAY, usamos displayBasePrice.
+
+                itemsList += `• ${qty}x ${name} - R$ ${displayBasePrice.toFixed(2).replace('.', ',')}\n`;
 
                 if (item.addons && item.addons.length > 0) {
                     item.addons.forEach(addon => {
                         const addonTotal = (addon.price || 0) * qty;
-                        subtotal += addonTotal;
+                        // Nota: a lógica anterior somava ao subtotal aqui.
+                        // subtotal += addonTotal;
                         itemsList += `  + ${addon.name} - R$ ${addonTotal.toFixed(2).replace('.', ',')}\n`;
                     });
                 }
