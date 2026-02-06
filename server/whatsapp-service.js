@@ -58,8 +58,8 @@ class WhatsAppService {
         this.autoReconnectEnabled = true;
         this.healthCheckInterval = null;
         this.reconnectAttempts = new Map(); // tenantId -> attempts
-        this.maxReconnectAttempts = 5;
-        this.reconnectDelay = 30000; // 30 segundos
+        this.maxReconnectAttempts = 15;
+        this.reconnectDelay = 10000; // 10 segundos (base para exponential backoff)
 
         // Garantir que a tabela de mapeamento existe
         this.ensurePidJidTable();
@@ -144,7 +144,7 @@ class WhatsAppService {
             clearInterval(this.healthCheckInterval);
         }
 
-        const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
+        const CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutos
 
         this.healthCheckInterval = setInterval(async () => {
             for (const [tenantId, sock] of this.clients) {
@@ -160,7 +160,7 @@ class WhatsAppService {
             }
         }, CHECK_INTERVAL);
 
-        console.log('[WhatsApp] Health check iniciado (intervalo: 5 min)');
+        console.log('[WhatsApp] Health check iniciado (intervalo: 2 min)');
     }
 
     /**
@@ -172,19 +172,29 @@ class WhatsAppService {
         if (attempts >= this.maxReconnectAttempts) {
             console.error(`[WhatsApp] Max tentativas atingidas para tenant ${tenantId}`);
             this.statuses.set(tenantId, 'FAILED');
+            // Agendar reset automatico em 1 hora para tentar novamente
+            console.log(`[WhatsApp] Agendando auto-reset em 1h para tenant ${tenantId}`);
+            setTimeout(() => {
+                console.log(`[WhatsApp] Auto-reset executado para tenant ${tenantId}`);
+                this.reconnectAttempts.set(tenantId, 0);
+                this.initializeForTenant(tenantId);
+            }, 60 * 60 * 1000);
             return;
         }
 
         this.reconnectAttempts.set(tenantId, attempts + 1);
-        console.log(`[WhatsApp] Tentativa ${attempts + 1} de reconexao para tenant ${tenantId}`);
+
+        // Exponential backoff: 10s, 20s, 40s, 80s, ... max 5min
+        const delay = Math.min(this.reconnectDelay * Math.pow(2, attempts), 5 * 60 * 1000);
+        console.log(`[WhatsApp] Tentativa ${attempts + 1} de reconexao para tenant ${tenantId} (delay: ${Math.round(delay / 1000)}s)`);
 
         try {
             await this.initializeForTenant(tenantId);
             this.reconnectAttempts.set(tenantId, 0); // Reset on success
         } catch (err) {
             console.error(`[WhatsApp] Falha ao reconectar:`, err.message);
-            // Agendar proxima tentativa
-            setTimeout(() => this.reconnectTenant(tenantId), this.reconnectDelay);
+            // Agendar proxima tentativa com backoff
+            setTimeout(() => this.reconnectTenant(tenantId), delay);
         }
     }
 
@@ -255,21 +265,24 @@ class WhatsAppService {
             }
 
             if (connection === 'close') {
-                const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+                // [FIX] Corrigido bug: instanceof retorna boolean, não objeto
+                const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-                console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Reconectando: ${shouldReconnect}`);
+                console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Status: ${statusCode}, Reconectando: ${shouldReconnect}`);
 
                 if (shouldReconnect) {
                     this.statuses.set(tenantId, 'RECONNECTING');
-                    // Reconectar automaticamente
-                    setTimeout(() => this.initializeForTenant(tenantId), 5000);
+                    // Delay randomizado para evitar rate-limit do WhatsApp
+                    const delay = 5000 + Math.random() * 5000; // 5-10 segundos
+                    setTimeout(() => this.initializeForTenant(tenantId), delay);
                 } else {
                     this.statuses.set(tenantId, 'LOGGED_OUT');
                     this.clients.delete(tenantId);
                     // Apagar sessao se foi logout
                     try {
                         fs.rmSync(authDir, { recursive: true, force: true });
-                    } catch (e) { }
+                    } catch (e) { /* ignore */ }
                 }
             } else if (connection === 'open') {
                 console.log(`WhatsApp pronto para tenant ${tenantId}`);
