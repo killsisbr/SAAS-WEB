@@ -7,7 +7,7 @@
     <title>Carregando...</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Press+Start+2P&family=Lato:wght@300;400;700&family=Quicksand:wght@400;600;700&family=Gloria+Hallelujah&display=swap"
         rel="stylesheet">
     <!-- Leaflet CSS para o mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -147,6 +147,856 @@
             --border-style: solid;
             --shadow-offset: 0px;
             --modal-rotate: 0deg;
+        }
+
+        [data-theme="modern"] {
+            --primary-red: #2B2B2B;
+            --bg-color: #F5F5F7;
+            --dark: #D1D1D6;
+            --yellow: #007AFF;
+            --card-bg: #FFFFFF;
+            --text-color: #1C1C1E;
+            --accent-blue: #5856D6;
+            --pattern-opacity: 0;
+            --radius: 12px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        [data-theme="compact"] {
+            --primary-red: #333333;
+            --bg-color: #f8f9fa;
+            --dark: #e9ecef;
+            --yellow: #228be6;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --accent-blue: #4c6ef5;
+            --pattern-opacity: 0;
+            --radius: 8px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        /* COMPACT THEME STYLES */
+        .product-compact-item {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--dark);
+            padding: 12px 0;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .product-compact-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-compact-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            background-color: #f1f3f5;
+            flex-shrink: 0;
+        }
+
+        .product-compact-info {
+            flex: 1;
+        }
+
+        .product-compact-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        [data-theme="compact"] .category-section h2 {
+            font-size: 1.5rem !important;
+            /* Smaller category titles */
+            background: transparent !important;
+            padding: 0 !important;
+            border: none !important;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-family: var(--font-main) !important;
+            font-weight: 700;
+            font-style: normal !important;
+        }
+
+        [data-theme="compact"] .grid {
+            gap: 0 !important;
+            /* Remove gap in compact grid */
+        }
+
+        [data-theme="compact"] .category-section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        /* === TEMA ELEGANT (LISTA PREMIUM) === */
+        [data-theme="elegant"] {
+            --primary-red: #D4AF37;
+            /* Dourado */
+            --bg-color: #121212;
+            /* Preto Fosco */
+            --dark: #D4AF37;
+            --yellow: #F4E0AO;
+            --card-bg: #1E1E1E;
+            --text-color: #E0E0E0;
+            --accent-blue: #D4AF37;
+            --pattern-opacity: 0.05;
+            --radius: 4px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Lato', sans-serif;
+            --font-display: 'Playfair Display', serif;
+        }
+
+        [data-theme="elegant"] .bebas {
+            font-family: var(--font-display) !important;
+            letter-spacing: 0;
+            font-weight: 700;
+            font-style: italic;
+            text-transform: none;
+        }
+
+        .product-elegant-item {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 24px 0;
+            gap: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-elegant-item:hover {
+            padding-left: 10px;
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.05), transparent);
+        }
+
+        .product-elegant-image {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-red);
+            padding: 2px;
+        }
+
+        /* === TEMA GLASS (GRID MODERNO) === */
+        [data-theme="glass"] {
+            --primary-red: #ffffff;
+            --bg-color: #2c0e52;
+            /* Sera substituido por gradient */
+            --dark: rgba(255, 255, 255, 0.2);
+            --yellow: #00d4ff;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --accent-blue: #bd00ff;
+            --pattern-opacity: 0;
+            --radius: 24px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        [data-theme="glass"] body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #2c0e52);
+            background-attachment: fixed;
+        }
+
+        [data-theme="glass"] .logo-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 30px;
+        }
+
+        [data-theme="glass"] .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="glass"] .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* === TEMA SOCIAL (RODOZIO/FEED) === */
+        [data-theme="social"] {
+            --primary-red: #ff0055;
+            --bg-color: #000000;
+            --dark: #333333;
+            --yellow: #00f2ff;
+            --card-bg: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-blue: #00f2ff;
+            --pattern-opacity: 0;
+            --radius: 16px;
+            --border-width: 0px;
+            --border-style: none;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        .product-social-card {
+            position: relative;
+            margin-bottom: 24px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            padding-bottom: 16px;
+        }
+
+        .social-img-container {
+            width: 100%;
+            aspect-ratio: 4/5;
+            position: relative;
+        }
+
+        .social-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .social-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px 0;
+        }
+
+        .social-btn-pedir {
+            background: var(--primary-red);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* === TEMA ARCADE (GAME 8-BIT) === */
+        [data-theme="arcade"] {
+            --primary-red: #ff00de;
+            /* Neon Pink */
+            --bg-color: #1a0b2e;
+            /* Dark Purple */
+            --dark: #43ffff;
+            /* Cyan Border */
+            --yellow: #43ffff;
+            --card-bg: #11081f;
+            --text-color: #43ffff;
+            --accent-blue: #ff00de;
+            --pattern-opacity: 0.1;
+            --radius: 0px;
+            --border-width: 4px;
+            --border-style: dashed;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+            --font-main: 'Press Start 2P', cursive;
+        }
+
+        [data-theme="arcade"] .bebas {
+            font-family: 'Press Start 2P', cursive !important;
+            font-size: 1rem !important;
+            line-height: 1.8;
+            letter-spacing: 0;
+        }
+
+        [data-theme="arcade"] h3 {
+            font-size: 0.8rem !important;
+            line-height: 1.5;
+        }
+
+        [data-theme="arcade"] p {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #ff91fb;
+        }
+
+        .product-arcade-card {
+            background: var(--card-bg);
+            border: 4px solid var(--dark);
+            padding: 16px;
+            position: relative;
+            box-shadow: 6px 6px 0px var(--primary-red);
+            image-rendering: pixelated;
+        }
+
+        .product-arcade-card:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px var(--primary-red);
+        }
+
+        .arcade-btn {
+            background: var(--primary-red);
+            color: white;
+            border: 2px solid white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        /* === MODERN THEME BOTTOM NAV === */
+        #modern-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-top: 1px solid var(--dark);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        [data-theme="modern"] #modern-bottom-nav,
+        [data-theme="modern-list"] #modern-bottom-nav,
+        [data-theme="retro-list"] #modern-bottom-nav,
+        [data-theme="midnight-list"] #modern-bottom-nav,
+        [data-theme="vibe-list"] #modern-bottom-nav,
+        [data-theme="doodle-list"] #modern-bottom-nav,
+        [data-theme="luxury-list"] #modern-bottom-nav,
+        [data-theme="matrix-list"] #modern-bottom-nav,
+        [data-theme="candy-list"] #modern-bottom-nav,
+        [data-theme="compact"] #modern-bottom-nav,
+        [data-theme="organic"] #modern-bottom-nav,
+        [data-theme="neon"] #modern-bottom-nav,
+        [data-theme="sketch"] #modern-bottom-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        /* Ocultar boiao flutuante padrao nestes temas */
+        [data-theme="modern"] #floating-cart-btn,
+        [data-theme="modern-list"] #floating-cart-btn,
+        [data-theme="retro-list"] #floating-cart-btn,
+        [data-theme="midnight-list"] #floating-cart-btn,
+        [data-theme="vibe-list"] #floating-cart-btn,
+        [data-theme="doodle-list"] #floating-cart-btn,
+        [data-theme="luxury-list"] #floating-cart-btn,
+        [data-theme="matrix-list"] #floating-cart-btn,
+        [data-theme="candy-list"] #floating-cart-btn,
+        [data-theme="compact"] #floating-cart-btn,
+        [data-theme="organic"] #floating-cart-btn,
+        [data-theme="neon"] #floating-cart-btn,
+        [data-theme="sketch"] #floating-cart-btn {
+            display: none !important;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            color: var(--dark);
+            opacity: 0.6;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            position: relative;
+        }
+
+        .nav-item.active {
+            opacity: 1;
+            color: var(--brand);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-badge {
+            background: var(--primary-red);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 99px;
+            position: absolute;
+            top: 6px;
+            right: 25%;
+            font-weight: bold;
+        }
+
+        /* Modal Historico */
+        .order-card {
+            background: var(--card-bg);
+            border: 1px solid var(--dark);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        /* === TEMA ELEGANT (LISTA PREMIUM) === */
+        [data-theme="elegant"] {
+            --primary-red: #D4AF37;
+            /* Dourado */
+            --bg-color: #121212;
+            /* Preto Fosco */
+            --dark: #D4AF37;
+            --yellow: #F4E0A0;
+            --card-bg: #1E1E1E;
+            --text-color: #E0E0E0;
+            --accent-blue: #D4AF37;
+            --pattern-opacity: 0.05;
+            --radius: 4px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Lato', sans-serif;
+            --font-display: 'Playfair Display', serif;
+        }
+
+        [data-theme="elegant"] .bebas {
+            font-family: var(--font-display) !important;
+            letter-spacing: 0;
+            font-weight: 700;
+            font-style: italic;
+            text-transform: none;
+        }
+
+        .product-elegant-item {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 24px 0;
+            gap: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-elegant-item:hover {
+            padding-left: 10px;
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.05), transparent);
+        }
+
+        .product-elegant-image {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-red);
+            padding: 2px;
+        }
+
+        /* === TEMA GLASS (GRID MODERNO) === */
+        [data-theme="glass"] {
+            --primary-red: #ffffff;
+            --bg-color: #2c0e52;
+            /* Sera substituido por gradient */
+            --dark: rgba(255, 255, 255, 0.2);
+            --yellow: #00d4ff;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --accent-blue: #bd00ff;
+            --pattern-opacity: 0;
+            --radius: 24px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        [data-theme="glass"] body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #2c0e52);
+            background-attachment: fixed;
+        }
+
+        [data-theme="glass"] .logo-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 30px;
+        }
+
+        [data-theme="glass"] .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="glass"] .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* === TEMA SOCIAL (RODOZIO/FEED) === */
+        [data-theme="social"] {
+            --primary-red: #ff0055;
+            --bg-color: #000000;
+            --dark: #333333;
+            --yellow: #00f2ff;
+            --card-bg: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-blue: #00f2ff;
+            --pattern-opacity: 0;
+            --radius: 16px;
+            --border-width: 0px;
+            --border-style: none;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        .product-social-card {
+            position: relative;
+            margin-bottom: 24px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            padding-bottom: 16px;
+        }
+
+        .social-img-container {
+            width: 100%;
+            aspect-ratio: 4/5;
+            position: relative;
+        }
+
+        .social-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .social-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px 0;
+        }
+
+        .social-btn-pedir {
+            background: var(--primary-red);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* === TEMA ARCADE (GAME 8-BIT) === */
+        [data-theme="arcade"] {
+            --primary-red: #ff00de;
+            /* Neon Pink */
+            --bg-color: #1a0b2e;
+            /* Dark Purple */
+            --dark: #43ffff;
+            /* Cyan Border */
+            --yellow: #43ffff;
+            --card-bg: #11081f;
+            --text-color: #43ffff;
+            --accent-blue: #ff00de;
+            --pattern-opacity: 0.1;
+            --radius: 0px;
+            --border-width: 4px;
+            --border-style: dashed;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+            --font-main: 'Press Start 2P', cursive;
+        }
+
+        [data-theme="arcade"] .bebas {
+            font-family: 'Press Start 2P', cursive !important;
+            font-size: 1rem !important;
+            line-height: 1.8;
+            letter-spacing: 0;
+        }
+
+        [data-theme="arcade"] h3 {
+            font-size: 0.8rem !important;
+            line-height: 1.5;
+        }
+
+        [data-theme="arcade"] p {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #ff91fb;
+        }
+
+        .product-arcade-card {
+            background: var(--card-bg);
+            border: 4px solid var(--dark);
+            padding: 16px;
+            position: relative;
+            box-shadow: 6px 6px 0px var(--primary-red);
+            image-rendering: pixelated;
+        }
+
+        .product-arcade-card:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px var(--primary-red);
+        }
+
+        .arcade-btn {
+            background: var(--primary-red);
+            color: white;
+            border: 2px solid white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        /* === TEMA ORGANIC (🌿 NATUREZA) === */
+        [data-theme="organic"] {
+            --primary-red: #2d6a4f;
+            /* Verde Floresta */
+            --bg-color: #f1f8e9;
+            /* Creme Esverdeado */
+            --dark: #a2d149;
+            --yellow: #ffd60a;
+            --card-bg: #ffffff;
+            --text-color: #1b4332;
+            --accent-blue: #40916c;
+            --pattern-opacity: 0.1;
+            --radius: 20px;
+            --border-width: 0px;
+            --border-style: none;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+            --font-main: 'Quicksand', sans-serif;
+        }
+
+        .product-organic-item {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            margin-bottom: 12px;
+            padding: 16px;
+            border-radius: 24px;
+            gap: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.08);
+            border: 1px solid rgba(162, 209, 73, 0.2);
+        }
+
+        .product-organic-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f1f8e9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* === TEMA NEON NIGHT (🌃 CYBER) === */
+        [data-theme="neon"] {
+            --primary-red: #ff0055;
+            /* Neon Pink */
+            --bg-color: #050505;
+            /* Black */
+            --dark: #00f2ff;
+            /* Cyan */
+            --yellow: #00f2ff;
+            --card-bg: #111111;
+            --text-color: #ffffff;
+            --accent-blue: #bc1888;
+            --pattern-opacity: 0.05;
+            --radius: 4px;
+            --border-width: 2px;
+            --border-style: solid;
+            --shadow-offset: 0px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        .product-neon-item {
+            display: flex;
+            align-items: center;
+            background: #111111;
+            border: 1px solid #222;
+            margin-bottom: 16px;
+            padding: 16px;
+            gap: 16px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .product-neon-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-red);
+            box-shadow: 0 0 10px var(--primary-red);
+        }
+
+        .product-neon-item:hover {
+            border-color: var(--dark);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        .product-neon-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 4px;
+            object-fit: cover;
+            filter: grayscale(0.2) contrast(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* === TEMA SKETCH (🎨 DESENHO) === */
+        [data-theme="sketch"] {
+            --primary-red: #333333;
+            --bg-color: #fdf6e3;
+            /* Papel Antigo */
+            --dark: #555555;
+            --yellow: #2aa198;
+            --card-bg: transparent;
+            --text-color: #222222;
+            --accent-blue: #268bd2;
+            --pattern-opacity: 0.2;
+            --radius: 0px;
+            --border-width: 2px;
+            --border-style: solid;
+            --shadow-offset: 2px;
+            --modal-rotate: -1deg;
+            --font-main: 'Gloria Hallelujah', cursive;
+        }
+
+        [data-theme="sketch"] body {
+            background-image: radial-gradient(#d3d3d3 1px, transparent 1px);
+            background-size: 20px 20px;
+            /* Efeito papel quadriculado/pontilhado */
+        }
+
+        .product-sketch-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 2px solid #333;
+            gap: 16px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-sketch-img {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #333;
+            padding: 2px;
+            background: white;
+            transform: rotate(-2deg);
+            object-fit: cover;
+        }
+
+        .product-sketch-name {
+            font-family: 'Gloria Hallelujah', cursive;
+            font-size: 1.3rem;
+            text-decoration: underline;
+            text-decoration-style: wavy;
+        }
+
+        /* MODERN LIST STYLES */
+        .product-list-item {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: var(--border-width) var(--border-style) var(--dark);
+            border-radius: var(--radius);
+            padding: 16px;
+            gap: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+        }
+
+        .product-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: var(--yellow);
+        }
+
+        .product-list-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            background-color: #eee;
+        }
+
+        .product-list-info {
+            flex: 1;
+        }
+
+        .product-list-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 100px;
+        }
+
+        [data-theme="modern"] .neo-card,
+        [data-theme="modern"] .neo-button {
+            box-shadow: none !important;
+        }
+
+        [data-theme="modern"] .bebas {
+            font-family: 'Outfit', sans-serif !important;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
         body {
@@ -953,6 +1803,56 @@
         </div>
     </div>
 
+    <!-- BARRA DE NAVEGACAO INFERIOR (TEMA MODERN) -->
+    <div id="modern-bottom-nav">
+        <button class="nav-item active" onclick="scrollToTop()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span class="text-xs font-bold">Início</span>
+        </button>
+        <button class="nav-item" onclick="toggleCart()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span class="text-xs font-bold">Carrinho</span>
+            <span id="nav-cart-count" class="nav-badge hidden">0</span>
+        </button>
+        <button class="nav-item" onclick="openOrdersModal()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span class="text-xs font-bold">Pedidos</span>
+        </button>
+    </div>
+
+    <!-- MODAL DE PEDIDOS E HISTORICO -->
+    <div id="orders-history-modal" class="modal-overlay fixed inset-0 z-[500] px-4">
+        <div
+            class="paper-modal w-full max-w-md mx-auto my-auto p-6 bg-card border-2 border-dark rounded-3xl h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="bebas text-4xl text-brand">MEUS PEDIDOS</h2>
+                <button onclick="closeModal('orders-history-modal')"
+                    class="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="orders-list-container" class="flex-1 overflow-y-auto space-y-4 pr-2">
+                <!-- Pedidos serao renderizados aqui via JS -->
+                <div class="text-center py-10 opacity-50">
+                    <p>Nenhum pedido encontrado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== ESTADO DA APLICACAO =====
         let cart = [];
@@ -961,8 +1861,13 @@
         let selectedExtras = [];
         let checkoutType = 'entrega';
         let map, marker;
-        const themes = ['retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy'];
+        const themes = [
+            'retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy', 'modern', 'compact',
+            'elegant', 'glass', 'social', 'arcade', 'organic', 'neon', 'sketch',
+            'retro-list', 'midnight-list', 'vibe-list', 'doodle-list', 'luxury-list', 'matrix-list', 'candy-list'
+        ];
         let currentThemeIdx = 0;
+        let isLayoutList = false; // Flag para forcar layout de lista nos temas padrao
 
         // Dados da loja carregados da API
         let storeData = null;
@@ -1397,6 +2302,21 @@
                     }
                     console.log('storeData.products populado:', storeData.products.length, 'produtos');
 
+                    // === APLICAR TEMA E LAYOUT ===
+                    if (storeData.settings?.storeTheme) {
+                        const savedTheme = storeData.settings.storeTheme;
+                        if (themes.includes(savedTheme)) {
+                            currentThemeIdx = themes.indexOf(savedTheme);
+                            isLayoutList = false;
+                            let finalTheme = savedTheme;
+                            if (savedTheme && savedTheme.endsWith('-list')) {
+                                isLayoutList = true;
+                                finalTheme = savedTheme.replace('-list', '');
+                            }
+                            document.documentElement.setAttribute('data-theme', finalTheme);
+                        }
+                    }
+
                     renderMenu();
                 }
 
@@ -1407,19 +2327,6 @@
             }
 
             renderStore();
-
-            // Aplicar tema salvo nas configuracoes
-            if (storeData?.settings?.storeTheme) {
-                const savedTheme = storeData.settings.storeTheme;
-                if (themes.includes(savedTheme)) {
-                    currentThemeIdx = themes.indexOf(savedTheme);
-                    document.documentElement.setAttribute('data-theme', savedTheme);
-                    const themeLabel = document.getElementById('theme-label');
-                    if (themeLabel) {
-                        themeLabel.innerText = `Atual: ${savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)}`;
-                    }
-                }
-            }
 
             // Aplicar configuracoes de entrega/retirada
             applyDeliverySettings();
@@ -1600,6 +2507,22 @@
                 document.getElementById('store-type').textContent = formatBusinessType(storeData.business_type);
             }
 
+            // Aplicar tema salvo nas configuracoes
+            if (storeData?.settings?.storeTheme) {
+                const savedTheme = storeData.settings.storeTheme;
+                if (themes.includes(savedTheme)) {
+                    currentThemeIdx = themes.indexOf(savedTheme);
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    const themeLabel = document.getElementById('theme-label');
+                    if (themeLabel) {
+                        themeLabel.innerText = `Atual: ${savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)}`;
+                    }
+                }
+            } else {
+                // Fallback padrao
+                document.documentElement.setAttribute('data-theme', 'retro');
+            }
+
             document.getElementById('store-footer-name').textContent = storeData.name.toUpperCase();
 
             // WhatsApp
@@ -1610,7 +2533,7 @@
             // Marquee/ActionBar text
             renderMarquee();
 
-            // Renderizar categorias e produtos
+            // Renderizar categorias e produtos - agora ja sabe o tema!
             renderMenu();
             renderSidebar();
 
@@ -1812,10 +2735,31 @@
                 return;
             }
 
+            // Verificar tema atual para decidir layout
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            // MODERN AGORA USA GRID PADRAO (pedido do usuario)
+            const isCompact = currentTheme === 'compact';
+            const isElegant = currentTheme === 'elegant';
+            const isGlass = currentTheme === 'glass';
+            const isSocial = currentTheme === 'social';
+            const isArcade = currentTheme === 'arcade';
+            const isOrganic = currentTheme === 'organic';
+            const isNeon = currentTheme === 'neon';
+            const isSketch = currentTheme === 'sketch';
+
             menu.innerHTML = storeData.categories.map(cat => {
                 const displayMode = cat.display_mode || 'default';
                 const isCircular = displayMode === 'circular';
-                const gridClass = isCircular ? 'pizza-grid' : 'grid gap-10';
+
+                // Definir grid based on theme
+                let gridClass = isCircular ? 'pizza-grid' : 'grid gap-10';
+
+                if (isLayoutList || isCompact || isOrganic || isNeon || isSketch) gridClass = 'flex flex-col';
+                if (isElegant) gridClass = 'flex flex-col gap-4'; // Elegant tambem e lista, mas com gap
+                if (isSocial) gridClass = 'flex flex-col gap-8'; // Social e feed, gap maior
+
+                // Glass usa grid padrao, mas pode ter grid diferente se quiser
+                // Arcade usa grid padrao
 
                 return `
                     <div class="category-section" data-category="${cat.id}">
@@ -1825,11 +2769,175 @@
                             </h2>
                         </div>
                         <div class="${gridClass}">
-                            ${cat.products.map(prod => isCircular ? renderProductCardCircular(prod) : renderProductCard(prod)).join('')}
+                            ${cat.products.map(prod => {
+                    if (isCompact) return renderProductCompact(prod);
+                    if (isElegant) return renderProductElegant(prod);
+                    if (isSocial) return renderProductSocial(prod);
+                    if (isArcade) return renderProductArcade(prod);
+                    if (isOrganic) return renderProductOrganic(prod);
+                    if (isNeon) return renderProductNeon(prod);
+                    if (isSketch) return renderProductSketch(prod);
+                    if (isGlass) return renderProductCard(prod); // Glass usa card padrao com CSS alterado
+
+                    // Se for o modo lista forcada para temas padrao, usar renderProductList
+                    if (isLayoutList) return renderProductList(prod);
+
+                    // Modern usa o card padrao agora (com CSS flat)
+                    return isCircular ? renderProductCardCircular(prod) : renderProductCard(prod);
+                }).join('')}
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // === RENDERERS DE TEMAS ===
+
+        function renderProductOrganic(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100/f1f8e9/2d6a4f?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-organic-item" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-organic-img"
+                         onerror="this.src='https://placehold.co/100x100/f1f8e9/2d6a4f?text=IMG'">
+                    
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 2px;">${product.name}</h3>
+                        ${desc ? `<p style="font-size: 0.85rem; opacity: 0.7; margin: 0;">${desc}</p>` : ''}
+                        <div style="margin-top: 8px; color: var(--primary-red); font-weight: 700;">R$ ${priceStr}</div>
+                    </div>
+
+                    <div style="background: var(--primary-red); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProductNeon(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100/050505/ff0055?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-neon-item" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-neon-img"
+                         onerror="this.src='https://placehold.co/100x100/050505/ff0055?text=IMG'">
+                    
+                    <div style="flex: 1;">
+                        <h3 style="color: #fff; font-size: 1rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">${product.name}</h3>
+                        ${desc ? `<p style="font-size: 0.8rem; color: #888; margin: 0;">${desc}</p>` : ''}
+                    </div>
+
+                    <div style="text-align: right;">
+                        <div style="color: var(--dark); font-weight: 800; font-size: 1rem; text-shadow: 0 0 5px var(--dark);">R$ ${priceStr}</div>
+                        <div style="font-size: 0.7rem; color: var(--primary-red); margin-top: 4px;">ADD +</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProductSketch(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100/fdf6e3/333333?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-sketch-item" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-sketch-img"
+                         onerror="this.src='https://placehold.co/100x100/fdf6e3/333333?text=IMG'">
+                    
+                    <div style="flex: 1;">
+                        <div class="product-sketch-name">${product.name}</div>
+                        ${desc ? `<p style="font-size: 0.9rem; margin: 4px 0 0; line-height: 1.2;">- ${desc}</p>` : ''}
+                    </div>
+
+                    <div style="transform: rotate(3deg); border: 2px solid #333; padding: 4px 10px; background: #fffbe6;">
+                        <span style="font-weight: bold; font-size: 1.1rem;">$ ${priceStr}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProductCompact(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100?text=IMG';
+
+            // Calculo de preco
+            let price = parseFloat(product.price) || 0;
+            try {
+                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
+                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
+                    const values = Object.values(sizePrices).map(v => parseFloat(v));
+                    if (values.length > 0) price = Math.min(...values);
+                }
+            } catch (e) { }
+
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-compact-item" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-compact-img"
+                         onerror="this.src='https://placehold.co/100x100?text=IMG'">
+                    
+                    <div class="product-compact-info">
+                        <h3 class="font-bold text-base text-textMain mb-0">${product.name}</h3>
+                        ${desc ? `<p class="text-xs opacity-60 line-clamp-1 mt-0.5">${desc}</p>` : ''}
+                    </div>
+
+                    <div class="product-compact-actions">
+                        <span class="font-bold text-sm text-brand whitespace-nowrap">R$ ${priceStr}</span>
+                        <div class="w-6 h-6 rounded-full bg-brand/10 text-brand flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProductList(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
+
+            // Calculo de preco
+            let price = parseFloat(product.price) || 0;
+            try {
+                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
+                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
+                    const values = Object.values(sizePrices).map(v => parseFloat(v));
+                    if (values.length > 0) price = Math.min(...values);
+                }
+            } catch (e) { }
+
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-list-item group" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-list-img"
+                         onerror="this.src='https://placehold.co/400x300?text=Sem+Imagem'">
+                    
+                    <div class="product-list-info">
+                        <h3 class="font-bold text-lg leading-tight mb-1 text-textMain">${product.name}</h3>
+                        ${desc ? `<p class="text-xs opacity-60 line-clamp-2 leading-relaxed">${desc}</p>` : ''}
+                    </div>
+
+                    <div class="product-list-actions">
+                        <span class="font-bold text-lg text-brand whitespace-nowrap">R$ ${priceStr}</span>
+                        <button class="bg-brand/10 text-brand rounded-full p-2 hover:bg-brand hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         function renderProductCard(product) {
@@ -3640,6 +4748,12 @@
                         body: JSON.stringify(orderData)
                     });
 
+                    // Se criou com sucesso, salvar ID para historico
+                    if (res.ok) {
+                        const savedOrder = await res.json();
+                        saveOrderToHistory(savedOrder);
+                    }
+
                     const result = await res.json();
 
                     if (result.success) {
@@ -3785,6 +4899,96 @@
         window.onclick = function (e) {
             if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
         }
+
+        // ===== FUNCOES AUXILIARES PARA NAV MODERN =====
+        function saveOrderToHistory(order) {
+            try {
+                let history = JSON.parse(localStorage.getItem('storeHistory') || '[]');
+                // Adicionar no inicio
+                history.unshift({
+                    id: order.id || Date.now(),
+                    date: new Date().toISOString(),
+                    total: order.total || cart.reduce((acc, i) => acc + i.totalPrice, 0),
+                    status: 'pending', // pending, prepared, delivered
+                    items: cart.length
+                });
+                // Manter apenas ultimos 10
+                history = history.slice(0, 10);
+                localStorage.setItem('storeHistory', JSON.stringify(history));
+
+                // Forcar atualizacao da nav se existir
+                renderBottomNav();
+            } catch (e) {
+                console.error('Erro ao salvar historico:', e);
+            }
+        }
+
+        function renderBottomNav() {
+            // Atualizar badge do carrinho
+            const cartCountEl = document.getElementById('cart-count');
+            const cartCount = cartCountEl ? cartCountEl.innerText : '0';
+
+            const navCartBadge = document.getElementById('nav-cart-count');
+            if (navCartBadge) {
+                navCartBadge.innerText = cartCount;
+                if (parseInt(cartCount) > 0) {
+                    navCartBadge.classList.remove('hidden');
+                } else {
+                    navCartBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        function openOrdersModal() {
+            const history = JSON.parse(localStorage.getItem('storeHistory') || '[]');
+            const container = document.getElementById('orders-list-container');
+
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 opacity-50"><p>Nenhum pedido encontrado no histórico.</p></div>';
+            } else {
+                container.innerHTML = history.map(order => {
+                    const date = new Date(order.date).toLocaleString('pt-BR');
+                    const statusMap = {
+                        'pending': { label: 'Enviado', color: 'text-yellow-600 bg-yellow-100' },
+                        'prepared': { label: 'Em Preparo', color: 'text-blue-600 bg-blue-100' },
+                        'delivered': { label: 'Entregue', color: 'text-emerald-600 bg-emerald-100' }
+                    };
+                    const st = statusMap[order.status] || statusMap['pending'];
+
+                    return `
+                        <div class="order-card shadow-sm mb-4 p-4 border rounded-xl bg-white">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="font-bold text-lg">Pedido #${String(order.id).slice(-4)}</p>
+                                    <p class="text-xs opacity-50">${date}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded-lg text-xs font-bold ${st.color}">${st.label}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-gray-200">
+                                <span class="text-xs font-bold opacity-70">${order.items} itens</span>
+                                <span class="font-bold text-brand">R$ ${parseFloat(order.total).toFixed(2).replace('.', ',')}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            openModal('orders-history-modal');
+        }
+
+        // Hook para atualizar nav quando carrinho mudar (Monkey Patch)
+        const oldUpdateCartUI = updateCartUI;
+        updateCartUI = function () {
+            oldUpdateCartUI(); // Chama a original
+            renderBottomNav(); // Atualiza nossa nav
+        };
+
+        // Hook init para garantir start
+        const originalInit = init;
+        init = async function () {
+            await originalInit();
+            renderBottomNav();
+        };
 
         // Inicializar ao carregar
         init();
