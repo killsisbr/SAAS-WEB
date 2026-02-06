@@ -240,14 +240,13 @@ export default function (db, broadcast) {
             if (finalPhone) {
                 console.log(`[Orders] Atualizando customerPhone de ${customerPhone} para ${finalPhone}`);
                 req.body.customerPhone = finalPhone; // Atualiza no body para ser usado no insert
-                customerPhone = finalPhone; // Atualiza variavel local
             }
 
             // [FIX] Se não conseguimos resolver e temos whatsappId, usar ele como fallback
             if (!finalPhone && whatsappId) {
                 console.log(`[Orders] ⚠️ Usando whatsappId como fallback: ${whatsappId}`);
                 finalPhone = whatsappId.replace(/\D/g, ''); // Limpar caracteres não numéricos
-                customerPhone = finalPhone;
+                req.body.customerPhone = finalPhone;
             }
 
             // Validações - permitir pedido mesmo sem telefone se tiver whatsappId
