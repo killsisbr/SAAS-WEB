@@ -199,7 +199,49 @@ export default function (db, broadcast) {
             }
 
             // Usar telefone do token se disponível, senão telefone validado
-            const finalPhone = phoneFromToken || validPhone;
+            let finalPhone = phoneFromToken || validPhone;
+
+            // [FIX] Se customerPhone for um PID (não validPhone), tentar recuperar o telefone real do mapeamento
+            if (!finalPhone && customerPhone && customerPhone.length >= 15) {
+                console.log(`[Orders] Tentando resolver PID ${customerPhone} para telefone real...`);
+
+                // Tentar via pid_jid_mappings (PID -> JID)
+                try {
+                    const pidMapping = await db.get(
+                        'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
+                        [tenantId, customerPhone]
+                    );
+                    if (pidMapping?.jid) {
+                        const extracted = pidMapping.jid.replace(/@.*$/, '').replace(/\D/g, '');
+                        // Remover 55 se for BR
+                        finalPhone = extracted.startsWith('55') ? extracted.substring(2) : extracted; // Salvar sem DDI para padronizar ou manter com? O sistema parece aceitar ambos, mas validPhone espera BR.
+                        // Melhor manter com DDI se for o formato padrão do banco
+                        finalPhone = extracted;
+                        console.log(`[Orders] PID resolvido via JID: ${finalPhone}`);
+                    }
+                } catch (e) { console.error(e); }
+
+                // Se ainda não achou, tentar via lid_phone_mappings (LID -> Phone)
+                if (!finalPhone) {
+                    try {
+                        const lidMapping = await db.get(
+                            'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                            [tenantId, customerPhone]
+                        );
+                        if (lidMapping?.phone) {
+                            finalPhone = lidMapping.phone;
+                            console.log(`[Orders] PID resolvido via LID: ${finalPhone}`);
+                        }
+                    } catch (e) { console.error(e); }
+                }
+            }
+
+            // Se conseguimos resolver o telefone real, atualizamos o customerPhone para o valor correto
+            if (finalPhone) {
+                console.log(`[Orders] Atualizando customerPhone de ${customerPhone} para ${finalPhone}`);
+                req.body.customerPhone = finalPhone; // Atualiza no body para ser usado no insert
+                customerPhone = finalPhone; // Atualiza variavel local
+            }
 
             // Validações - permitir pedido mesmo sem telefone se tiver whatsappId
             if (!customerName || !items || items.length === 0) {

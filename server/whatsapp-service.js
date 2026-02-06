@@ -998,8 +998,16 @@ class WhatsAppService {
                             console.log(`[OrderConfirmation] Usando JID do mapeamento: ${pid} -> ${jid}`);
                         } else {
                             console.log(`[OrderConfirmation] ⚠️ Mapeamento não encontrado para PID: ${pid}`);
-                            // Tentar usar o whatsappId diretamente como fallback
-                            jid = whatsappId;
+
+                            // [FIX] NÃO usar whatsappId (PID) diretamente se falhar mapeamento, pois PID não é roteável
+                            // Se tiver menos de 15 digitos, pode ser telefone mal formatado
+                            if (pid.length < 15) {
+                                let phone = pid.replace(/\D/g, '');
+                                if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) phone = '55' + phone;
+                                jid = phone + '@s.whatsapp.net';
+                            }
+                            // Se for PID longo e não achou mapeamento, deixamos jid = null.
+                            // O código abaixo (fallback customerPhone) tentará usar o telefone do cadastro.
                         }
                     } catch (err) {
                         console.error(`[OrderConfirmation] Erro ao buscar mapeamento:`, err.message);
@@ -1171,11 +1179,28 @@ class WhatsAppService {
 
             // Link WhatsApp do cliente
             let cleanPhone = (orderData.customer_phone || orderData.customerPhone || '').replace(/\D/g, '');
-            if (cleanPhone && !cleanPhone.startsWith('55')) {
+
+            // [FIX] Se for PID no grupo, tentar resolver para telefone real para gerar link wa.me correto
+            if (cleanPhone.length >= 15) {
+                try {
+                    // Tentar resolver PID -> JID (telefone)
+                    const mapping = await this.db.get(
+                        'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
+                        [tenantId, cleanPhone]
+                    );
+                    if (mapping?.jid) {
+                        cleanPhone = mapping.jid.replace(/@.*$/, '').replace(/\D/g, '');
+                    }
+                } catch (e) { }
+            }
+
+            if (cleanPhone && !cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
                 cleanPhone = '55' + cleanPhone;
             }
-            if (cleanPhone) {
+            if (cleanPhone && cleanPhone.length < 15) { // Só exibir link se for telefone real, não PID
                 groupLines.push(`📱 *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
+            } else if (cleanPhone) {
+                groupLines.push(`📱 *WhatsApp (PID)*: ${cleanPhone} (Link indisponível)`);
             }
 
             // Link de localização do Google Maps
