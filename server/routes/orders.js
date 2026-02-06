@@ -243,6 +243,13 @@ export default function (db, broadcast) {
                 customerPhone = finalPhone; // Atualiza variavel local
             }
 
+            // [FIX] Se não conseguimos resolver e temos whatsappId, usar ele como fallback
+            if (!finalPhone && whatsappId) {
+                console.log(`[Orders] ⚠️ Usando whatsappId como fallback: ${whatsappId}`);
+                finalPhone = whatsappId.replace(/\D/g, ''); // Limpar caracteres não numéricos
+                customerPhone = finalPhone;
+            }
+
             // Validações - permitir pedido mesmo sem telefone se tiver whatsappId
             if (!customerName || !items || items.length === 0) {
                 return res.status(400).json({ error: 'Dados incompletos' });

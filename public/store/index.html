@@ -4748,15 +4748,12 @@
                         body: JSON.stringify(orderData)
                     });
 
-                    // Se criou com sucesso, salvar ID para historico
-                    if (res.ok) {
-                        const savedOrder = await res.json();
-                        saveOrderToHistory(savedOrder);
-                    }
-
+                    // Ler resposta UMA ÚNICA VEZ (body stream só pode ser lido uma vez)
                     const result = await res.json();
 
-                    if (result.success) {
+                    // Se criou com sucesso, salvar ID para historico
+                    if (res.ok && result.success) {
+                        saveOrderToHistory(result.order || result);
                         console.log('Pedido salvo:', result.order);
 
                         // Salvar dados do cliente no cache para proximas visitas
