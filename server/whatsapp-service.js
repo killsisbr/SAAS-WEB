@@ -326,6 +326,20 @@ class WhatsAppService {
             }
         });
 
+        // Handler de contatos (Sync de LIDs para Auto-Mapeamento)
+        sock.ev.on('contacts.upsert', async (contacts) => {
+            try {
+                for (const contact of contacts) {
+                    // Mapear LID -> Telefone Real (se disponivel)
+                    if (contact.lid && contact.id && contact.id.endsWith('@s.whatsapp.net')) {
+                        await this.saveLidPhoneMapping(tenantId, contact.lid, contact.id);
+                    }
+                }
+            } catch (err) {
+                console.error(`[AutoMap] Erro processando contatos: ${err.message}`);
+            }
+        });
+
         // Armazenar sockettt
         this.clients.set(tenantId, sock);
     }
@@ -336,10 +350,40 @@ class WhatsAppService {
     async handleMessage(tenantId, message, settings, sock) {
         try {
             console.log(`[handleMessage] === MENSAGEM RECEBIDA para tenant ${tenantId} ===`);
-            const jid = message.key.remoteJid;
+            let jid = message.key.remoteJid;
 
-            // Extrair numero do JID
-            const numberMatch = jid.match(/^(\d+)@/);
+            // [FIX] Baileys 7.x: Se for LID, usar remoteJidAlt que contém o número real
+            const isLid = jid.endsWith('@lid');
+            let realPhoneJid = jid;
+
+            if (isLid) {
+                // remoteJidAlt contém o número real quando o JID é LID
+                const altJid = message.key.remoteJidAlt;
+                if (altJid && altJid.endsWith('@s.whatsapp.net')) {
+                    realPhoneJid = altJid;
+                    console.log(`[LID-Fix] LID detectado: ${jid} -> Número real: ${altJid}`);
+
+                    // Salvar mapeamento automaticamente para uso futuro
+                    const lidNumber = jid.replace(/@.*$/, '');
+                    const phoneNumber = altJid.replace(/@.*$/, '');
+                    await this.saveLidPhoneMapping(tenantId, lidNumber, phoneNumber);
+                } else {
+                    console.log(`[LID-Fix] ⚠️ LID sem remoteJidAlt disponível: ${jid}`);
+                    // Tentar buscar no banco de mapeamentos existentes
+                    const lidNumber = jid.replace(/@.*$/, '');
+                    const mapping = await this.db.get(
+                        'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                        [tenantId, lidNumber]
+                    );
+                    if (mapping?.phone) {
+                        realPhoneJid = mapping.phone + '@s.whatsapp.net';
+                        console.log(`[LID-Fix] Resolvido via banco: ${lidNumber} -> ${mapping.phone}`);
+                    }
+                }
+            }
+
+            // Extrair numero do JID (usar o real, não o LID)
+            const numberMatch = realPhoneJid.match(/^(\d+)@/);
             if (!numberMatch) return;
 
             const fullNumber = numberMatch[1];
@@ -359,7 +403,7 @@ class WhatsAppService {
 
             const pushName = message.pushName || 'Cliente';
 
-            console.log(`Mensagem de Cliente (${jid}): ${messageBody.substring(0, 50)}, tel: ${sanitizedNumber}`);
+            console.log(`Mensagem de Cliente (${realPhoneJid}): ${messageBody.substring(0, 50)}, tel: ${sanitizedNumber}`);
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             const currentSettings = tenant ? JSON.parse(tenant.settings || '{}') : settings;
@@ -392,7 +436,7 @@ class WhatsAppService {
 
                     // UNIFICAÇÃO: Usar a MESMA função buildOrderLink() que o Modo Link usa
                     // Isso garante paridade entre os dois modos
-                    const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, jid);
+                    const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, realPhoneJid);
                     console.log(`[DirectOrder] Link gerado por buildOrderLink: ${orderLink}`);
 
                     const result = await processDirectOrder({
@@ -437,7 +481,7 @@ class WhatsAppService {
                         }
 
                         // Preparar link da loja (passa jid para salvar mapeamento)
-                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, jid);
+                        let orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, realPhoneJid);
                         console.log(`[Trigger] Link construído: ${orderLink}`);
 
                         // Substituir variaveis na resposta
@@ -473,7 +517,7 @@ class WhatsAppService {
                 }
 
                 console.log(`[AutoWelcome] Enviando link automático para ${jid} (primeira mensagem do dia)`);
-                const success = await this.sendWelcomeMessage(tenantId, jid, sanitizedNumber, currentSettings, pushName, sock);
+                const success = await this.sendWelcomeMessage(tenantId, realPhoneJid, sanitizedNumber, currentSettings, pushName, sock);
 
                 if (success) {
                     this.markWelcomeSent(tenantId, jid);
@@ -860,6 +904,7 @@ class WhatsAppService {
                  ON CONFLICT(lid, tenant_id) DO UPDATE SET phone = ?, updated_at = CURRENT_TIMESTAMP`,
                 [id, lid, cleanPhone, tenantId, cleanPhone]
             );
+            console.log(`[AutoMap] ✅ Mapeado LID ${lid} -> ${cleanPhone}`);
             return true;
         } catch (err) {
             console.error('[WhatsApp] Erro ao salvar mapeamento LID:', err.message);
