@@ -240,6 +240,11 @@ class WhatsAppService {
             generateHighQualityLinkPreview: false,
             syncFullHistory: false,
             markOnlineOnConnect: true,
+            // Configurações de estabilidade para evitar Status 408
+            keepAliveIntervalMs: 25000, // Ping a cada 25 segundos
+            retryRequestDelayMs: 250, // Delay entre retry de requests
+            connectTimeoutMs: 60000, // 60 segundos para conectar
+            qrTimeout: 45000, // 45 segundos para escanear QR
         });
 
         // Salvar credenciais quando atualizarem
