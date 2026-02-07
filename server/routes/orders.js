@@ -249,6 +249,14 @@ export default function (db, broadcast) {
                 req.body.customerPhone = finalPhone;
             }
 
+            // [FIX] Último fallback: usar customerPhone original mesmo que pareça inválido
+            // Isso permite pedidos de acesso direto à loja (sem WhatsApp)
+            if (!finalPhone && customerPhone) {
+                const cleanPhone = customerPhone.replace(/\D/g, '');
+                console.log(`[Orders] ⚠️ Usando customerPhone original como fallback: ${cleanPhone}`);
+                finalPhone = cleanPhone;
+            }
+
             // Validações - permitir pedido mesmo sem telefone se tiver whatsappId
             if (!customerName || !items || items.length === 0) {
                 return res.status(400).json({ error: 'Dados incompletos' });
