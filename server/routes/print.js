@@ -75,10 +75,11 @@ export default function (db) {
 
                 receipt += formatLine(itemLine, priceLine, width) + '\n';
 
-                // Adicionais
-                if (item.extras && item.extras.length > 0) {
-                    for (const extra of item.extras) {
-                        receipt += `   + ${extra.name}\n`;
+                // Adicionais (pode estar como addons, extras ou modifiers)
+                const itemAddons = item.addons || item.extras || item.modifiers || [];
+                if (itemAddons.length > 0) {
+                    for (const extra of itemAddons) {
+                        receipt += `   + ${extra.name || extra}\n`;
                     }
                 }
 

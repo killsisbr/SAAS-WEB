@@ -8,7 +8,8 @@ import makeWASocket, {
     DisconnectReason,
     useMultiFileAuthState,
     makeCacheableSignalKeyStore,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    downloadMediaMessage
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
 import qrcodeImage from 'qrcode';
@@ -20,9 +21,16 @@ import pino from 'pino';
 import { handleConversation } from './services/conversation-handler.js';
 import { getCacheService } from './services/cache-service.js';
 import { getBackupService } from './services/backup-service.js';
+import AIEmployee from './services/ai-employee.js';
+import { AgentEmployee } from './agent-employee/index.js';
+import { TranscriptionService } from './services/transcription-service.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Instanciar serviço de transcrição
+// const transcriptionService = new TranscriptionService();
 
 // Caminho para salvar as sessoes
 const SESSIONS_DIR = path.join(__dirname, 'baileys-sessions');
@@ -34,8 +42,9 @@ if (!fs.existsSync(SESSIONS_DIR)) {
 const logger = pino({ level: 'silent' });
 
 class WhatsAppService {
-    constructor(db) {
+    constructor(db, broadcast) {
         this.db = db;
+        this.broadcast = broadcast; // Para notificações em tempo real
         this.clients = new Map(); // tenantId -> socket
         this.qrCodes = new Map(); // tenantId -> qrCode
         this.statuses = new Map(); // tenantId -> status
@@ -60,6 +69,8 @@ class WhatsAppService {
         this.reconnectAttempts = new Map(); // tenantId -> attempts
         this.maxReconnectAttempts = 15;
         this.reconnectDelay = 10000; // 10 segundos (base para exponential backoff)
+        this.qrAttempts = new Map(); // tenantId -> attempts
+        this.maxQrAttempts = 5;
 
         // Garantir que a tabela de mapeamento existe
         this.ensurePidJidTable();
@@ -147,12 +158,17 @@ class WhatsAppService {
         const CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutos
 
         this.healthCheckInterval = setInterval(async () => {
+            console.log(`[HealthCheck] Verificando ${this.clients.size} conexões ativas...`);
             for (const [tenantId, sock] of this.clients) {
                 try {
                     // Verificar se socket está conectado
                     if (!sock?.user) {
-                        console.log(`[HealthCheck] Tenant ${tenantId} desconectado, tentando reconectar...`);
+                        const status = this.statuses.get(tenantId);
+                        console.log(`[HealthCheck] ⚠️ Tenant ${tenantId} parece instável (Status: ${status}). Tentando reconectar...`);
                         await this.reconnectTenant(tenantId);
+                    } else {
+                        // Opcional: Ping simples ou log de "Tudo OK"
+                        // console.log(`[HealthCheck] Tenant ${tenantId} OK.`);
                     }
                 } catch (err) {
                     console.error(`[HealthCheck] Erro ao verificar tenant ${tenantId}:`, err.message);
@@ -189,8 +205,14 @@ class WhatsAppService {
         console.log(`[WhatsApp] Tentativa ${attempts + 1} de reconexao para tenant ${tenantId} (delay: ${Math.round(delay / 1000)}s)`);
 
         try {
+            // Se for tentativa 1, logamos, se for retry logs reduzidos
+            if (attempts === 0) {
+                console.log(`[WhatsApp] Iniciando conexão para tenant ${tenantId}...`);
+            }
+
             await this.initializeForTenant(tenantId);
             this.reconnectAttempts.set(tenantId, 0); // Reset on success
+            this.qrAttempts.set(tenantId, 0); // Reset QRs on success
         } catch (err) {
             console.error(`[WhatsApp] Falha ao reconectar:`, err.message);
             // Agendar proxima tentativa com backoff
@@ -202,6 +224,11 @@ class WhatsAppService {
      * Inicializar WhatsApp para um tenant usando Baileys
      */
     async initializeForTenant(tenantId) {
+        // Resetar contador de QR codes ao iniciar manualmente ou auto-reconnect
+        if (!this.reconnectAttempts.has(tenantId)) {
+            this.qrAttempts.set(tenantId, 0);
+        }
+
         // Verificar se ja existe cliente
         if (this.clients.has(tenantId) && this.clients.get(tenantId)?.user) {
             console.log(`WhatsApp client ja existe e esta conectado para tenant ${tenantId}`);
@@ -255,8 +282,21 @@ class WhatsAppService {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                console.log(`QR Code para tenant ${tenantId}:`);
-                qrcode.generate(qr, { small: true });
+                const attempts = (this.qrAttempts.get(tenantId) || 0) + 1;
+                this.qrAttempts.set(tenantId, attempts);
+
+                if (attempts > this.maxQrAttempts) {
+                    console.log(`[WhatsApp] ⚠️ Limite de QR Codes atingido para ${tenantId} (${attempts}/${this.maxQrAttempts}). Parando para evitar spam.`);
+                    this.statuses.set(tenantId, 'SCAN_TIMEOUT');
+                    if (sock) {
+                        try { sock.end(); } catch (e) { }
+                    }
+                    return;
+                }
+
+                if (attempts === 1) {
+                    console.log(`[WhatsApp] QR Code gerado para tenant ${tenantId}.`);
+                }
 
                 // Gerar QR code como imagem base64
                 try {
@@ -270,11 +310,14 @@ class WhatsAppService {
             }
 
             if (connection === 'close') {
-                // [FIX] Corrigido bug: instanceof retorna boolean, não objeto
-                const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+                const BoomError = lastDisconnect?.error;
+                const statusCode = BoomError?.output?.statusCode;
+                const reason = BoomError?.message || 'Unknown reason';
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-                console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Status: ${statusCode}, Reconectando: ${shouldReconnect}`);
+                console.log(`[WhatsApp] 🛑 Conexão FECHADA para tenant ${tenantId}.`);
+                console.log(`[WhatsApp] Status Code: ${statusCode} (${reason})`);
+                console.log(`[WhatsApp] Reconectando automaticamente: ${shouldReconnect}`);
 
                 if (shouldReconnect) {
                     this.statuses.set(tenantId, 'RECONNECTING');
@@ -303,26 +346,30 @@ class WhatsAppService {
             if (m.type !== 'notify') return;
 
             for (const msg of m.messages) {
-                // [CRITICAL] Ignorar mensagens do proprio bot
-                if (msg.key.fromMe) return;
+                try {
+                    // [CRITICAL] Ignorar mensagens do proprio bot
+                    if (msg.key.fromMe) return;
 
-                // Ignorar mensagens de status/broadcast
-                if (msg.key.remoteJid === 'status@broadcast') return;
+                    // Ignorar mensagens de status/broadcast
+                    if (msg.key.remoteJid === 'status@broadcast') return;
 
-                // Ignorar mensagens muito antigas (evitar processar backlog em loop)
-                const msgTime = (msg.messageTimestamp || 0);
-                const now = Math.floor(Date.now() / 1000);
-                if (now - msgTime > 30) { // Ignorar mensagens com mais de 30s
-                    return;
+                    // Ignorar mensagens muito antigas (evitar processar backlog em loop)
+                    const msgTime = (msg.messageTimestamp || 0);
+                    const now = Math.floor(Date.now() / 1000);
+                    if (now - msgTime > 30) { // Ignorar mensagens com mais de 30s
+                        return;
+                    }
+
+                    // Processar comandos de grupos ANTES de ignorar
+                    if (msg.key.remoteJid?.endsWith('@g.us')) {
+                        await this.handleGroupCommand(tenantId, msg, sock);
+                        continue; // Não processar como mensagem normal
+                    }
+
+                    await this.handleMessage(tenantId, msg, settings, sock);
+                } catch (err) {
+                    console.error(`[WhatsApp] Erro fatal ao processar mensagem individual para ${tenantId}:`, err);
                 }
-
-                // Processar comandos de grupos ANTES de ignorar
-                if (msg.key.remoteJid?.endsWith('@g.us')) {
-                    await this.handleGroupCommand(tenantId, msg, sock);
-                    continue; // Não processar como mensagem normal
-                }
-
-                await this.handleMessage(tenantId, msg, settings, sock);
             }
         });
 
@@ -349,7 +396,6 @@ class WhatsAppService {
      */
     async handleMessage(tenantId, message, settings, sock) {
         try {
-            console.log(`[handleMessage] === MENSAGEM RECEBIDA para tenant ${tenantId} ===`);
             let jid = message.key.remoteJid;
 
             // [FIX] Baileys 7.x: Se for LID, usar remoteJidAlt que contém o número real
@@ -361,7 +407,7 @@ class WhatsAppService {
                 const altJid = message.key.remoteJidAlt;
                 if (altJid && altJid.endsWith('@s.whatsapp.net')) {
                     realPhoneJid = altJid;
-                    console.log(`[LID-Fix] LID detectado: ${jid} -> Número real: ${altJid}`);
+                    // console.log(`[LID-Fix] LID detectado: ${jid} -> Número real: ${altJid}`);
 
                     // Salvar mapeamento automaticamente para uso futuro
                     const lidNumber = jid.replace(/@.*$/, '');
@@ -403,25 +449,23 @@ class WhatsAppService {
 
             const pushName = message.pushName || 'Cliente';
 
-            console.log(`Mensagem de Cliente (${realPhoneJid}): ${messageBody.substring(0, 50)}, tel: ${sanitizedNumber}`);
+            console.log(`[WhatsApp] 📥 ${pushName} (${sanitizedNumber}): "${messageBody.substring(0, 50)}${messageBody.length > 50 ? '...' : ''}"`);
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             const currentSettings = tenant ? JSON.parse(tenant.settings || '{}') : settings;
 
             // Debug: mostrar status do bot
-            console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}`);
+            // console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}`);
 
             // ============ VERIFICAR MODO DE OPERAÇÃO ============
             const orderMode = currentSettings.whatsappOrderMode || 'link'; // 'link' | 'direct' | 'ai'
-            console.log(`[OrderMode] Tenant ${tenantId} está usando modo: ${orderMode}`);
+            // console.log(`[OrderMode] Tenant ${tenantId} está usando modo: ${orderMode}`);
 
             // MODO DIRETO: Pedidos conversacionais via WhatsApp
             if (orderMode === 'direct') {
                 try {
-                    console.log(`[DirectOrder] Importando módulos...`);
                     const { processDirectOrder } = await import('./direct-order/index.js');
                     const { broadcast } = await import('./server.js');
-                    console.log(`[DirectOrder] Módulos importados, processando...`);
 
                     // Detectar mensagem de localização
                     const locationMessage = message.message?.locationMessage;
@@ -460,6 +504,109 @@ class WhatsAppService {
                     console.error('[DirectOrder] Stack:', err.stack);
                 }
                 return; // Não processar como modo link
+            }
+
+            // MODO FUNCIONÁRIO IA: Auto-atendimento via Agente Estruturado
+            if (orderMode === 'funcionario_ia') {
+                try {
+                    console.log(`[AgentEmployee] Processando mensagem de ${realPhoneJid}...`);
+
+                    // Pegar configurações do Funcionário IA
+                    const aiConfig = currentSettings.aiEmployee || {};
+                    if (!aiConfig.enabled) {
+                        console.log(`[AgentEmployee] Módulo desativado, usando modo link`);
+                    } else {
+                        // Criar instância do AgentEmployee (novo agente estruturado)
+                        const agent = new AgentEmployee(this.db, tenantId, {
+                            employeeName: aiConfig.employeeName || 'Ana',
+                            storeName: tenant?.name || 'Restaurante',
+                            ollamaUrl: aiConfig.ollamaUrl || 'http://localhost:11434',
+                            model: aiConfig.model || 'gemma3:4b'
+                        });
+
+                        // Simular digitação
+                        await sock.sendPresenceUpdate('composing', jid);
+
+                        // Detectar localização
+                        // Detectar localização
+                        const locationMessage = message.message?.locationMessage;
+                        let location = null;
+                        if (locationMessage) {
+                            location = {
+                                latitude: locationMessage.degreesLatitude,
+                                longitude: locationMessage.degreesLongitude
+                            };
+                            console.log(`[AgentEmployee] 📍 Localização recebida: ${JSON.stringify(location)}`);
+                        }
+
+                        // Detectar áudio (DESATIVADO TEMPORARIAMENTE)
+                        /*
+                        const audioMessage = message.message?.audioMessage;
+                        let audioText = null;
+                        if (audioMessage) { ... }
+                        */
+
+                        // Se for localização, definimos um texto padrão.
+                        const finalMessage = location
+                            ? '📍 [Localização Enviada]'
+                            : (messageBody || '');
+
+                        // Se não tem mensagem nem mídia, ignora
+                        if (!finalMessage) return;
+
+                        // Processar mensagem
+                        const result = await agent.handleMessage(
+                            sanitizedNumber,
+                            finalMessage,
+                            pushName,
+                            { location, audio: false } // Audio disabled
+                        );
+
+                        // Parar digitação
+                        await sock.sendPresenceUpdate('paused', jid);
+
+                        if (result.success && result.message) {
+                            await this.safeSendMessage(tenantId, jid, result.message, sock);
+                            console.log(`[AgentEmployee] Resposta enviada para ${jid}`);
+
+                            // Se pedido foi criado, notificar dashboard
+                            if (result.orderCreated) {
+                                console.log(`[AgentEmployee] ✅ Pedido #${result.orderCreated.orderNumber} criado!`);
+
+                                // Notificar dashboard via SSE
+                                if (this.broadcast) {
+                                    const fullOrder = await this.db.get('SELECT * FROM orders WHERE id = ?', [result.orderCreated.id]);
+                                    if (fullOrder) {
+                                        fullOrder.items = JSON.parse(fullOrder.items || '[]');
+                                        this.broadcast(tenantId, 'new-order', fullOrder);
+                                    }
+                                }
+
+                                // Notificar grupo WhatsApp se configurado
+                                const groupJid = currentSettings.notificationGroupJid;
+                                if (groupJid) {
+                                    const order = result.orderCreated;
+                                    const itemsList = order.items.map(i => `• ${i.quantity}x ${i.name}`).join('\n');
+                                    const groupMsg = `🔔 *NOVO PEDIDO #${order.orderNumber}*\n\n` +
+                                        `*Cliente:* ${order.customerName}\n` +
+                                        `*Itens:*\n${itemsList}\n\n` +
+                                        `*Total:* R$ ${order.total.toFixed(2).replace('.', ',')}\n` +
+                                        `*Pagamento:* ${order.paymentMethod}\n` +
+                                        (order.deliveryType === 'delivery' ? `*Endereço:* ${order.address}\n` : `*Retirada no local*\n`) +
+                                        `*Contato:* wa.me/${order.customerPhone}`;
+                                    await this.safeSendMessage(tenantId, groupJid, groupMsg, sock);
+                                }
+                            }
+                        }
+
+                    }
+
+                    return; // Não processar como modo link
+                } catch (err) {
+                    console.error('[AgentEmployee] Erro no processamento:', err.message);
+                    console.error('[AgentEmployee] Stack:', err.stack);
+                    // Em caso de erro, cair para modo link como fallback
+                }
             }
 
             // ============ GATILHOS DE PALAVRAS-CHAVE ============
@@ -945,25 +1092,8 @@ class WhatsAppService {
                 const displayBasePrice = itemTotal - itemAddonsTotal;
 
                 // Acumular subtotal principal (apenas debug/fallback, finalTotal usa orderData.total)
-                subtotal += itemTotal;
                 if (item.total === undefined) {
-                    // Se item.total veio undefined, calculamos (price*qty), mas precisamos somar addons no subtotal geral
-                    // SE os addons não estivessem inclusos em price. 
-                    // Mas assumindo lógica segura: itemTotal contém tudo.
-                    // Se itemTotal era só price*qty (base), então itemAddonsTotal deve ser somado ao subtotal?
-                    // A lógica anterior somava: subtotal += itemTotal; subtotal += addonTotal;
-                    // Se itemTotal ERA 23 (full), somar 5 dava 28. Errado.
-                    // Se itemTotal ERA 18 (base), somar 5 da 23. Certo.
-                    // O screenshot mostrou Total 30 (Correto). Então o backend Order Total estava certo.
-                    // O problema era apenas visual.
-                    // Vamos manter a lógica de soma interna igual a anterior só para garantir, 
-                    // mas mudando A STRING DA MENSAGEM.
                     subtotal += itemAddonsTotal;
-                } else {
-                    // Se item.total já existia (full), não somamos addonsTotal no subtotal geral de novo
-                    // porem a logica original somava...
-                    // A subtotal calculation aqui é meio inútil se tem orderData.total.
-                    // Vamos focar NA STRING.
                 }
 
                 // CORREÇÃO: A lógica anterior somava itemTotal E addonTotal acumulativamente no subtotal.
@@ -1269,14 +1399,201 @@ class WhatsAppService {
             return false;
         }
     }
+
+    /**
+     * Processa um pedido vindo da IA e salva no banco de dados
+     */
+    async processAIOrder(tenantId, customerPhone, orderData, conversation) {
+        try {
+            console.log(`[AIOrder] Iniciando processamento para ${customerPhone} no tenant ${tenantId}`);
+
+            // 1. Validar dados básicos
+            if (!orderData || !orderData.items || orderData.items.length === 0) {
+                console.warn('[AIOrder] Dados de pedido insuficientes.');
+                return;
+            }
+
+            // 2. Buscar informações da loja
+            const tenant = await this.db.get('SELECT name, settings FROM tenants WHERE id = ?', [tenantId]);
+            if (!tenant) return;
+            const settings = JSON.parse(tenant.settings || '{}');
+
+            // 3. Processar itens e calcular totais
+            let subtotal = 0;
+            const itemsWithDetails = [];
+
+            for (const item of orderData.items) {
+                console.log(`[AIOrder] Tentando match para item: "${item.name}" (Preço citado: ${item.price_quoted || 'N/A'})`);
+
+                // 1. Tentar match exato por nome (sem acentos/case insensitive)
+                const productName = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                let product = await this.db.get(
+                    'SELECT * FROM products WHERE tenant_id = ? AND (LOWER(name) = ? OR name LIKE ?) AND is_available = 1',
+                    [tenantId, item.name.toLowerCase(), `%${item.name}%`]
+                );
+
+                // 2. Fallback: Se não achou, tentar por partes do nome
+                if (!product) {
+                    const words = item.name.split(' ').filter(w => w.length > 3);
+                    if (words.length > 0) {
+                        product = await this.db.get(
+                            'SELECT * FROM products WHERE tenant_id = ? AND name LIKE ? AND is_available = 1 LIMIT 1',
+                            [tenantId, `%${words[0]}%`]
+                        );
+                    }
+                }
+
+                // 3. Fallback: Se ainda não achou, usar o preço como dica (mas priorizar o nome)
+                if (!product && item.price_quoted) {
+                    product = await this.db.get(
+                        'SELECT * FROM products WHERE tenant_id = ? AND price = ? AND is_available = 1 LIMIT 1',
+                        [tenantId, parseFloat(item.price_quoted)]
+                    );
+                }
+
+                if (product) {
+                    console.log(`[AIOrder] ✅ Match encontrado: ${product.name} (R$ ${product.price})`);
+                    const quantity = parseInt(item.quantity) || 1;
+                    const price = parseFloat(product.price);
+                    const itemTotal = price * quantity;
+                    subtotal += itemTotal;
+
+                    itemsWithDetails.push({
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: quantity,
+                        addons: [],
+                        observation: item.observation || '',
+                        total: itemTotal
+                    });
+                } else {
+                    console.warn(`[AIOrder] ❌ Produto absolutamente não encontrado: "${item.name}"`);
+                }
+            }
+
+            if (itemsWithDetails.length === 0) {
+                console.error('[AIOrder] Nenhum produto do cardápio foi identificado corretamente.');
+                return;
+            }
+
+            // 5. Calcular taxas e total final
+            const isPickup = orderData.deliveryType?.toLowerCase().includes('retirada') ||
+                orderData.deliveryType?.toLowerCase().includes('balcão') ||
+                orderData.deliveryType?.toLowerCase().includes('busca');
+
+            const deliveryFee = isPickup ? 0 : (parseFloat(settings.deliveryFee) || 0);
+            const total = subtotal + deliveryFee;
+
+            // 6. Criar/Atualizar cliente
+            const customerName = conversation.customerName || 'Cliente WhatsApp';
+            let customerId = uuidv4();
+            const existingCustomer = await this.db.get(
+                'SELECT id FROM customers WHERE tenant_id = ? AND phone = ?',
+                [tenantId, customerPhone]
+            );
+
+            if (existingCustomer) {
+                customerId = existingCustomer.id;
+                await this.db.run(`
+                    UPDATE customers SET 
+                        name = ?, total_orders = total_orders + 1, 
+                        total_spent = total_spent + ?, last_order_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                `, [customerName, total, customerId]);
+            } else {
+                await this.db.run(`
+                    INSERT INTO customers (id, tenant_id, name, phone, total_orders, total_spent, last_order_at)
+                    VALUES (?, ?, ?, ?, 1, ?, CURRENT_TIMESTAMP)
+                `, [customerId, tenantId, customerName, customerPhone, total]);
+            }
+
+            // 7. Salvar Pedido
+            const orderId = uuidv4();
+            const orderNumber = await this.getNextOrderNumber(tenantId);
+            const now = new Date().toISOString();
+
+            await this.db.run(
+                `INSERT INTO orders (id, tenant_id, customer_name, customer_phone, items, subtotal, delivery_fee, total, status, payment_method, delivery_type, address, created_at, updated_at, order_number)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    orderId,
+                    tenantId,
+                    customerName,
+                    customerPhone,
+                    JSON.stringify(itemsWithDetails),
+                    subtotal,
+                    deliveryFee,
+                    total,
+                    'PENDING',
+                    orderData.paymentMethod || 'Não informado',
+                    isPickup ? 'PICKUP' : 'DELIVERY',
+                    orderData.address || 'Não informado',
+                    now,
+                    now,
+                    orderNumber
+                ]
+            );
+
+            // 8. Notificar Dashboard em tempo real (BROADCAST)
+            if (this.broadcast) {
+                const fullOrder = await this.db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+                if (fullOrder) {
+                    fullOrder.items = JSON.parse(fullOrder.items || '[]');
+                    // Tentar parsear endereço se for JSON string
+                    try {
+                        fullOrder.address = JSON.parse(fullOrder.address);
+                    } catch (e) { }
+
+                    this.broadcast(tenantId, 'new-order', fullOrder);
+                    console.log(`[AIOrder] ✅ Pedido #${orderNumber} enviado para o dashboard via SSE`);
+                }
+            }
+
+            // 9. Enviar confirmação para o cliente
+            const confirmationData = {
+                order_number: orderNumber,
+                items: itemsWithDetails,
+                delivery_fee: deliveryFee,
+                total: total,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                address: orderData.address ? { street: orderData.address } : null,
+                payment_method: orderData.paymentMethod || 'PIX'
+            };
+
+            this.sendOrderConfirmation(tenantId, customerPhone + '@s.whatsapp.net', confirmationData)
+                .then(() => console.log(`[AIOrder] ✅ Confirmação enviada para o cliente`))
+                .catch(err => console.error('[AIOrder] Erro ao enviar confirmação:', err.message));
+
+            // 10. Enviar para o grupo de entregas
+            this.sendOrderToGroup(tenantId, {
+                ...confirmationData,
+                observation: orderData.observation || 'Pedido via Funcionário IA'
+            })
+                .then(() => console.log(`[AIOrder] ✅ Pedido #${orderNumber} enviado para o grupo`))
+                .catch(err => console.error('[AIOrder] Erro ao enviar para o grupo:', err.message));
+
+            // 11. Resetar conversa IA para evitar loops
+            const aiEmployee = new AIEmployee(this.db, tenantId);
+            await aiEmployee.resetConversation(customerPhone);
+
+            console.log(`[AIOrder] ✅ Processo finalizado com sucesso para o pedido #${orderNumber}`);
+
+        } catch (err) {
+            console.error('[AIOrder] Erro crítico ao criar pedido:', err.message);
+            console.error(err.stack);
+        }
+    }
 }
 
 // Singleton
 let instance = null;
 
-export function initWhatsAppService(db) {
+export function initWhatsAppService(db, broadcast) {
     if (!instance) {
-        instance = new WhatsAppService(db);
+        instance = new WhatsAppService(db, broadcast);
     }
     return instance;
 }

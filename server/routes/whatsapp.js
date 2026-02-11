@@ -198,7 +198,7 @@ export default function (db) {
         try {
             const {
                 whatsappBotEnabled, whatsappGroupId, siteUrl, botMessages, aiBot, triggers,
-                whatsappOrderMode, pixKey, deliveryFee  // Novos campos para modo direto
+                whatsappOrderMode, pixKey, deliveryFee, aiEmployee  // aiEmployee para Funcionário IA
             } = req.body;
 
             // Buscar tenant atual
@@ -240,6 +240,11 @@ export default function (db) {
             if (deliveryFee !== undefined) {
                 settings.deliveryFee = parseFloat(deliveryFee) || 0;
             }
+            // Configurações do Funcionário IA (Ollama)
+            if (aiEmployee !== undefined) {
+                settings.aiEmployee = aiEmployee;
+                console.log(`[WhatsApp] Configurações do Funcionário IA atualizadas:`, aiEmployee);
+            }
 
             await db.run(
                 'UPDATE tenants SET settings = ? WHERE id = ?',
@@ -249,6 +254,34 @@ export default function (db) {
             res.json({ success: true, settings });
         } catch (error) {
             res.status(500).json({ error: error.message });
+        }
+    });
+
+    // ========================================
+    // POST /api/whatsapp/test-ollama - Testar conexão com Ollama
+    // ========================================
+    router.post('/test-ollama', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        try {
+            const { ollamaUrl } = req.body;
+            const url = ollamaUrl || 'http://localhost:11434';
+
+            const response = await fetch(`${url}/api/tags`, {
+                signal: AbortSignal.timeout(5000)
+            });
+
+            if (!response.ok) {
+                return res.json({ online: false, error: 'Ollama não está respondendo' });
+            }
+
+            const data = await response.json();
+            const models = data.models || [];
+
+            res.json({
+                online: true,
+                models: models.map(m => m.name)
+            });
+        } catch (error) {
+            res.json({ online: false, error: error.message || 'Erro ao conectar' });
         }
     });
 

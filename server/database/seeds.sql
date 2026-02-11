@@ -29,6 +29,10 @@ INSERT OR IGNORE INTO themes (id, name, slug, business_types, is_premium, primar
 ('theme_mexican', 'Mexicano Fiesta', 'mexican-fiesta', '["MEXICANA"]', 1, '#16A34A', '#DC2626', '#FACC15', '#1C1917', '#FFFFFF', 'GRADIENT', 'PILL'),
 ('theme_cafe', 'Cafe Premium', 'cafe-premium', '["CAFETERIA", "DOCERIA"]', 1, '#78350F', '#F59E0B', '#D97706', '#1C1917', '#FEF3C7', 'SHADOW', 'ROUNDED'),
 ('theme_neon', 'Neon Night', 'neon-night', '["TODOS"]', 1, '#00F5FF', '#FF00FF', '#FFFF00', '#0A0A0A', '#FFFFFF', 'GLASS', 'PILL'),
+('theme_arcade', 'Gamer Arcade', 'arcade-8bit', '["TODOS"]', 1, '#FF00FF', '#00FFFF', '#FFFF00', '#000000', '#FFFFFF', 'NEO', 'ROUNDED'),
+('theme_fashion', 'Fashion Boutique', 'fashion-boutique', '["MODA", "VESTUARIO", "CALCADOS"]', 1, '#9333ea', '#f472b6', '#db2777', '#ffffff', '#111827', 'SHADOW', 'ROUNDED'),
+('theme_petshop', 'Pet World', 'pet-world', '["PETSHOP", "AGROPECUARIA"]', 1, '#f97316', '#0ea5e9', '#0284c7', '#ffffff', '#1f2937', 'GLASS', 'ROUNDED'),
+('theme_pharmacy', 'Pharmacy Delivery', 'pharmacy-delivery', '["FARMACIA", "SUPLEMENTOS"]', 1, '#059669', '#dc2626', '#b91c1c', '#f9fafb', '#111827', 'SHADOW', 'ROUNDED'),
 ('theme_elegant', 'Elegante Gold', 'elegante-gold', '["RESTAURANTE", "ARABE"]', 1, '#D4AF37', '#1A1A1A', '#C0C0C0', '#0D0D0D', '#FFFFFF', 'BORDERED', 'SQUARE');
 
 -- ============================================================

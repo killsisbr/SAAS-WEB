@@ -1,0 +1,51 @@
+[
+    {
+        "name": "Pedido Simples - Burger e Refri",
+        "description": "Cliente pede um burger e um refrigerante diretamente.",
+        "messages": [
+            "Oi, boa noite",
+            "Quero fazer um pedido",
+            "Me vê um X-Bacon e uma Coca-Cola 350ml",
+            "Só isso mesmo",
+            "É entrega",
+            "Rua das Palmeiras, 45, centro",
+            "Vou pagar no PIX"
+        ],
+        "expected_order": {
+            "items": [
+                {
+                    "name": "X-Bacon",
+                    "quantity": 1
+                },
+                {
+                    "name": "Coca-Cola 350ml",
+                    "quantity": 1
+                }
+            ],
+            "paymentMethod": "PIX",
+            "deliveryType": "entrega"
+        }
+    },
+    {
+        "name": "Pedido de Marmita com Observação",
+        "description": "Cliente pede marmita e adiciona observação de retirada de ingrediente.",
+        "messages": [
+            "Olá, vocês tem marmita?",
+            "Quero uma Marmita Media (M)",
+            "Mas capricha no feijão e sem salada por favor",
+            "Retirada",
+            "Dinheiro"
+        ],
+        "expected_order": {
+            "items": [
+                {
+                    "name": "Marmita Media (M)",
+                    "quantity": 1,
+                    "observation": "capricha no feijão e sem salada"
+                }
+            ],
+            "deliveryType": "retirada",
+            "paymentMethod": "Dinheiro"
+        }
+    }
+]

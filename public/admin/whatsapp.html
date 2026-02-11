@@ -510,17 +510,29 @@
                             style="flex: 1; min-width: 200px; padding: 16px; border: 3px solid var(--dark); border-radius: 12px; cursor: pointer; background: var(--bg); transition: all 0.2s;">
                             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
                                 <i class="fas fa-comments" style="font-size: 1.5rem; color: #10b981;"></i>
-                                <strong>Modo Híbrido (Conversa + Link)</strong>
+                                <strong>Modo Híbrido</strong>
                             </div>
                             <small style="color: var(--text-muted);">
                                 O robô conversa pelo WhatsApp <strong>E TAMBÉM</strong> envia o link do cardápio.
-                                <br><span style="color: #10b981;">(Recomendado)</span>
+                            </small>
+                        </div>
+                        <div id="modeAIEmployeeCard" onclick="selectOrderMode('funcionario_ia')" class="mode-card"
+                            style="flex: 1; min-width: 200px; padding: 16px; border: 3px solid var(--dark); border-radius: 12px; cursor: pointer; background: var(--bg); transition: all 0.2s;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                <i class="fas fa-robot" style="font-size: 1.5rem; color: #8b5cf6;"></i>
+                                <strong>Funcionário IA</strong>
+                                <span
+                                    style="background: linear-gradient(135deg, #8b5cf6, #d946ef); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem;">NOVO</span>
+                            </div>
+                            <small style="color: var(--text-muted);">
+                                IA local (Ollama) conversa e anota pedidos automaticamente.
+                                <br><span style="color: #8b5cf6;">Sem custo de API!</span>
                             </small>
                         </div>
                     </div>
                     <small style="color: var(--text-muted); margin-top: 8px; display: block;">
                         <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
-                        <strong>Dica:</strong> O modo direto é mais rápido para clientes frequentes!
+                        <strong>Dica:</strong> O Funcionário IA usa Ollama local para atendimento 100% automático!
                     </small>
                 </div>
 
@@ -537,6 +549,62 @@
                         <label><i class="fas fa-truck" style="color: #f59e0b;"></i> Taxa de Entrega Padrão (R$)</label>
                         <input type="number" id="deliveryFeeDirect" placeholder="5.00" step="0.50" min="0">
                         <small style="color: var(--text-muted);">Valor cobrado para entregas no modo direto.</small>
+                    </div>
+                </div>
+
+                <!-- Configurações do Funcionário IA -->
+                <div id="aiEmployeeSettings" style="display: none;">
+                    <hr style="border: none; border-top: 2px dashed #8b5cf6; margin: 20px 0;">
+                    <div class="info-box"
+                        style="background: linear-gradient(135deg, #ede9fe, #fce7f3); margin-bottom: 16px;">
+                        <i class="fas fa-robot" style="color: #8b5cf6; font-size: 1.5rem;"></i>
+                        <div>
+                            <strong>Funcionário IA com Ollama</strong><br>
+                            <small>Usa LLMs locais para conversar e anotar pedidos. Sem custo por mensagem!</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user" style="color: #8b5cf6;"></i> Nome do Atendente</label>
+                        <input type="text" id="aiEmployeeName" placeholder="Ana" value="Ana">
+                        <small style="color: var(--text-muted);">O nome que a IA usará para se apresentar.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-theater-masks" style="color: #8b5cf6;"></i> Personalidade</label>
+                        <select id="aiEmployeePersonality">
+                            <option value="friendly">😊 Simpático (usa emojis, tom informal)</option>
+                            <option value="professional">💼 Profissional (formal e objetivo)</option>
+                            <option value="casual">🤙 Casual (descontraído)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-server" style="color: #8b5cf6;"></i> URL do Ollama</label>
+                        <input type="text" id="aiOllamaUrl" placeholder="http://localhost:11434"
+                            value="http://localhost:11434">
+                        <small style="color: var(--text-muted);">Endereço do servidor Ollama (local ou remoto).</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-brain" style="color: #8b5cf6;"></i> Modelo</label>
+                        <select id="aiOllamaModel">
+                            <option value="llama3:8b">Llama 3 (8B) - Recomendado</option>
+                            <option value="mistral:7b">Mistral (7B) - Rápido</option>
+                            <option value="qwen2:7b">Qwen 2 (7B) - Multilíngue</option>
+                            <option value="phi3:mini">Phi 3 Mini - Leve</option>
+                        </select>
+                        <small style="color: var(--text-muted);">Escolha o modelo de IA. Llama 3 oferece melhor
+                            equilíbrio.</small>
+                    </div>
+
+                    <div class="form-group" style="display: flex; gap: 12px;">
+                        <button class="btn" style="background: #8b5cf6; color: white;" onclick="testOllamaConnection()">
+                            <i class="fas fa-plug"></i> TESTAR CONEXÃO
+                        </button>
+                    </div>
+
+                    <div id="ollamaStatus" style="display: none; padding: 12px; border-radius: 12px; margin-top: 12px;">
                     </div>
                 </div>
 
@@ -841,12 +909,16 @@
             // Atualizar cards visuais
             document.getElementById('modeLinkCard').classList.toggle('active', mode === 'link');
             document.getElementById('modeDirectCard').classList.toggle('active', mode === 'direct');
+            document.getElementById('modeAIEmployeeCard')?.classList.toggle('active', mode === 'funcionario_ia');
 
             // Atualizar badge
             const badge = document.getElementById('orderModeBadge');
             if (mode === 'direct') {
-                badge.textContent = 'DIRETO';
+                badge.textContent = 'HÍBRIDO';
                 badge.style.background = '#10b981';
+            } else if (mode === 'funcionario_ia') {
+                badge.textContent = 'FUNCIONÁRIO IA';
+                badge.style.background = 'linear-gradient(135deg, #8b5cf6, #d946ef)';
             } else {
                 badge.textContent = 'LINK';
                 badge.style.background = '#3b82f6';
@@ -854,6 +926,7 @@
 
             // Mostrar/esconder configurações extras
             document.getElementById('directModeSettings').style.display = mode === 'direct' ? 'block' : 'none';
+            document.getElementById('aiEmployeeSettings').style.display = mode === 'funcionario_ia' ? 'block' : 'none';
         }
 
         async function saveOrderMode() {
@@ -863,13 +936,23 @@
                 btn.innerHTML = '<i class="fas fa-spinner spinner"></i> SALVANDO...';
                 btn.disabled = true;
 
+                // Configurações do Funcionário IA
+                const aiEmployeeConfig = {
+                    enabled: currentOrderMode === 'funcionario_ia',
+                    employeeName: document.getElementById('aiEmployeeName')?.value || 'Ana',
+                    personality: document.getElementById('aiEmployeePersonality')?.value || 'friendly',
+                    ollamaUrl: document.getElementById('aiOllamaUrl')?.value || 'http://localhost:11434',
+                    model: document.getElementById('aiOllamaModel')?.value || 'llama3:8b'
+                };
+
                 await fetch('/api/whatsapp/settings', {
                     method: 'PUT',
                     headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         whatsappOrderMode: currentOrderMode,
                         pixKey: document.getElementById('pixKeyDirect').value.trim(),
-                        deliveryFee: parseFloat(document.getElementById('deliveryFeeDirect').value) || 0
+                        deliveryFee: parseFloat(document.getElementById('deliveryFeeDirect').value) || 0,
+                        aiEmployee: aiEmployeeConfig
                     })
                 });
 
@@ -882,6 +965,41 @@
                 alert('Erro ao salvar');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
+            }
+        }
+
+        // Testar conexão com Ollama
+        async function testOllamaConnection() {
+            const statusEl = document.getElementById('ollamaStatus');
+            const url = document.getElementById('aiOllamaUrl')?.value || 'http://localhost:11434';
+
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<i class="fas fa-spinner spinner"></i> Testando conexão com Ollama...';
+            statusEl.style.background = '#fef3c7';
+            statusEl.style.color = '#92400e';
+
+            try {
+                const res = await fetch('/api/whatsapp/test-ollama', {
+                    method: 'POST',
+                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ollamaUrl: url })
+                });
+                const data = await res.json();
+
+                if (data.online) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Conectado!</strong><br>
+                        Modelos disponíveis: ${data.models?.slice(0, 5).join(', ') || 'Nenhum'}`;
+                    statusEl.style.background = '#d1fae5';
+                    statusEl.style.color = '#065f46';
+                } else {
+                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> <strong>Erro:</strong> ${data.error || 'Não foi possível conectar'}`;
+                    statusEl.style.background = '#fee2e2';
+                    statusEl.style.color = '#991b1b';
+                }
+            } catch (e) {
+                statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> <strong>Erro:</strong> Não foi possível conectar ao Ollama`;
+                statusEl.style.background = '#fee2e2';
+                statusEl.style.color = '#991b1b';
             }
         }
 

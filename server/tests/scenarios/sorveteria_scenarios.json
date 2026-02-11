@@ -1,0 +1,53 @@
+[
+    {
+        "name": "Pedido de Pote de Sorvete",
+        "description": "Cliente pede um pote de 1 litro.",
+        "messages": [
+            "Opa, tudo bem?",
+            "Quero um pode de sorvete",
+            "Pote 1 Litro",
+            "Ninho com Nutella",
+            "Isso aí",
+            "Entrega na Av Brasil 500",
+            "Cartão"
+        ],
+        "expected_order": {
+            "items": [
+                {
+                    "name": "Pote 1 Litro",
+                    "quantity": 1,
+                    "observation": "Ninho com Nutella"
+                }
+            ],
+            "deliveryType": "entrega",
+            "paymentMethod": "Cartão"
+        }
+    },
+    {
+        "name": "Pedido de Milkshake e Água",
+        "description": "Cliente pede milkshake e uma água.",
+        "messages": [
+            "Boa tarde",
+            "Me vê um Milkshake 500ml de Morango",
+            "E uma Agua sem Gas",
+            "Para viagem",
+            "Vou passar aí pegar",
+            "Pix"
+        ],
+        "expected_order": {
+            "items": [
+                {
+                    "name": "Milkshake 500ml",
+                    "quantity": 1,
+                    "observation": "Morango"
+                },
+                {
+                    "name": "Agua sem Gas",
+                    "quantity": 1
+                }
+            ],
+            "deliveryType": "retirada",
+            "paymentMethod": "PIX"
+        }
+    }
+]

@@ -921,6 +921,74 @@
             /* Efeito papel quadriculado/pontilhado */
         }
 
+        /* === TEMA FASHION BOUTIQUE (👗 MODA) === */
+        [data-theme="fashion"] {
+            --primary-red: #9333ea;
+            --bg-color: #ffffff;
+            --dark: #111827;
+            --yellow: #f472b6;
+            --card-bg: #ffffff;
+            --text-color: #111827;
+            --accent-blue: #db2777;
+            --pattern-opacity: 0.05;
+            --radius: 0px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 8px;
+            --modal-rotate: 0deg;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        [data-theme="fashion"] .neo-card {
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px rgba(147, 51, 234, 0.2);
+            border-color: #000;
+        }
+
+        /* === TEMA PET WORLD (🐾 PETSHOP) === */
+        [data-theme="petshop"] {
+            --primary-red: #f97316;
+            --bg-color: #f8fafc;
+            --dark: #0f172a;
+            --yellow: #0ea5e9;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --accent-blue: #0284c7;
+            --pattern-opacity: 0.1;
+            --radius: 30px;
+            --border-width: 0px;
+            --border-style: none;
+            --shadow-offset: 10px;
+            --modal-rotate: 2deg;
+            --font-main: 'Quicksand', sans-serif;
+        }
+
+        [data-theme="petshop"] .neo-card {
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.1);
+        }
+
+        /* === TEMA PHARMACY (💊 FARMACIA) === */
+        [data-theme="pharmacy"] {
+            --primary-red: #059669;
+            --bg-color: #f9fafb;
+            --dark: #111827;
+            --yellow: #dc2626;
+            --card-bg: #ffffff;
+            --text-color: #111827;
+            --accent-blue: #047857;
+            --pattern-opacity: 0.03;
+            --radius: 12px;
+            --border-width: 1px;
+            --border-style: solid;
+            --shadow-offset: 4px;
+            --modal-rotate: 0deg;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        [data-theme="pharmacy"] .neo-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: #e5e7eb;
+        }
+
         .product-sketch-item {
             display: flex;
             align-items: center;
@@ -1864,6 +1932,7 @@
         const themes = [
             'retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy', 'modern', 'compact',
             'elegant', 'glass', 'social', 'arcade', 'organic', 'neon', 'sketch',
+            'fashion', 'petshop', 'pharmacy',
             'retro-list', 'midnight-list', 'vibe-list', 'doodle-list', 'luxury-list', 'matrix-list', 'candy-list'
         ];
         let currentThemeIdx = 0;

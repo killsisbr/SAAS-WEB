@@ -589,3 +589,24 @@ CREATE TABLE IF NOT EXISTS synonyms (
 
 CREATE INDEX IF NOT EXISTS idx_synonyms_tenant ON synonyms(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_synonyms_word ON synonyms(tenant_id, word);
+
+-- ============================================================
+-- CONVERSAS IA (Funcionário IA - Auto Atendimento)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ai_conversations (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    customer_phone TEXT NOT NULL,
+    customer_name TEXT,
+    messages TEXT DEFAULT '[]', -- JSON array de mensagens
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'ordering', 'confirming', 'completed', 'cancelled')),
+    order_data TEXT, -- JSON com dados do pedido extraído
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_conversations_tenant ON ai_conversations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ai_conversations_phone ON ai_conversations(tenant_id, customer_phone);
+CREATE INDEX IF NOT EXISTS idx_ai_conversations_status ON ai_conversations(tenant_id, status);

@@ -442,7 +442,7 @@ async function start() {
 
         if (whatsappAutoConnect) {
             try {
-                const whatsapp = initWhatsAppService(db);
+                const whatsapp = initWhatsAppService(db, broadcast);
                 await whatsapp.autoReconnectAll();
                 console.log('[WhatsApp] Auto-reconnect concluído (Baileys)');
 
