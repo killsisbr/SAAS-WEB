@@ -583,7 +583,7 @@ class WhatsAppService {
                                 }
 
                                 // Notificar grupo WhatsApp se configurado
-                                const groupJid = currentSettings.notificationGroupJid;
+                                const groupJid = currentSettings.whatsappGroupId || currentSettings.notificationGroupJid;
                                 if (groupJid) {
                                     const order = result.orderCreated;
                                     const itemsList = order.items.map(i => `• ${i.quantity}x ${i.name}`).join('\n');
@@ -1238,7 +1238,7 @@ class WhatsAppService {
         try {
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             const settings = JSON.parse(tenant?.settings || '{}');
-            const groupId = settings.whatsappGroupId;
+            const groupId = settings.whatsappGroupId || settings.notificationGroupJid;
 
             if (!groupId) {
                 console.log('[GroupOrder] Grupo não configurado');
