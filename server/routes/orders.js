@@ -390,119 +390,128 @@ export default function (db, broadcast) {
             // São executados após a resposta ao cliente
             // ========================================
 
+            // [FIX] Declarar confirmationTarget ANTES de usar (bug: faltava let, causava ReferenceError em ESM strict mode)
+            let confirmationTarget = null;
+
             // Enviar confirmação via WhatsApp para o cliente
             // ESTRATÉGIA: Sempre formatar corretamente para @s.whatsapp.net
             // [FIX] Inverter precedência: Priorizar o telefone digitado pelo cliente (validado) 
             // sobre o whatsappId de origem (que pode ser de um link compartilhado)
-            if (validPhone) {
-                // Cliente digitou ou confirmou este telefone no checkout
-                let cleanPhone = validPhone.replace(/\D/g, '');
-                if (!cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
-                    cleanPhone = '55' + cleanPhone;
-                }
-                confirmationTarget = cleanPhone + '@s.whatsapp.net';
-                console.log(`[Confirmacao] 🎯 Prioridade TOTAL para telefone do checkout: ${confirmationTarget}`);
-            } else if (whatsappId) {
-                // FALLBACK: Só usar whatsappId se o cliente não informou telefone manual (ex: PID/LID de bot)
-                let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
+            try {
+                if (validPhone) {
+                    // Cliente digitou ou confirmou este telefone no checkout
+                    let cleanPhone = validPhone.replace(/\D/g, '');
+                    if (!cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+                        cleanPhone = '55' + cleanPhone;
+                    }
+                    confirmationTarget = cleanPhone + '@s.whatsapp.net';
+                    console.log(`[Confirmacao] 🎯 Prioridade TOTAL para telefone do checkout: ${confirmationTarget}`);
+                } else if (whatsappId) {
+                    // FALLBACK: Só usar whatsappId se o cliente não informou telefone manual (ex: PID/LID de bot)
+                    let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
 
-                if (phone.length >= 15) {
-                    // [FIX] PID/LID detectado - Tentar resolver para telefone real antes de enviar
-                    let resolvedPhone = null;
+                    if (phone.length >= 15) {
+                        // [FIX] PID/LID detectado - Tentar resolver para telefone real antes de enviar
+                        let resolvedPhone = null;
 
-                    try {
-                        // 1. Tentar via pid_jid_mappings (PID -> JID)
-                        const pidMapping = await db.get(
-                            'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
-                            [tenantId, phone]
-                        );
-                        if (pidMapping?.jid) {
-                            resolvedPhone = pidMapping.jid;
-                            console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela PID: ${resolvedPhone}`);
-                        }
-                    } catch (e) { }
-
-                    if (!resolvedPhone) {
                         try {
-                            // 2. Tentar via lid_phone_mappings (LID -> Phone)
-                            const lidMapping = await db.get(
-                                'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                            // 1. Tentar via pid_jid_mappings (PID -> JID)
+                            const pidMapping = await db.get(
+                                'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
                                 [tenantId, phone]
                             );
-                            if (lidMapping?.phone) {
-                                // Mapeamento LID retorna apenas números, adicionar sufixo
-                                let rawPhone = lidMapping.phone.replace(/\D/g, '');
-                                if (!rawPhone.startsWith('55') && rawPhone.length >= 10 && rawPhone.length <= 11) {
-                                    rawPhone = '55' + rawPhone;
-                                }
-                                resolvedPhone = rawPhone + '@s.whatsapp.net';
-                                console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela LID: ${resolvedPhone}`);
+                            if (pidMapping?.jid) {
+                                resolvedPhone = pidMapping.jid;
+                                console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela PID: ${resolvedPhone}`);
                             }
                         } catch (e) { }
-                    }
 
-                    if (resolvedPhone) {
-                        confirmationTarget = resolvedPhone;
-                    } else {
-                        // Se não resolveu, há risco de ser um LID não mapeado. 
-                        // Enviar para @s.whatsapp.net com 15+ dígitos é inválido e causa falha.
-                        // Logar erro e tentar envio para @lid como última esperança se for compatível?
-                        // Melhor não arriscar bloquear a fila com JID inválido.
-                        // MAS, se o original tinha @lid, devemos respeitar.
-                        if (whatsappId.includes('@lid')) {
-                            confirmationTarget = phone + '@lid';
-                            console.log(`[Confirmacao] ⚠️ PID não resolvido, mantendo formato LID original: ${confirmationTarget}`);
-                        } else {
-                            console.error(`[Confirmacao] ❌ PID ${phone} não resolvido e sem formato conhecido. Ignorando envio para evitar erro.`);
-                            confirmationTarget = null;
+                        if (!resolvedPhone) {
+                            try {
+                                // 2. Tentar via lid_phone_mappings (LID -> Phone)
+                                const lidMapping = await db.get(
+                                    'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                                    [tenantId, phone]
+                                );
+                                if (lidMapping?.phone) {
+                                    // Mapeamento LID retorna apenas números, adicionar sufixo
+                                    let rawPhone = lidMapping.phone.replace(/\D/g, '');
+                                    if (!rawPhone.startsWith('55') && rawPhone.length >= 10 && rawPhone.length <= 11) {
+                                        rawPhone = '55' + rawPhone;
+                                    }
+                                    resolvedPhone = rawPhone + '@s.whatsapp.net';
+                                    console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela LID: ${resolvedPhone}`);
+                                }
+                            } catch (e) { }
                         }
-                    }
 
-                } else {
-                    if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
-                        phone = '55' + phone;
+                        if (resolvedPhone) {
+                            confirmationTarget = resolvedPhone;
+                        } else {
+                            // Se não resolveu, há risco de ser um LID não mapeado. 
+                            // Enviar para @s.whatsapp.net com 15+ dígitos é inválido e causa falha.
+                            // MAS, se o original tinha @lid, devemos respeitar.
+                            if (whatsappId.includes('@lid')) {
+                                confirmationTarget = phone + '@lid';
+                                console.log(`[Confirmacao] ⚠️ PID não resolvido, mantendo formato LID original: ${confirmationTarget}`);
+                            } else {
+                                console.error(`[Confirmacao] ❌ PID ${phone} não resolvido e sem formato conhecido. Ignorando envio para evitar erro.`);
+                                confirmationTarget = null;
+                            }
+                        }
+
+                    } else {
+                        if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
+                            phone = '55' + phone;
+                        }
+                        confirmationTarget = phone + '@s.whatsapp.net';
+                        console.log(`[Confirmacao] Usando whatsappId formatado (fallback): ${confirmationTarget}`);
                     }
-                    confirmationTarget = phone + '@s.whatsapp.net';
-                    console.log(`[Confirmacao] Usando whatsappId formatado (fallback): ${confirmationTarget}`);
                 }
+
+                if (confirmationTarget) {
+                    getService().sendOrderConfirmation(tenantId, confirmationTarget, {
+                        order_number: orderNumber,
+                        items: itemsWithDetails,
+                        delivery_fee: deliveryFee,
+                        total,
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
+                        address,
+                        payment_method: paymentMethod
+                    }).then(() => {
+                        console.log(`[Confirmacao] ✅ WhatsApp enviado para ${confirmationTarget}`);
+                    }).catch(err => {
+                        console.error('[Confirmacao] Erro:', err.message);
+                    });
+                } else {
+                    console.log(`[Confirmacao] ⚠️ Sem destino para enviar confirmação`);
+                }
+            } catch (confirmErr) {
+                console.error('[Confirmacao] ❌ Erro inesperado no bloco de confirmação:', confirmErr.message);
             }
 
-            if (confirmationTarget) {
-                getService().sendOrderConfirmation(tenantId, confirmationTarget, {
+            // Enviar para grupo de entregas (try-catch independente para não ser bloqueado por erros na confirmação)
+            try {
+                getService().sendOrderToGroup(tenantId, {
                     order_number: orderNumber,
                     items: itemsWithDetails,
-                    delivery_fee: deliveryFee,
                     total,
+                    delivery_fee: deliveryFee,
                     customer_name: customerName,
                     customer_phone: customerPhone,
-                    address,
-                    payment_method: paymentMethod
+                    address: address || null, // Objeto completo com lat, lng, street, number, etc.
+                    payment_method: paymentMethod,
+                    change_for: req.body.payment_change || null,
+                    observation: observation || null
                 }).then(() => {
-                    console.log(`[Confirmacao] ✅ WhatsApp enviado para ${confirmationTarget}`);
+                    console.log(`[Grupo] ✅ Pedido #${orderNumber} enviado para grupo`);
                 }).catch(err => {
-                    console.error('[Confirmacao] Erro:', err.message);
+                    console.error('Erro ao enviar para grupo WhatsApp:', err.message);
                 });
-            } else {
-                console.log(`[Confirmacao] ⚠️ Sem destino para enviar confirmação`);
+            } catch (groupErr) {
+                console.error('[Grupo] ❌ Erro inesperado no bloco de grupo:', groupErr.message);
             }
-
-            // Enviar para grupo de entregas
-            getService().sendOrderToGroup(tenantId, {
-                order_number: orderNumber,
-                items: itemsWithDetails,
-                total,
-                delivery_fee: deliveryFee,
-                customer_name: customerName,
-                customer_phone: customerPhone,
-                address: address || null, // Objeto completo com lat, lng, street, number, etc.
-                payment_method: paymentMethod,
-                change_for: req.body.payment_change || null,
-                observation: observation || null
-            }).then(() => {
-                console.log(`[Grupo] ✅ Pedido #${orderNumber} enviado para grupo`);
-            }).catch(err => {
-                console.error('Erro ao enviar para grupo WhatsApp:', err.message);
-            });
 
         } catch (error) {
             console.error('Create order error:', error);
