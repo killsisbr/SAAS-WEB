@@ -437,6 +437,17 @@ async function start() {
         backupService.startAutosave(24); // Backup diário
         console.log('[Backup] Serviço de autosave iniciado');
 
+        // Validar e garantir que o modelo LLM está disponível (Ollama)
+        try {
+            const { getOllamaManager } = await import('./services/ollama-manager.js');
+            const ollamaManager = getOllamaManager();
+            // Pegar modelo padrão das configs ou .env
+            const defaultModel = process.env.OLLAMA_MODEL || 'gemma3:4b';
+            await ollamaManager.ensureModel(defaultModel);
+        } catch (err) {
+            console.warn('[Ollama] Erro ao garantir modelo durante o boot:', err.message);
+        }
+
         // Auto-reconectar WhatsApp (apenas se habilitado via env)
         const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
 

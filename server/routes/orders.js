@@ -392,33 +392,30 @@ export default function (db, broadcast) {
 
             // Enviar confirmação via WhatsApp para o cliente
             // ESTRATÉGIA: Sempre formatar corretamente para @s.whatsapp.net
-            let confirmationTarget = null;
-
-            if (whatsappId) {
-                // Extrair número do whatsappId (remover @c.us, @s.whatsapp.net, etc)
-                let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
-
-                // Verificar se é PID (15+ dígitos) ou telefone (10-13 dígitos)
-                if (phone.length >= 15) {
-                    // É um PID - passar para o service que vai buscar o mapeamento
-                    confirmationTarget = phone + '@s.whatsapp.net';
-                    console.log(`[Confirmacao] Usando PID: ${confirmationTarget}`);
-                } else {
-                    // É um telefone - adicionar código do país se necessário
-                    if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
-                        phone = '55' + phone;
-                    }
-                    confirmationTarget = phone + '@s.whatsapp.net';
-                    console.log(`[Confirmacao] Usando telefone formatado: ${confirmationTarget}`);
-                }
-            } else if (validPhone) {
-                // Cliente não veio do bot - usar telefone digitado (já validado)
+            // [FIX] Inverter precedência: Priorizar o telefone digitado pelo cliente (validado) 
+            // sobre o whatsappId de origem (que pode ser de um link compartilhado)
+            if (validPhone) {
+                // Cliente digitou ou confirmou este telefone no checkout
                 let cleanPhone = validPhone.replace(/\D/g, '');
                 if (!cleanPhone.startsWith('55') && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
                     cleanPhone = '55' + cleanPhone;
                 }
                 confirmationTarget = cleanPhone + '@s.whatsapp.net';
-                console.log(`[Confirmacao] Usando telefone do checkout: ${confirmationTarget}`);
+                console.log(`[Confirmacao] 🎯 Prioridade TOTAL para telefone do checkout: ${confirmationTarget}`);
+            } else if (whatsappId) {
+                // FALLBACK: Só usar whatsappId se o cliente não informou telefone manual (ex: PID/LID de bot)
+                let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
+
+                if (phone.length >= 15) {
+                    confirmationTarget = phone + '@s.whatsapp.net';
+                    console.log(`[Confirmacao] Usando PID (fallback): ${confirmationTarget}`);
+                } else {
+                    if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
+                        phone = '55' + phone;
+                    }
+                    confirmationTarget = phone + '@s.whatsapp.net';
+                    console.log(`[Confirmacao] Usando whatsappId formatado (fallback): ${confirmationTarget}`);
+                }
             }
 
             if (confirmationTarget) {

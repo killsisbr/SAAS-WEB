@@ -4941,6 +4941,20 @@
             deliveryFee = 0;
 
             showToast('PEDIDO ENVIADO!');
+
+            // [FIX] Limpar parâmetros da URL para evitar "reciclar" identidade se recarregar a página
+            // Preserva apenas o slug da loja
+            try {
+                const url = new URL(window.location.href);
+                url.search = '';
+                window.history.replaceState({}, document.title, url.toString());
+                console.log('[Security] URL parameters cleared after order');
+            } catch (e) { }
+
+            // Resetar variáveis de identidade para nova sessão
+            whatsappFromUrl = null;
+            lidFromUrl = null;
+            phoneFromWhatsApp = null;
         }
 
         // Atualizar resumo quando abrir checkout

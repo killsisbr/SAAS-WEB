@@ -1,0 +1,37 @@
+﻿
+        let whatsappFromUrl = null;  // ID completo para backend (ex: 
+5511999999999@c.us)
+        let lidFromUrl = null; // LID do WhatsApp quando nÃ£o hÃ¡ nÃºmero real
+        (function extractWhatsAppFromUrl() {
+                    whatsappFromUrl = cleanDigits + '@c.us';
+                    console.log('[WhatsApp] Telefone vÃ¡lido detectado:', 
+phoneFromWhatsApp, 'ID:', whatsappFromUrl);
+                    whatsappFromUrl = cleanDigits + '@c.us';
+                lidFromUrl = lid;
+                whatsappFromUrl = phoneFromUrl.replace(/\D/g, '');
+                sessionStorage.setItem('whatsappPhone', whatsappFromUrl);
+                console.log('Telefone detectado (simples):', whatsappFromUrl);
+                whatsappFromUrl = whatsappLegacy.replace(/\D/g, '');
+                lidFromUrl = lidParam;
+                sessionStorage.setItem('lidFromUrl', lidParam);
+            if (whatsappFromUrl) {
+                await prefillCustomerData(whatsappFromUrl);
+            else if (lidFromUrl) {
+                await prefillFromLid(lidFromUrl);
+                    whatsappFromUrl = data.phone;
+                if (phoneInput && !whatsappFromUrl && cached.phone) {
+                        const currentPhone = whatsappFromUrl || (phoneInput ? 
+phoneInput.value.replace(/\D/g, '') : '');
+                console.log('[DEBUG] whatsappFromUrl:', whatsappFromUrl);
+                console.log('[DEBUG] lidFromUrl:', lidFromUrl);
+                const computedWhatsappId = whatsappFromUrl
+                    ? (whatsappFromUrl.includes('@') ? whatsappFromUrl : 
+whatsappFromUrl + '@c.us')
+                    : (lidFromUrl ? lidFromUrl + '@lid' : null);
+                        if (lidFromUrl && phone) {
+                                        lid: lidFromUrl,
+                                console.log('[LID] Mapeamento salvo:', lidFromUrl, 
+'->', phone);
+            if (!whatsappFromUrl) {
+
+
