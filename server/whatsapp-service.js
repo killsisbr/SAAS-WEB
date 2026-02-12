@@ -319,6 +319,13 @@ class WhatsAppService {
                 console.log(`[WhatsApp] Status Code: ${statusCode} (${reason})`);
                 console.log(`[WhatsApp] Reconectando automaticamente: ${shouldReconnect}`);
 
+                // [FIX] Impedir loop infinito de reconexão se atingiu limite de QR
+                if (this.statuses.get(tenantId) === 'SCAN_TIMEOUT') {
+                    console.log(`[WhatsApp] 🛑 Tenant ${tenantId} parou por excesso de QR. Reconexão automática ABORTADA.`);
+                    this.clients.delete(tenantId);
+                    return;
+                }
+
                 if (shouldReconnect) {
                     this.statuses.set(tenantId, 'RECONNECTING');
                     // Delay randomizado para evitar rate-limit do WhatsApp
