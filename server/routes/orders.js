@@ -407,8 +407,57 @@ export default function (db, broadcast) {
                 let phone = whatsappId.replace(/@.*$/, '').replace(/\D/g, '');
 
                 if (phone.length >= 15) {
-                    confirmationTarget = phone + '@s.whatsapp.net';
-                    console.log(`[Confirmacao] Usando PID (fallback): ${confirmationTarget}`);
+                    // [FIX] PID/LID detectado - Tentar resolver para telefone real antes de enviar
+                    let resolvedPhone = null;
+
+                    try {
+                        // 1. Tentar via pid_jid_mappings (PID -> JID)
+                        const pidMapping = await db.get(
+                            'SELECT jid FROM pid_jid_mappings WHERE tenant_id = ? AND pid = ?',
+                            [tenantId, phone]
+                        );
+                        if (pidMapping?.jid) {
+                            resolvedPhone = pidMapping.jid;
+                            console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela PID: ${resolvedPhone}`);
+                        }
+                    } catch (e) { }
+
+                    if (!resolvedPhone) {
+                        try {
+                            // 2. Tentar via lid_phone_mappings (LID -> Phone)
+                            const lidMapping = await db.get(
+                                'SELECT phone FROM lid_phone_mappings WHERE tenant_id = ? AND lid = ?',
+                                [tenantId, phone]
+                            );
+                            if (lidMapping?.phone) {
+                                // Mapeamento LID retorna apenas números, adicionar sufixo
+                                let rawPhone = lidMapping.phone.replace(/\D/g, '');
+                                if (!rawPhone.startsWith('55') && rawPhone.length >= 10 && rawPhone.length <= 11) {
+                                    rawPhone = '55' + rawPhone;
+                                }
+                                resolvedPhone = rawPhone + '@s.whatsapp.net';
+                                console.log(`[Confirmacao] 🔍 PID ${phone} resolvido via tabela LID: ${resolvedPhone}`);
+                            }
+                        } catch (e) { }
+                    }
+
+                    if (resolvedPhone) {
+                        confirmationTarget = resolvedPhone;
+                    } else {
+                        // Se não resolveu, há risco de ser um LID não mapeado. 
+                        // Enviar para @s.whatsapp.net com 15+ dígitos é inválido e causa falha.
+                        // Logar erro e tentar envio para @lid como última esperança se for compatível?
+                        // Melhor não arriscar bloquear a fila com JID inválido.
+                        // MAS, se o original tinha @lid, devemos respeitar.
+                        if (whatsappId.includes('@lid')) {
+                            confirmationTarget = phone + '@lid';
+                            console.log(`[Confirmacao] ⚠️ PID não resolvido, mantendo formato LID original: ${confirmationTarget}`);
+                        } else {
+                            console.error(`[Confirmacao] ❌ PID ${phone} não resolvido e sem formato conhecido. Ignorando envio para evitar erro.`);
+                            confirmationTarget = null;
+                        }
+                    }
+
                 } else {
                     if (!phone.startsWith('55') && phone.length >= 10 && phone.length <= 11) {
                         phone = '55' + phone;
