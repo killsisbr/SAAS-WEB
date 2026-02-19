@@ -90,7 +90,7 @@ export async function processMessage(message, context, menuData, apiKey, provide
         console.error(`[AI/${provider}] Erro ao processar:`, error.message);
         return {
             intent: 'error',
-            response: 'Desculpe, nao entendi. Pode repetir?'
+            response: 'Desculpe, n\u00E3o entendi. Pode repetir?'
         };
     }
 }
@@ -117,7 +117,7 @@ function buildSystemPrompt(context, menuData, businessInfo = {}) {
     // Metodos de pagamento dinâmicos
     const paymentMethods = [];
     if (businessInfo.acceptPix !== false) paymentMethods.push('PIX');
-    if (businessInfo.acceptCard !== false) paymentMethods.push('Cartao');
+    if (businessInfo.acceptCard !== false) paymentMethods.push('Cart\u00E3o');
     if (businessInfo.acceptCash !== false) paymentMethods.push('Dinheiro');
     if (paymentMethods.length === 0) paymentMethods.push('A combinar');
 
@@ -148,11 +148,11 @@ function buildSystemPrompt(context, menuData, businessInfo = {}) {
             ];
 
             if (relevantGroups.length > 0) {
-                line += '\n    OPCOES DISPONIVEIS:';
+                line += '\n    OP\u00C7\u00D5ES DISPON\u00CDVEIS:';
                 relevantGroups.forEach(g => {
                     const min = g.min_selection || 0;
                     const max = g.max_selection || 1;
-                    const mandatory = min > 0 ? `(OBRIGATORIO: minimo ${min})` : '(Opcional)';
+                    const mandatory = min > 0 ? `(OBRIGAT\u00D3RIO: m\u00EDnimo ${min})` : '(Opcional)';
                     line += `\n    * ${g.name} ${mandatory} - Escolha entre ${min} e ${max}:`;
                     g.items.forEach(i => {
                         line += `\n      > ${i.name} (ID: ${i.id}): +R$ ${Number(i.price).toFixed(2).replace('.', ',')}`;
@@ -260,7 +260,7 @@ export async function generateGreeting(restaurantName, apiKey, provider = 'gemin
                 temperature: 0.8,
                 max_tokens: 150
             });
-            return completion.choices[0]?.message?.content || `Ola! Bem-vindo ao ${restaurantName}!`;
+            return completion.choices[0]?.message?.content || `Ol\u00E1! Bem-vindo ao ${restaurantName}!`;
         } else {
             const genAI = getProvider('gemini', apiKey);
             const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
@@ -286,7 +286,7 @@ export function formatOrderConfirmation(order) {
         return line;
     }).join('\n');
 
-    return `Pedido #${order.orderNumber} confirmado!\n\n${items}\n\nTotal: R$ ${order.total.toFixed(2).replace('.', ',')}\n\nAgradecemos a preferencia!`;
+    return `Pedido #${order.orderNumber} confirmado!\n\n${items}\n\nTotal: R$ ${order.total.toFixed(2).replace('.', ',')}\n\nAgradecemos a prefer\u00EAncia!`;
 }
 
 export default {

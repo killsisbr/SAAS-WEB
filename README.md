@@ -22,6 +22,7 @@ Sistema completo para gerenciamento de pedidos, cardapio digital, integracao com
 - [API Reference](#api-reference)
 - [Banco de Dados](#banco-de-dados)
 - [Deploy](#deploy)
+- [Auto-Recovery & Manutenção](#auto-recovery--manutencao)
 - [Autor](#autor)
 
 ---
@@ -638,6 +639,29 @@ pm2 start server.js --name deliveryhub
 # 4. Configurar Nginx (proxy reverso)
 # 5. Configurar SSL (Let's Encrypt)
 ```
+
+---
+
+## Auto-Recovery & Manutencao
+
+O sistema possui mecanismos integrados para garantir a estabilidade e disponibilidade, especialmente em ambientes de VPS com recursos limitados.
+
+### 1. Deadlock Detection (WhatsApp)
+O `whatsapp-service.js` monitora a atividade das conexões. Se um tenant estiver "Online" mas sem nenhuma atividade ou evento por mais de 30 minutos, o sistema detecta um possivel **Deadlock** e força um **Hard Reconnect** (limpeza de cache e reinicialização do socket).
+
+### 2. Auto-Restart Programado (Manutencao)
+Para evitar fragmentação de memória e garantir a limpeza de logs, recomenda-se o uso do script `maintenance.sh`.
+
+**Configuracao na VPS:**
+1. Dê permissão de execução: `chmod +x /root/killsis/SAAS-WEB/maintenance.sh` (ajuste o caminho se necessário).
+2. Adicione ao Crontab (`crontab -e`):
+```bash
+# Reiniciar o sistema e limpar logs diariamente às 04:00 AM
+0 4 * * * /bin/bash /root/killsis/SAAS-WEB/maintenance.sh >> /root/killsis/maintenance.log 2>&1
+```
+
+### 3. Hard Reset Manual
+Caso um tenant apresente erro persistente de `prekey bundle` ou loop de queda, o sistema agora tenta um hard reset automático após 5 falhas consecutivas.
 
 ---
 

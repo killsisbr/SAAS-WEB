@@ -13,6 +13,7 @@ module.exports = {
         },
         node_args: '--max-old-space-size=4096', // Aumentar o heap size do Node para 4GB
         merge_logs: true,
-        log_date_format: 'YYYY-MM-DD HH:mm:ss'
+        log_date_format: 'YYYY-MM-DD HH:mm:ss',
+        cron_restart: '0 4 * * *' // Double-lock: Reiniciar todo dia às 04:00 AM
     }]
 };

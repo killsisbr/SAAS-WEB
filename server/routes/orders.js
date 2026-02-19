@@ -92,9 +92,15 @@ export default function (db, broadcast) {
                 return res.status(400).json({ error: 'Tenant ID obrigatorio' });
             }
 
+            let cleanPhone = phone.replace(/\D/g, '');
+            // Se for brasileiro (10 ou 11 digitos) e comeca com 55, remover
+            if (cleanPhone.startsWith('55') && cleanPhone.length > 11) {
+                cleanPhone = cleanPhone.substring(2);
+            }
+
             const customer = await db.get(
                 'SELECT * FROM customers WHERE tenant_id = ? AND phone = ?',
-                [tenantId, phone.replace(/\D/g, '')]
+                [tenantId, cleanPhone]
             );
 
             if (!customer) {
@@ -106,7 +112,7 @@ export default function (db, broadcast) {
                 SELECT address, customer_name FROM orders 
                 WHERE tenant_id = ? AND customer_phone = ? AND address IS NOT NULL
                 ORDER BY created_at DESC LIMIT 1
-            `, [tenantId, phone.replace(/\D/g, '')]);
+            `, [tenantId, cleanPhone]);
 
             res.json({
                 exists: true,
@@ -317,12 +323,35 @@ export default function (db, broadcast) {
 
             const total = subtotal + deliveryFee;
 
-            // Obter proximo numero de pedido
-            const lastOrder = await db.get(
-                'SELECT MAX(order_number) as max FROM orders WHERE tenant_id = ?',
-                [tenantId]
-            );
-            const orderNumber = (lastOrder?.max || 0) + 1;
+            // Obter numero de pedido aleatorio de 4 digitos
+            let orderNumber;
+            let isUnique = false;
+            let attempts = 0;
+
+            while (!isUnique && attempts < 10) {
+                orderNumber = Math.floor(1000 + Math.random() * 9000); // 1000-9999
+
+                // Verificar se ja existe este numero para o tenant hoje
+                const today = new Date().toISOString().split('T')[0];
+                const existing = await db.get(
+                    'SELECT id FROM orders WHERE tenant_id = ? AND order_number = ? AND date(created_at) = ?',
+                    [tenantId, orderNumber, today]
+                );
+
+                if (!existing) {
+                    isUnique = true;
+                }
+                attempts++;
+            }
+
+            // Fallback para incremental se falhar muitas vezes (improvavel com 4 digitos)
+            if (!isUnique) {
+                const lastOrder = await db.get(
+                    'SELECT MAX(order_number) as max FROM orders WHERE tenant_id = ?',
+                    [tenantId]
+                );
+                orderNumber = (lastOrder?.max || 0) + 1;
+            }
 
             // Criar/atualizar cliente
             let customerId = null;

@@ -50,6 +50,7 @@ class WhatsAppService {
         this.statuses = new Map(); // tenantId -> status
         this.welcomeLogs = new Map(); // tenantId -> { whatsappId -> timestamp }
         this.recentMessages = new Map(); // tenantId -> { whatsappId -> { message, timestamp } }
+        this.pendingInitializations = new Set(); // tenantId (Evitar conexões duplicadas)
 
         // Intervalo (em horas) para reenvio do welcome
         this.welcomeResendHours = parseFloat(process.env.WELCOME_RESEND_HOURS || '12');
@@ -71,6 +72,10 @@ class WhatsAppService {
         this.reconnectDelay = 10000; // 10 segundos (base para exponential backoff)
         this.qrAttempts = new Map(); // tenantId -> attempts
         this.maxQrAttempts = 5;
+        this.lastMessageTime = new Map(); // tenantId -> timestamp (for deadlock detection)
+
+        // Limite para decretar "Deadlock" (30 minutos sem nenhuma atividade ou erro)
+        this.deadlockThreshold = 30 * 60 * 1000;
 
         // Garantir que a tabela de mapeamento existe
         this.ensurePidJidTable();
@@ -160,15 +165,28 @@ class WhatsAppService {
         this.healthCheckInterval = setInterval(async () => {
             console.log(`[HealthCheck] Verificando ${this.clients.size} conexões ativas...`);
             for (const [tenantId, sock] of this.clients) {
+                const status = this.statuses.get(tenantId);
+
+                // Pular se já estiver em processo de conexão
+                if (status === 'INITIALIZING' || status === 'RECONNECTING' || status === 'CONNECTING' || this.pendingInitializations.has(tenantId)) {
+                    continue;
+                }
+
                 try {
-                    // Verificar se socket está conectado
+                    // 1. Verificar se socket está conectado fisicamente
                     if (!sock?.user) {
-                        const status = this.statuses.get(tenantId);
                         console.log(`[HealthCheck] ⚠️ Tenant ${tenantId} parece instável (Status: ${status}). Tentando reconectar...`);
                         await this.reconnectTenant(tenantId);
-                    } else {
-                        // Opcional: Ping simples ou log de "Tudo OK"
-                        // console.log(`[HealthCheck] Tenant ${tenantId} OK.`);
+                        continue;
+                    }
+
+                    // 2. Deadlock Detection (Se passar muito tempo sem atividade mesmo "Online")
+                    const lastActivity = this.lastMessageTime.get(tenantId) || Date.now();
+                    const inactiveTime = Date.now() - lastActivity;
+
+                    if (inactiveTime > this.deadlockThreshold && status === 'READY') {
+                        console.warn(`[HealthCheck] 🚨 Tenant ${tenantId} detectado em Deadlock (${Math.round(inactiveTime / 60000)}min inativo). Forçando reinicialização.`);
+                        await this.reconnectTenant(tenantId, true); // true = force hard reset
                     }
                 } catch (err) {
                     console.error(`[HealthCheck] Erro ao verificar tenant ${tenantId}:`, err.message);
@@ -181,8 +199,10 @@ class WhatsAppService {
 
     /**
      * Reconectar tenant
+     * @param {string} tenantId 
+     * @param {boolean} hardReset Se deve apagar a sessão e começar do zero
      */
-    async reconnectTenant(tenantId) {
+    async reconnectTenant(tenantId, hardReset = false) {
         const attempts = this.reconnectAttempts.get(tenantId) || 0;
 
         if (attempts >= this.maxReconnectAttempts) {
@@ -202,14 +222,29 @@ class WhatsAppService {
 
         // Exponential backoff: 10s, 20s, 40s, 80s, ... max 5min
         const delay = Math.min(this.reconnectDelay * Math.pow(2, attempts), 5 * 60 * 1000);
-        console.log(`[WhatsApp] Tentativa ${attempts + 1} de reconexao para tenant ${tenantId} (delay: ${Math.round(delay / 1000)}s)`);
+        console.log(`[WhatsApp] Tentativa ${attempts + 1} de reconexao para tenant ${tenantId} (delay: ${Math.round(delay / 1000)}s)${hardReset ? ' [HARD RESET]' : ''}`);
 
         try {
+            // Se for Hard Reset, encerramos cliente e apagamos pasta
+            if (hardReset || attempts === 5) { // No 5º erro, tenta um hard reset automático
+                console.log(`[WhatsApp] Executando Hard Reset para tenant ${tenantId} devido a falhas persistentes.`);
+                const sock = this.clients.get(tenantId);
+                if (sock) {
+                    try { sock.end(); } catch (e) { }
+                    this.clients.delete(tenantId);
+                }
+                const authDir = path.join(SESSIONS_DIR, `session-${tenantId}`);
+                if (fs.existsSync(authDir)) {
+                    fs.rmSync(authDir, { recursive: true, force: true });
+                }
+            }
+
             // Se for tentativa 1, logamos, se for retry logs reduzidos
             if (attempts === 0) {
                 console.log(`[WhatsApp] Iniciando conexão para tenant ${tenantId}...`);
             }
 
+            this.statuses.set(tenantId, 'CONNECTING');
             await this.initializeForTenant(tenantId);
             this.reconnectAttempts.set(tenantId, 0); // Reset on success
             this.qrAttempts.set(tenantId, 0); // Reset QRs on success
@@ -224,178 +259,198 @@ class WhatsAppService {
      * Inicializar WhatsApp para um tenant usando Baileys
      */
     async initializeForTenant(tenantId) {
-        // Resetar contador de QR codes ao iniciar manualmente ou auto-reconnect
-        if (!this.reconnectAttempts.has(tenantId)) {
-            this.qrAttempts.set(tenantId, 0);
-        }
-
-        // Verificar se ja existe cliente
-        if (this.clients.has(tenantId) && this.clients.get(tenantId)?.user) {
-            console.log(`WhatsApp client ja existe e esta conectado para tenant ${tenantId}`);
+        // [GUARD] Evitar inicializações duplicadas simultâneas
+        if (this.pendingInitializations.has(tenantId)) {
+            console.log(`[WhatsApp] ⚠️ Já existe uma inicialização em curso para tenant ${tenantId}. Ignorando duplicata.`);
             return;
         }
 
-        const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
-        if (!tenant) {
-            throw new Error(`Tenant ${tenantId} nao encontrado`);
-        }
+        this.pendingInitializations.add(tenantId);
 
-        const settings = JSON.parse(tenant.settings || '{}');
-
-        console.log(`Inicializando WhatsApp (Baileys) para tenant ${tenantId}`);
-        this.statuses.set(tenantId, 'INITIALIZING');
-
-        // Diretorio de autenticacao para este tenant
-        const authDir = path.join(SESSIONS_DIR, `session-${tenantId}`);
-
-        // Carregar estado de autenticacao
-        const { state, saveCreds } = await useMultiFileAuthState(authDir);
-
-        // Buscar versao mais recente do Baileys
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        console.log(`[Baileys] Usando versao WA: ${version.join('.')}, isLatest: ${isLatest}`);
-
-        // Criar socket
-        const sock = makeWASocket({
-            version,
-            logger,
-            printQRInTerminal: false,
-            auth: {
-                creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, logger),
-            },
-            generateHighQualityLinkPreview: false,
-            syncFullHistory: false,
-            markOnlineOnConnect: true,
-            // Configurações de estabilidade para evitar Status 408
-            keepAliveIntervalMs: 25000, // Ping a cada 25 segundos
-            retryRequestDelayMs: 250, // Delay entre retry de requests
-            connectTimeoutMs: 60000, // 60 segundos para conectar
-            qrTimeout: 45000, // 45 segundos para escanear QR
-        });
-
-        // Salvar credenciais quando atualizarem
-        sock.ev.on('creds.update', saveCreds);
-
-        // Handler de QR Code
-        sock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect, qr } = update;
-
-            if (qr) {
-                const attempts = (this.qrAttempts.get(tenantId) || 0) + 1;
-                this.qrAttempts.set(tenantId, attempts);
-
-                if (attempts > this.maxQrAttempts) {
-                    console.log(`[WhatsApp] ⚠️ Limite de QR Codes atingido para ${tenantId} (${attempts}/${this.maxQrAttempts}). Parando para evitar spam.`);
-                    this.statuses.set(tenantId, 'SCAN_TIMEOUT');
-                    if (sock) {
-                        try { sock.end(); } catch (e) { }
-                    }
-                    return;
-                }
-
-                if (attempts === 1) {
-                    console.log(`[WhatsApp] QR Code gerado para tenant ${tenantId}.`);
-                }
-
-                // Gerar QR code como imagem base64
-                try {
-                    const qrImageBase64 = await qrcodeImage.toDataURL(qr);
-                    this.qrCodes.set(tenantId, qrImageBase64);
-                } catch (err) {
-                    this.qrCodes.set(tenantId, qr);
-                }
-
-                this.statuses.set(tenantId, 'QR_READY');
+        try {
+            // Resetar contador de QR codes ao iniciar manualmente ou auto-reconnect
+            if (!this.reconnectAttempts.has(tenantId)) {
+                this.qrAttempts.set(tenantId, 0);
             }
 
-            if (connection === 'close') {
-                const BoomError = lastDisconnect?.error;
-                const statusCode = BoomError?.output?.statusCode;
-                const reason = BoomError?.message || 'Unknown reason';
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-                console.log(`[WhatsApp] 🛑 Conexão FECHADA para tenant ${tenantId}.`);
-                console.log(`[WhatsApp] Status Code: ${statusCode} (${reason})`);
-                console.log(`[WhatsApp] Reconectando automaticamente: ${shouldReconnect}`);
-
-                // [FIX] Impedir loop infinito de reconexão se atingiu limite de QR
-                if (this.statuses.get(tenantId) === 'SCAN_TIMEOUT') {
-                    console.log(`[WhatsApp] 🛑 Tenant ${tenantId} parou por excesso de QR. Reconexão automática ABORTADA.`);
-                    this.clients.delete(tenantId);
-                    return;
-                }
-
-                if (shouldReconnect) {
-                    this.statuses.set(tenantId, 'RECONNECTING');
-                    // Delay randomizado para evitar rate-limit do WhatsApp
-                    const delay = 5000 + Math.random() * 5000; // 5-10 segundos
-                    setTimeout(() => this.initializeForTenant(tenantId), delay);
-                } else {
-                    this.statuses.set(tenantId, 'LOGGED_OUT');
-                    this.clients.delete(tenantId);
-                    // Apagar sessao se foi logout
-                    try {
-                        fs.rmSync(authDir, { recursive: true, force: true });
-                    } catch (e) { /* ignore */ }
-                }
-            } else if (connection === 'open') {
-                console.log(`WhatsApp pronto para tenant ${tenantId}`);
-                this.statuses.set(tenantId, 'READY');
-                this.qrCodes.delete(tenantId);
-                this.reconnectAttempts.set(tenantId, 0);
+            // Verificar se ja existe cliente
+            if (this.clients.has(tenantId) && this.clients.get(tenantId)?.user) {
+                console.log(`WhatsApp client ja existe e esta conectado para tenant ${tenantId}`);
+                return;
             }
-        });
 
-        // Handler de mensagens
-        sock.ev.on('messages.upsert', async (m) => {
-            // Ignorar history sync (append) e outros tipos que não sejam notify
-            if (m.type !== 'notify') return;
+            const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+            if (!tenant) {
+                throw new Error(`Tenant ${tenantId} nao encontrado`);
+            }
 
-            for (const msg of m.messages) {
-                try {
-                    // [CRITICAL] Ignorar mensagens do proprio bot
-                    if (msg.key.fromMe) return;
+            const settings = JSON.parse(tenant.settings || '{}');
 
-                    // Ignorar mensagens de status/broadcast
-                    if (msg.key.remoteJid === 'status@broadcast') return;
+            console.log(`Inicializando WhatsApp (Baileys) para tenant ${tenantId}`);
+            this.statuses.set(tenantId, 'INITIALIZING');
 
-                    // Ignorar mensagens muito antigas (evitar processar backlog em loop)
-                    const msgTime = (msg.messageTimestamp || 0);
-                    const now = Math.floor(Date.now() / 1000);
-                    if (now - msgTime > 30) { // Ignorar mensagens com mais de 30s
+            // Diretorio de autenticacao para este tenant
+            const authDir = path.join(SESSIONS_DIR, `session-${tenantId}`);
+
+            // Carregar estado de autenticacao
+            const { state, saveCreds } = await useMultiFileAuthState(authDir);
+
+            // Buscar versao mais recente do Baileys
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            console.log(`[Baileys] Usando versao WA: ${version.join('.')}, isLatest: ${isLatest}`);
+
+            // Criar socket
+            const sock = makeWASocket({
+                version,
+                logger,
+                printQRInTerminal: false,
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(state.keys, logger),
+                },
+                generateHighQualityLinkPreview: false,
+                syncFullHistory: false,
+                markOnlineOnConnect: true,
+                // Configurações de estabilidade para evitar Status 408
+                keepAliveIntervalMs: 25000, // Ping a cada 25 segundos
+                retryRequestDelayMs: 250, // Delay entre retry de requests
+                connectTimeoutMs: 60000, // 60 segundos para conectar
+                qrTimeout: 45000, // 45 segundos para escanear QR
+            });
+
+            // Salvar credenciais quando atualizarem
+            sock.ev.on('creds.update', saveCreds);
+
+            // Handler de QR Code
+            sock.ev.on('connection.update', async (update) => {
+                const { connection, lastDisconnect, qr } = update;
+
+                if (qr) {
+                    const attempts = (this.qrAttempts.get(tenantId) || 0) + 1;
+                    this.qrAttempts.set(tenantId, attempts);
+
+                    if (attempts > this.maxQrAttempts) {
+                        console.log(`[WhatsApp] ⚠️ Limite de QR Codes atingido para ${tenantId} (${attempts}/${this.maxQrAttempts}). Parando para evitar spam.`);
+                        this.statuses.set(tenantId, 'SCAN_TIMEOUT');
+                        if (sock) {
+                            try { sock.end(); } catch (e) { }
+                        }
                         return;
                     }
 
-                    // Processar comandos de grupos ANTES de ignorar
-                    if (msg.key.remoteJid?.endsWith('@g.us')) {
-                        await this.handleGroupCommand(tenantId, msg, sock);
-                        continue; // Não processar como mensagem normal
+                    if (attempts === 1) {
+                        console.log(`[WhatsApp] QR Code gerado para tenant ${tenantId}.`);
                     }
 
-                    await this.handleMessage(tenantId, msg, settings, sock);
+                    // Gerar QR code como imagem base64
+                    try {
+                        const qrImageBase64 = await qrcodeImage.toDataURL(qr);
+                        this.qrCodes.set(tenantId, qrImageBase64);
+                    } catch (err) {
+                        this.qrCodes.set(tenantId, qr);
+                    }
+
+                    this.statuses.set(tenantId, 'QR_READY');
+                }
+
+                if (connection === 'close') {
+                    const BoomError = lastDisconnect?.error;
+                    const statusCode = BoomError?.output?.statusCode;
+                    const reason = BoomError?.message || 'Unknown reason';
+                    const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+                    console.log(`[WhatsApp] 🛑 Conexão FECHADA para tenant ${tenantId}.`);
+                    console.log(`[WhatsApp] Motivo: ${statusCode} (${reason})`);
+                    if (BoomError?.data) {
+                        console.log(`[WhatsApp] Detalhes do Erro:`, JSON.stringify(BoomError.data));
+                    }
+                    console.log(`[WhatsApp] Reconectando automaticamente: ${shouldReconnect}`);
+
+                    // [FIX] Impedir loop infinito de reconexão se atingiu limite de QR
+                    if (this.statuses.get(tenantId) === 'SCAN_TIMEOUT') {
+                        console.log(`[WhatsApp] 🛑 Tenant ${tenantId} parou por excesso de QR. Reconexão automática ABORTADA.`);
+                        this.clients.delete(tenantId);
+                        return;
+                    }
+
+                    if (shouldReconnect) {
+                        this.statuses.set(tenantId, 'RECONNECTING');
+                        // Delay randomizado para evitar rate-limit do WhatsApp
+                        const delay = 5000 + Math.random() * 5000; // 5-10 segundos
+                        setTimeout(() => this.initializeForTenant(tenantId), delay);
+                    } else {
+                        this.statuses.set(tenantId, 'LOGGED_OUT');
+                        this.clients.delete(tenantId);
+                        // Apagar sessao se foi logout
+                        try {
+                            fs.rmSync(authDir, { recursive: true, force: true });
+                        } catch (e) { /* ignore */ }
+                    }
+                } else if (connection === 'open') {
+                    console.log(`WhatsApp pronto para tenant ${tenantId}`);
+                    this.statuses.set(tenantId, 'READY');
+                    this.qrCodes.delete(tenantId);
+                    this.reconnectAttempts.set(tenantId, 0);
+                    this.lastMessageTime.set(tenantId, Date.now()); // Reset deadlock timer
+                }
+            });
+
+            // Handler de mensagens
+            sock.ev.on('messages.upsert', async (m) => {
+                // Ignorar history sync (append) e outros tipos que não sejam notify
+                if (m.type !== 'notify') return;
+
+                for (const msg of m.messages) {
+                    try {
+                        // [CRITICAL] Ignorar mensagens do proprio bot
+                        if (msg.key.fromMe) return;
+
+                        // Ignorar mensagens de status/broadcast
+                        if (msg.key.remoteJid === 'status@broadcast') return;
+
+                        // Ignorar mensagens muito antigas (evitar processar backlog em loop)
+                        const msgTime = (msg.messageTimestamp || 0);
+                        const now = Math.floor(Date.now() / 1000);
+                        if (now - msgTime > 30) { // Ignorar mensagens com mais de 30s
+                            return;
+                        }
+
+                        // Processar comandos de grupos ANTES de ignorar
+                        if (msg.key.remoteJid?.endsWith('@g.us')) {
+                            await this.handleGroupCommand(tenantId, msg, sock);
+                            continue; // Não processar como mensagem normal
+                        }
+
+                        await this.handleMessage(tenantId, msg, settings, sock);
+                    } catch (err) {
+                        console.error(`[WhatsApp] Erro fatal ao processar mensagem individual para ${tenantId}:`, err);
+                    }
+                }
+            });
+
+            // Handler de contatos (Sync de LIDs para Auto-Mapeamento)
+            sock.ev.on('contacts.upsert', async (contacts) => {
+                try {
+                    for (const contact of contacts) {
+                        // Mapear LID -> Telefone Real (se disponivel)
+                        if (contact.lid && contact.id && contact.id.endsWith('@s.whatsapp.net')) {
+                            await this.saveLidPhoneMapping(tenantId, contact.lid, contact.id);
+                        }
+                    }
                 } catch (err) {
-                    console.error(`[WhatsApp] Erro fatal ao processar mensagem individual para ${tenantId}:`, err);
+                    console.error(`[AutoMap] Erro processando contatos: ${err.message}`);
                 }
-            }
-        });
+            });
 
-        // Handler de contatos (Sync de LIDs para Auto-Mapeamento)
-        sock.ev.on('contacts.upsert', async (contacts) => {
-            try {
-                for (const contact of contacts) {
-                    // Mapear LID -> Telefone Real (se disponivel)
-                    if (contact.lid && contact.id && contact.id.endsWith('@s.whatsapp.net')) {
-                        await this.saveLidPhoneMapping(tenantId, contact.lid, contact.id);
-                    }
-                }
-            } catch (err) {
-                console.error(`[AutoMap] Erro processando contatos: ${err.message}`);
-            }
-        });
-
-        // Armazenar sockettt
-        this.clients.set(tenantId, sock);
+            // Armazenar socket
+            this.clients.set(tenantId, sock);
+        } catch (err) {
+            console.error(`[WhatsApp] ❌ Falha crítica ao inicializar tenant ${tenantId}:`, err);
+            this.statuses.set(tenantId, 'FAILED');
+            throw err;
+        } finally {
+            this.pendingInitializations.delete(tenantId);
+        }
     }
 
     /**
@@ -453,6 +508,28 @@ class WhatsAppService {
                 '';
 
             if (!messageBody) return; // Ignorar mensagens sem texto
+
+            // ============ COMANDO DE TESTE ============
+            if (messageBody.trim().toLowerCase() === '.teste') {
+                console.log(`[Command] .teste recebido de ${message.pushName || 'Cliente'} (${realPhoneJid})`);
+                const uptime = process.uptime();
+                const hours = Math.floor(uptime / 3600);
+                const minutes = Math.floor((uptime % 3600) / 60);
+                const seconds = Math.floor(uptime % 60);
+
+                // Buscar nome do tenant para o log
+                const tempTenant = await this.db.get('SELECT name FROM tenants WHERE id = ?', [tenantId]);
+
+                const testResponse = `✅ *CONEXÃO ATIVA*\n\n` +
+                    `🤖 *Status:* Online e Funcional\n` +
+                    `⏱️ *Uptime:* ${hours}h ${minutes}m ${seconds}s\n` +
+                    `🏪 *Unidade:* ${tempTenant?.name || 'SaaS Restaurante'}\n\n` +
+                    `📅 *Data:* ${new Date().toLocaleString('pt-BR')}\n` +
+                    `⚙️ *Versão API:* 2.0.0`;
+
+                await this.safeSendMessage(tenantId, jid, testResponse, sock);
+                return;
+            }
 
             const pushName = message.pushName || 'Cliente';
 
@@ -677,6 +754,7 @@ class WhatsAppService {
                     this.markWelcomeSent(tenantId, jid);
                     this.markMessageSent(tenantId, jid, 'welcome');
                     this.markMessageSent(tenantId, jid, 'link');
+                    this.lastMessageTime.set(tenantId, Date.now()); // Update activity
                     console.log(`[AutoWelcome] ✅ Marcado como enviado para ${jid}`);
                 } else {
                     console.log(`[AutoWelcome] ❌ Falhou para ${jid}`);
@@ -838,10 +916,10 @@ class WhatsAppService {
                     .replace(/\{nome\}/gi, customerName || 'Cliente');
             } else {
                 // Mensagem padrao
-                welcomeMessage = `Ola! Bem-vindo ao ${restaurantName}!\n\n` +
-                    `Eu sou o robo de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
-                    `Para comecar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
-                    `Dica: Seu pedido ja estara vinculado ao seu WhatsApp!`;
+                welcomeMessage = `Ol\u00E1! Bem-vindo ao ${restaurantName}!\n\n` +
+                    `Eu sou o rob\u00F4 de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
+                    `Para come\u00E7ar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
+                    `Dica: Seu pedido j\u00E1 estar\u00E1 vinculado ao seu WhatsApp!`;
             }
 
             return await this.safeSendMessage(tenantId, jid, welcomeMessage, sock);
@@ -1124,14 +1202,14 @@ class WhatsAppService {
             const finalTotal = total > 0 ? total : (subtotal + deliveryFee);
 
             const summaryLines = [];
-            summaryLines.push('✅ *Pedido Confirmado!*');
+            summaryLines.push('\u2705 *Pedido Confirmado!*');
             summaryLines.push('');
-            summaryLines.push(`Número do pedido: #${orderData.order_number || orderData.orderNumber}`);
+            summaryLines.push(`N\u00FAmero do pedido: #${orderData.order_number || orderData.orderNumber}`);
             summaryLines.push('');
             summaryLines.push('Itens:');
             summaryLines.push(itemsList.trim());
             if (deliveryFee > 0) {
-                summaryLines.push(`• Taxa de entrega - R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
+                summaryLines.push(`\u2022 Taxa de entrega - R$ ${deliveryFee.toFixed(2).replace('.', ',')}`);
             }
             summaryLines.push(`*Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
             summaryLines.push('');
@@ -1142,7 +1220,7 @@ class WhatsAppService {
             const pixName = settings.pixName || settings.pix_holder_name || '';
 
             if (paymentMethod.includes('PIX') && pixKey) {
-                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
+                summaryLines.push('\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501');
                 summaryLines.push('*DADOS PARA PAGAMENTO PIX*');
                 summaryLines.push('');
                 summaryLines.push(`Chave PIX: ${pixKey}`);
@@ -1151,11 +1229,11 @@ class WhatsAppService {
                 }
                 summaryLines.push('');
                 summaryLines.push('_Pague agora para agilizar o preparo!_');
-                summaryLines.push('━━━━━━━━━━━━━━━━━━━━');
+                summaryLines.push('\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501');
                 summaryLines.push('');
             }
 
-            summaryLines.push(`*Seu pedido será preparado e entregue em breve!*`);
+            summaryLines.push(`*Seu pedido ser\u00E1 preparado e entregue em breve!*`);
             summaryLines.push(`Obrigado por pedir no ${restaurantName}!`);
 
             const message = summaryLines.join('\n');
@@ -1284,14 +1362,14 @@ class WhatsAppService {
             const finalTotal = total > 0 ? total : calculatedTotal;
 
             const groupLines = [];
-            groupLines.push(`🍔 *NOVO PEDIDO #${orderData.order_number || orderData.orderNumber || 'N/A'}*`);
+            groupLines.push(`\u{1F354} *NOVO PEDIDO #${orderData.order_number || orderData.orderNumber || 'N/A'}*`);
             groupLines.push('');
-            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
-            groupLines.push('📦 *ITENS DO PEDIDO*');
+            groupLines.push('\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501');
+            groupLines.push('\u{1F4E6} *ITENS DO PEDIDO*');
             groupLines.push(itemsList.trim());
             groupLines.push('');
-            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
-            groupLines.push('💰 *VALORES*');
+            groupLines.push('\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501');
+            groupLines.push('\u{1F4B0} *VALORES*');
             groupLines.push(`Subtotal dos itens: R$ ${subtotal.toFixed(2).replace('.', ',')}`);
 
             if (deliveryFee > 0) {
@@ -1302,8 +1380,8 @@ class WhatsAppService {
 
             groupLines.push(`*TOTAL DO PEDIDO: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`);
             groupLines.push('');
-            groupLines.push('━━━━━━━━━━━━━━━━━━━━');
-            groupLines.push('👤 *DADOS DO CLIENTE*');
+            groupLines.push('\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501');
+            groupLines.push('\u{1F464} *DADOS DO CLIENTE*');
             groupLines.push(`Nome: ${orderData.customer_name || orderData.customerName || 'Cliente'}`);
 
             let addressText = '';
@@ -1327,35 +1405,35 @@ class WhatsAppService {
                 if (lat && lng) {
                     mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
                 }
-                groupLines.push(`Endereço: ${addressText || 'Não informado'}`);
+                groupLines.push(`Endere\u00E7o: ${addressText || 'N\u00E3o informado'}`);
             } else if (typeof orderData.address === 'string' && orderData.address.trim()) {
                 addressText = orderData.address;
-                groupLines.push(`Endereço: ${addressText}`);
+                groupLines.push(`Endere\u00E7o: ${addressText}`);
             } else {
-                groupLines.push(`📍 *RETIRADA NO LOCAL*`);
+                groupLines.push(`\u{1F4CC} *RETIRADA NO LOCAL*`);
             }
 
             // Traduzir método de pagamento
             const groupPaymentLabels = {
                 'PIX': 'PIX',
-                'CREDIT_CARD': 'Cartão',
-                'DEBIT_CARD': 'Cartão (Débito)',
+                'CREDIT_CARD': 'Cart\u00E3o',
+                'DEBIT_CARD': 'Cart\u00E3o (D\u00E9bito)',
                 'CASH': 'Dinheiro',
                 'LOCAL': 'Pagamento no Local'
             };
             const paymentMethod = orderData.payment_method || orderData.paymentMethod || 'N/A';
             groupLines.push(`Pagamento: ${groupPaymentLabels[paymentMethod] || paymentMethod}`);
 
-            // Informação de troco
+            // Informa\u00E7\u00E3o de troco
             if (orderData.change_for !== null && orderData.change_for !== undefined) {
                 const valorPago = parseFloat(orderData.change_for);
                 if (valorPago === 0) {
-                    groupLines.push(`💵 *Troco*: Cliente deseja troco (valor não especificado)`);
+                    groupLines.push(`\u{1F4B5} *Troco*: Cliente deseja troco (valor n\u00E3o especificado)`);
                 } else if (valorPago > finalTotal) {
                     const change = valorPago - finalTotal;
-                    groupLines.push(`💵 *Troco*: R$ ${change.toFixed(2).replace('.', ',')} (para R$ ${valorPago.toFixed(2).replace('.', ',')})`);
+                    groupLines.push(`\u{1F4B5} *Troco*: R$ ${change.toFixed(2).replace('.', ',')} (para R$ ${valorPago.toFixed(2).replace('.', ',')})`);
                 } else if (valorPago === finalTotal) {
-                    groupLines.push(`💵 *Troco*: Sem troco (valor exato)`);
+                    groupLines.push(`\u{1F4B5} *Troco*: Sem troco (valor exato)`);
                 }
             }
 
@@ -1380,20 +1458,20 @@ class WhatsAppService {
                 cleanPhone = '55' + cleanPhone;
             }
             if (cleanPhone && cleanPhone.length < 15) { // Só exibir link se for telefone real, não PID
-                groupLines.push(`📱 *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
+                groupLines.push(`\u{1F4F1} *WhatsApp do Cliente*: https://wa.me/${cleanPhone}`);
             } else if (cleanPhone) {
-                groupLines.push(`📱 *WhatsApp (PID)*: ${cleanPhone} (Link indisponível)`);
+                groupLines.push(`\u{1F4F1} *WhatsApp (PID)*: ${cleanPhone} (Link indispon\u00EDvel)`);
             }
 
             // Link de localização do Google Maps
             if (mapsLink) {
-                groupLines.push(`📍 *Localização*: ${mapsLink}`);
+                groupLines.push(`\u{1F4CC} *Localiza\u00E7\u00E3o*: ${mapsLink}`);
             }
 
-            // Observações do local
+            // Observa\u00E7\u00F5es do local
             const obsLocal = orderData.observation || addressObservation || orderData.notes;
             if (obsLocal) {
-                groupLines.push(`📝 Observações do local: ${obsLocal}`);
+                groupLines.push(`\u{1F4DD} Observa\u00E7\u00F5es do local: ${obsLocal}`);
             }
 
             groupLines.push('');
@@ -1577,7 +1655,7 @@ class WhatsAppService {
             // 10. Enviar para o grupo de entregas
             this.sendOrderToGroup(tenantId, {
                 ...confirmationData,
-                observation: orderData.observation || 'Pedido via Funcionário IA'
+                observation: orderData.observation || 'Pedido via Funcion\u00E1rio IA'
             })
                 .then(() => console.log(`[AIOrder] ✅ Pedido #${orderNumber} enviado para o grupo`))
                 .catch(err => console.error('[AIOrder] Erro ao enviar para o grupo:', err.message));

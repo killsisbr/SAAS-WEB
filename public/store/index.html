@@ -1563,17 +1563,17 @@
 
                 <div class="space-y-6 mb-10">
                     <div>
-                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu Nome</label>
-                        <input type="text" id="cust-name" placeholder="Ex: João Brutus"
+                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Seu Nome</label>
+                        <input type="text" id="cust-name" placeholder="Ex: João Silva"
                             class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
                     </div>
                     <div id="phone-field-container">
                         <div class="flex items-center gap-2 mb-2">
-                            <label class="bebas text-xl opacity-50 uppercase tracking-widest">Teu Telemóvel</label>
+                            <label class="bebas text-xl opacity-50 uppercase tracking-widest">Seu WhatsApp</label>
                             <span id="phone-save-notice" class="text-[10px] text-red-500 font-bold hidden">(salvo para
                                 próximos pedidos)</span>
                         </div>
-                        <input type="text" id="cust-phone" placeholder="9xx xxx xxx"
+                        <input type="text" id="cust-phone" placeholder="(DDD) 9xxxx-xxxx"
                             class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
                     </div>
 
@@ -1954,47 +1954,52 @@
         let whatsappFromUrl = null;  // ID completo para backend (ex: 5511999999999@c.us)
         let phoneFromWhatsApp = null; // Número limpo para exibição (ex: 11999999999)
         let lidFromUrl = null; // LID do WhatsApp quando não há número real
+
         (function extractWhatsAppFromUrl() {
             const params = new URLSearchParams(window.location.search);
-            const phone = params.get('whatsapp');
+            let phone = params.get('whatsapp') || params.get('p');
+            const lid = params.get('lid');
+
+            // 1. Tentar recuperar do localStorage se não estiver na URL
+            if (!phone) phone = localStorage.getItem('hub_whatsapp_id');
+            if (!lid) lidFromUrl = localStorage.getItem('hub_lid');
+            else {
+                lidFromUrl = lid;
+                localStorage.setItem('hub_lid', lid);
+            }
+
             if (phone) {
+                // Se o telefone veio da URL, salvar no localStorage
+                if (params.get('whatsapp') || params.get('p')) {
+                    localStorage.setItem('hub_whatsapp_id', phone);
+                }
+
                 let cleanDigits = phone.replace(/\D/g, '');
 
                 // VALIDAÇÃO: Verificar se é um telefone brasileiro válido
-                // Telefone BR válido: 10-11 dígitos (sem 55) ou 12-13 dígitos (com 55)
-                // PID/LID do WhatsApp: geralmente tem 15+ dígitos
                 const isValidBrazilianPhone = (
                     (cleanDigits.length >= 10 && cleanDigits.length <= 11) || // Sem 55
                     (cleanDigits.startsWith('55') && cleanDigits.length >= 12 && cleanDigits.length <= 13) // Com 55
                 );
 
                 if (isValidBrazilianPhone) {
-                    // É um telefone válido - usar para preencher campo
                     if (cleanDigits.startsWith('55') && cleanDigits.length >= 12) {
-                        phoneFromWhatsApp = cleanDigits.substring(2); // Remove 55 para exibição
+                        phoneFromWhatsApp = cleanDigits.substring(2);
                     } else {
                         phoneFromWhatsApp = cleanDigits;
                     }
 
-                    // Adicionar 55 para o whatsappId do backend
                     if (!cleanDigits.startsWith('55') && cleanDigits.length >= 10 && cleanDigits.length <= 11) {
                         cleanDigits = '55' + cleanDigits;
                     }
                     whatsappFromUrl = cleanDigits + '@c.us';
-                    console.log('[WhatsApp] Telefone válido detectado:', phoneFromWhatsApp, 'ID:', whatsappFromUrl);
+                    console.log('[WhatsApp] Telefone detectado:', phoneFromWhatsApp, 'ID:', whatsappFromUrl);
                 } else {
-                    // É um PID/LID - NÃO usar como telefone, apenas como ID
-                    whatsappFromUrl = cleanDigits + '@c.us';
-                    phoneFromWhatsApp = null; // NÃO preencher campo de telefone
-                    console.log('[WhatsApp] PID detectado (não é telefone):', cleanDigits, '- Cliente deve digitar telefone');
+                    // É um PID/LID
+                    whatsappFromUrl = cleanDigits + (cleanDigits.length >= 15 ? '@c.us' : '@c.us');
+                    phoneFromWhatsApp = null;
+                    console.log('[WhatsApp] ID persistente detectado:', cleanDigits);
                 }
-            }
-
-            // Verificar também parâmetro LID
-            const lid = params.get('lid');
-            if (lid) {
-                lidFromUrl = lid;
-                console.log('[WhatsApp] LID detectado:', lid);
             }
         })();
 
@@ -2003,6 +2008,13 @@
             KEY: 'deliveryhub_customer_cache',
 
             save(data) {
+                // Normalizar telefone antes de salvar se existir
+                if (data.phone) {
+                    data.phone = data.phone.replace(/\D/g, '');
+                    if (data.phone.startsWith('55') && data.phone.length > 11) {
+                        data.phone = data.phone.substring(2);
+                    }
+                }
                 const cacheData = {
                     ...this.load(),
                     ...data,
@@ -2281,36 +2293,17 @@
         // ===== INICIALIZACAO =====
         async function init() {
             const path = window.location.pathname;
-            const slug = path.split('/loja/')[1]?.split('?')[0]; // Limpar querystring do slug
+            const slug = path.split('/loja/')[1]?.split('?')[0];
 
-            // Detectar telefone da URL (enviado pelo bot) - link simples ?p=PHONE
             const urlParams = new URLSearchParams(window.location.search);
-            const phoneFromUrl = urlParams.get('p'); // Novo: parametro simples
-            const orderToken = urlParams.get('t'); // Compatibilidade JWT
-            const whatsappLegacy = urlParams.get('whatsapp'); // Compatibilidade antiga
-            const lidParam = urlParams.get('lid'); // NOVO: LID quando nao tem numero real
+            const orderToken = urlParams.get('t');
 
-            // Armazenar telefone para uso
-            let phoneFromToken = null;
-            if (phoneFromUrl) {
-                whatsappFromUrl = phoneFromUrl.replace(/\D/g, '');
-                sessionStorage.setItem('whatsappPhone', whatsappFromUrl);
-                console.log('Telefone detectado (simples):', whatsappFromUrl);
-            } else if (orderToken) {
+            if (orderToken) {
                 sessionStorage.setItem('orderToken', orderToken);
-                // Decodificar telefone do token
-                try {
-                } catch (e) {
-                    console.warn('Erro ao decodificar token:', e);
-                }
-            } else if (whatsappLegacy) {
-                whatsappFromUrl = whatsappLegacy.replace(/\D/g, '');
-            } else if (lidParam) {
-                // NOVO: Cliente veio com LID (sem numero real)
-                lidFromUrl = lidParam;
-                sessionStorage.setItem('lidFromUrl', lidParam);
-                console.log('[LID] Cliente veio com LID:', lidParam);
             }
+
+            // A identificação principal (whatsappFromUrl, lidFromUrl) 
+            // já foi feita na IIFE extractWhatsAppFromUrl no topo do script.
 
             // Carregar cache do cliente
             customerCacheData = customerCache.load();
@@ -2408,6 +2401,11 @@
             else if (lidFromUrl) {
                 await prefillFromLid(lidFromUrl);
             }
+            // NOVO: Fallback final para dados do cache de navegacao
+            else if (customerCacheData && customerCacheData.phone) {
+                console.log('[Cache] Usando dados do cache global para pre-preenchimento');
+                await prefillCustomerData(customerCacheData.phone);
+            }
         }
 
         // NOVO: Buscar telefone do mapeamento LID e pre-preencher
@@ -2464,32 +2462,53 @@
                 formattedPhone = formattedPhone.substring(2);
             }
 
-            // ESCONDER campo de telefone completamente (veio do WhatsApp)
+            // MANTER campo de telefone visível mas desabilitado (veio do WhatsApp)
             phoneInput.value = formattedPhone;
+            phoneInput.readOnly = true;
+            phoneInput.style.backgroundColor = '#f3f4f6'; // Cinza claro para indicar leitura
+            phoneInput.style.opacity = '0.7';
+
             if (phoneContainer) {
-                phoneContainer.style.display = 'none';
+                phoneContainer.style.display = 'block';
             }
 
-            // Recuperar nome salvo do localStorage (cliente recorrente)
-            const savedName = localStorage.getItem(`customer_name_${phone}`);
+            // Mostrar aviso de que o numero ja está vinculado
+            const saveNotice = document.getElementById('phone-save-notice');
+            if (saveNotice) {
+                saveNotice.innerText = '(WhatsApp Identificado)';
+                saveNotice.classList.remove('hidden');
+            }
+
+            // Recuperar nome salvo (várias tentativas de chaves para compatibilidade)
+            let savedName = localStorage.getItem(`customer_name_${phone}`) ||
+                localStorage.getItem(`customer_name_${phone.replace('@c.us', '')}`);
+
+            if (!savedName && customerCacheData && customerCacheData.name) {
+                savedName = customerCacheData.name;
+            }
+
             if (savedName && nameInput) {
                 nameInput.value = savedName;
             }
 
             // Buscar dados do cliente no servidor
             try {
-                const customerRes = await fetch(`/api/orders/customer/${phone}?tenantId=${storeData?.id}`);
+                // Garantir formato limpo para API
+                let cleanPhoneToFetch = phone.replace(/\D/g, '');
+                if (cleanPhoneToFetch.startsWith('55') && cleanPhoneToFetch.length > 11) {
+                    cleanPhoneToFetch = cleanPhoneToFetch.substring(2);
+                }
+                const customerRes = await fetch(`/api/orders/customer/${cleanPhoneToFetch}?tenantId=${storeData?.id}`);
                 const customerData = await customerRes.json();
 
                 if (customerData.exists && customerData.customer) {
-                    // Pre-preencher nome se disponivel (e nao tiver no localStorage)
-                    if (customerData.customer.name && nameInput && !savedName) {
+                    // Pre-preencher nome se disponivel (e nao tiver no localStorage/cache)
+                    if (customerData.customer.name && nameInput && !nameInput.value) {
                         nameInput.value = customerData.customer.name;
-                        localStorage.setItem(`customer_name_${phone}`, customerData.customer.name);
                     }
 
-                    // Pre-preencher endereco se disponivel
-                    if (customerData.customer.lastAddress) {
+                    // Pre-preencher endereco se disponivel e nao tiver preenchido via cache
+                    if (customerData.customer.lastAddress && !addressInput.value) {
                         const addr = customerData.customer.lastAddress;
                         if (addr.street && addressInput) {
                             addressInput.value = addr.street + (addr.number ? ', ' + addr.number : '');
@@ -4260,18 +4279,32 @@
             }
 
 
-            // Auto-salvar nome ao digitar
-            if (nameInput) {
-                nameInput.addEventListener('blur', () => {
-                    if (nameInput.value.trim()) {
-                        const currentPhone = whatsappFromUrl || (phoneInput ? phoneInput.value.replace(/\D/g, '') : '');
-                        if (currentPhone) {
-                            localStorage.setItem(`customer_name_${currentPhone}`, nameInput.value.trim());
+            // Auto-salvar dados ao digitar (Persistência JARVIS)
+            const saveManualData = () => {
+                const name = nameInput?.value.trim();
+                // Pegar telefone do input ou da variavel global
+                let phone = phoneInput?.value.replace(/\D/g, '') || (whatsappFromUrl ? whatsappFromUrl.replace(/\D/g, '') : '');
+
+                if (phone) {
+                    // Normalizar: remover 55 se for BR com 12+ digitos
+                    if (phone.startsWith('55') && phone.length > 11) phone = phone.substring(2);
+
+                    if (phone.length >= 10) {
+                        console.log('[Persistence] Salvando dados manuais para:', phone);
+                        localStorage.setItem('hub_whatsapp_id', phone);
+                        if (name) {
+                            localStorage.setItem(`customer_name_${phone}`, name);
+                            // Salvar tambem com sufixo para compatibilidade total
+                            localStorage.setItem(`customer_name_55${phone}@c.us`, name);
                         }
-                        // Tambem salvar no cache geral
-                        /* customerCache.save({ name: nameInput.value.trim() }); */ // Nao, melhor nao mexer no cache globa parcial agora
+                        customerCache.save({ name, phone });
                     }
-                });
+                }
+            };
+
+            if (nameInput) nameInput.addEventListener('blur', saveManualData);
+            if (phoneInput && !phoneFromWhatsApp) {
+                phoneInput.addEventListener('blur', saveManualData);
             }
         }
 

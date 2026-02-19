@@ -431,11 +431,11 @@ async function start() {
 
         // Inicializar serviços
         const cacheService = getCacheService();
-        console.log('[Cache] Serviço inicializado');
+        console.log('[Cache] Servi\u00E7o inicializado');
 
         const backupService = getBackupService(path.join(__dirname, 'database', 'deliveryhub.sqlite'));
         backupService.startAutosave(24); // Backup diário
-        console.log('[Backup] Serviço de autosave iniciado');
+        console.log('[Backup] Servi\u00E7o de autosave iniciado');
 
         // Validar e garantir que o modelo LLM está disponível (Ollama)
         try {
@@ -455,7 +455,7 @@ async function start() {
             try {
                 const whatsapp = initWhatsAppService(db, broadcast);
                 await whatsapp.autoReconnectAll();
-                console.log('[WhatsApp] Auto-reconnect concluído (Baileys)');
+                console.log('[WhatsApp] Auto-reconnect conclu\u00EDdo (Baileys)');
 
                 // Follow-up DESABILITADO temporariamente
                 // const followUp = getFollowUpService(db);
