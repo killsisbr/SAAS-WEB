@@ -6,6 +6,7 @@
 // Autor: killsis (Lucas Larocca)
 // ============================================================
 
+import crypto from 'crypto';
 import { getWhatsAppService } from '../whatsapp-service.js';
 
 /**
@@ -279,7 +280,7 @@ class FollowUpService {
             await this.db.run(`
                 INSERT INTO activity_logs (id, tenant_id, action, details, created_at)
                 VALUES (?, ?, 'FOLLOW_UP_SENT', ?, datetime('now'))
-            `, [require('crypto').randomUUID(), tenantId, JSON.stringify({ phone: cleanPhone, type, message: message.substring(0, 100) })]);
+            `, [crypto.randomUUID(), tenantId, JSON.stringify({ phone: cleanPhone, type, message: message.substring(0, 100) })]);
 
             console.log(`[Follow-up] ${type} enviado para ${cleanPhone}`);
 

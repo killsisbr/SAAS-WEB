@@ -448,40 +448,26 @@ async function start() {
             console.warn('[Ollama] Erro ao garantir modelo durante o boot:', err.message);
         }
 
-        // Auto-reconectar WhatsApp (apenas se habilitado via env)
-        const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
-
-        if (whatsappAutoConnect) {
-            try {
-                const whatsapp = initWhatsAppService(db, broadcast);
-                await whatsapp.autoReconnectAll();
-                console.log('[WhatsApp] Auto-reconnect conclu\u00EDdo (Baileys)');
-
-                // Follow-up DESABILITADO temporariamente
-                // const followUp = getFollowUpService(db);
-                // followUp.init();
-                // console.log('[Follow-up] Serviço inicializado');
-                console.log('[Follow-up] Serviço DESABILITADO');
-            } catch (err) {
-                console.warn('[WhatsApp/FollowUp] Erro na inicializacao:', err.message);
-            }
-        } else {
-            console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
-        }
-
-        // Inicializar módulo de IA (Reforço/Aprendizado)
-        try {
-            const { initializeAIModule } = await import('./ai-reinforcement/index.js');
-            await initializeAIModule(db);
-        } catch (err) {
-            console.warn('[AI-Reinforcement] Erro na inicialização:', err.message);
-        }
-
         // Iniciar servidor
-        app.listen(PORT, () => {
+        app.listen(PORT, async () => {
             console.log('============================================================');
             console.log(`  DeliveryHub SaaS rodando em http://localhost:${PORT}`);
             console.log('============================================================');
+
+            // Auto-reconectar WhatsApp apenas após o servidor estar ONLINE na porta
+            const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
+            if (whatsappAutoConnect) {
+                try {
+                    const whatsapp = initWhatsAppService(db, broadcast);
+                    await whatsapp.autoReconnectAll();
+                    console.log('[WhatsApp] Auto-reconnect concluído (Baileys)');
+                } catch (err) {
+                    console.warn('[WhatsApp] Erro na inicializacao:', err.message);
+                }
+            } else {
+                console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
+            }
+
             console.log('  Rotas disponiveis:');
             console.log('    - Landing:    http://localhost:' + PORT + '/');
             console.log('    - Onboarding: http://localhost:' + PORT + '/onboarding');

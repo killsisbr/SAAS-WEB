@@ -359,12 +359,11 @@ class WhatsAppService {
                     const reason = BoomError?.message || 'Unknown reason';
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-                    console.log(`[WhatsApp] 🛑 Conexão FECHADA para tenant ${tenantId}.`);
-                    console.log(`[WhatsApp] Motivo: ${statusCode} (${reason})`);
+                    console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Motivo: ${statusCode} (${reason}). Reconectando: ${shouldReconnect}`);
+
                     if (BoomError?.data) {
-                        console.log(`[WhatsApp] Detalhes do Erro:`, JSON.stringify(BoomError.data));
+                        // console.log(`[WhatsApp] Detalhes do Erro:`, JSON.stringify(BoomError.data));
                     }
-                    console.log(`[WhatsApp] Reconectando automaticamente: ${shouldReconnect}`);
 
                     // [FIX] Impedir loop infinito de reconexão se atingiu limite de QR
                     if (this.statuses.get(tenantId) === 'SCAN_TIMEOUT') {
