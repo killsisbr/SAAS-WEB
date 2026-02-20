@@ -1,0 +1,124 @@
+========== PM2 STATUS ==========
+┌────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 26 │ fullpvp          │ default     │ N/A     │ fork    │ 372025   │ 21h    │ 924  │ online    │ 0%       │ 2.1gb    │ root     │ disabled │
+│ 27 │ saas-web         │ default     │ 1.0.0   │ fork    │ 384603   │ 21m    │ 419  │ online    │ 0%       │ 135.9mb  │ root     │ disabled │
+└────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Module
+┌────┬──────────────────────────────┬───────────────┬──────────┬──────────┬──────┬──────────┬──────────┬──────────┐
+│ id │ module                       │ version       │ pid      │ status   │ ↺    │ cpu      │ mem      │ user     │
+├────┼──────────────────────────────┼───────────────┼──────────┼──────────┼──────┼──────────┼──────────┼──────────┤
+│ 6  │ pm2-logrotate                │ 3.0.0         │ 197449   │ online   │ 3    │ 0%       │ 78.6mb   │ root     │
+└────┴──────────────────────────────┴───────────────┴──────────┴──────────┴──────┴──────────┴──────────┴──────────┘
+
+========== PM2 LIST (JSON) ==========
+[{"pid":197449,"name":"pm2-logrotate","pm2_env":{"exit_code":0,"prev_restart_delay":0,"node_version":"22.20.0","version":"3.0.0","unstable_restarts":1,"restart_time":3,"pm_id":6,"created_at":1770921274389,"axm_dynamic":{},"axm_options":{"error":true,"heapdump":true,"feature.profiler.heapsnapshot":false,"feature.profiler.heapsampling":true,"feature.profiler.cpu_js":true,"latency":true,"catchExceptions":true,"profiling":true,"metrics":{"http":true,"runtime":true,"eventLoop":true,"network":false,"v8":true},"standalone":false,"module_conf":{"rotateModule":true,"rotateInterval":"0 0 * * *","workerInterval":30,"dateFormat":"YYYY-MM-DD_HH-mm-ss","compress":true,"retain":10,"max_size":"10M"},"apm":{"version":"6.1.0","type":"node"},"module_name":"pm2-logrotate","module_version":"3.0.0","max_size":"10M","retain":10,"compress":true,"dateFormat":"YYYY-MM-DD_HH-mm-ss","workerInterval":30,"rotateInterval":"0 0 * * *","rotateModule":true,"alert_enabled":true,"widget":{"block":{"main_probes":["Global logs size","Files count"],"actions":true,"mem":true,"cpu":true,"issues":true},"el":{"actions":false,"probes":false},"theme":["#111111","#1B2228","#31C2F1","#807C7C"],"logo":"https://raw.githubusercontent.com/pm2-hive/pm2-logrotate/master/pres/logo.png","type":"generic"},"isModule":true,"description":"Module to rotate logs of every pm2 application","pmx_version":"1.6.8"},"axm_monitor":{"Used Heap Size":{"value":"10.86","type":"internal/v8/heap/used","unit":"MiB","historic":true},"Heap Usage":{"value":71.1,"type":"internal/v8/heap/usage","unit":"%","historic":true},"Heap Size":{"value":"15.28","type":"internal/v8/heap/total","unit":"MiB","historic":true},"Files count":{"alert":{},"type":"Files count","historic":true,"agg_type":"avg","value":99},"Global logs size":{"alert":{},"type":"Global logs size","historic":true,"agg_type":"avg","value":"1.19 GB"},"Event Loop Latency p95":{"value":"1.66","type":"internal/libuv/latency/p95","unit":"ms","historic":true},"Event Loop Latency":{"value":"0
+========== LAST 100 LINES ERROR LOG ==========
+[TAILING] Tailing last 100 lines for [saas-web] process (change the value with --lines option)
+/root/.pm2/logs/saas-web-error.log last 100 lines:
+
+========== LAST 150 LINES OUT LOG ==========
+[TAILING] Tailing last 150 lines for [saas-web] process (change the value with --lines option)
+/root/.pm2/logs/saas-web-out.log last 150 lines:
+27|saas-we | Database conectado e otimizado: /root/killsis/SAAS-WEB/server/database/deliveryhub.sqlite
+27|saas-we | Schema aplicado
+27|saas-we | Seeds ignorados (banco ja possui dados)
+27|saas-we | Rotas carregadas
+27|saas-we | [CacheService] Inicializado com TTL padrão de 10 minutos
+27|saas-we | [Cache] Serviço inicializado
+27|saas-we | [BackupService] Inicializado. Diretório: /root/killsis/SAAS-WEB/server/backups
+27|saas-we | [BackupService] Backup criado: db_backup_2026-02-20T20-18-13-463Z_autosave.sqlite (2728.00 KB)
+27|saas-we | [BackupService] Autosave iniciado (intervalo: 24h)
+27|saas-we | [Backup] Serviço de autosave iniciado
+27|saas-we | [OllamaManager] Verificando modelo: gemma3:4b
+27|saas-we | [OllamaManager] ✅ Modelo gemma3:4b pronto.
+27|saas-we | ============================================================
+27|saas-we |   DeliveryHub SaaS rodando em http://localhost:5000
+27|saas-we | ============================================================
+27|saas-we | [WhatsApp] Iniciando auto-reconnect de todos os tenants...
+27|saas-we | [WhatsApp] Auto-conectando tenant: Brutus Burger (demo_tenant_001) [sessao existente]
+27|saas-we | Inicializando WhatsApp (Baileys) para tenant demo_tenant_001
+27|saas-we | [WhatsApp] Tabela pid_jid_mappings verificada/criada
+27|saas-we | [Baileys] Usando versao WA: 2.3000.1033105955, isLatest: true
+27|saas-we | WhatsApp pronto para tenant demo_tenant_001
+27|saas-we | [WhatsApp] Health check iniciado (intervalo: 5 min)
+27|saas-we | [WhatsApp] Auto-reconnect concluido. Reconectados: 1, Ignorados (sem sessao): 3
+27|saas-we | [WhatsApp] Auto-reconnect concluído (Baileys)
+27|saas-we |   Rotas disponiveis:
+27|saas-we |     - Landing:    http://localhost:5000/
+27|saas-we |     - Onboarding: http://localhost:5000/onboarding
+27|saas-we |     - Admin:      http://localhost:5000/admin
+27|saas-we |     - Loja:       http://localhost:5000/loja/:slug
+27|saas-we |     - SuperAdmin: http://localhost:5000/superadmin
+27|saas-we | ============================================================
+27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
+27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
+27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
+27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
+
+
+========== PORT 5000 CHECK ==========
+5000/tcp:            384603
+
+========== PORT 3000 CHECK ==========
+Port 3000 is FREE
+
+========== NODE PROCESSES ==========
+root      156250  0.5  1.2 1058772 100972 ?      Sl   Feb09  91:02 node /usr/bin/pm2 logs deliveryhub --lines 20 --no-daemon
+root      197449  0.2  0.9 1322784 80680 ?       Ssl  Feb12  23:36 node /root/.pm2/modules/pm2-logrotate/node_modules/pm2-log
+root      383884  0.0  0.7 1049992 62268 pts/0   Sl+  18:53   0:00 node /root/.nvm/versions/node/v22.20.0/bin/pm2 log 27
+root      384603  0.3  1.7 11847532 139396 ?     Ssl  20:18   0:04 node /root/killsis/SAAS-WEB/server/server.js
+
+========== MEMORY USAGE ==========
+               total        used        free      shared  buff/cache   available
+Mem:           7.8Gi       3.2Gi       315Mi       115Mi       4.7Gi       4.6Gi
+Swap:             0B          0B          0B
+
+========== DISK USAGE ==========
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        96G   55G   42G  57% /
+
+========== SERVER.JS HEAD (first 5 lines of start function) ==========
+17:import { initWhatsAppService, getWhatsAppService } from './whatsapp-service.js';
+452:        app.listen(PORT, async () => {
+458:            const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
+461:                    const whatsapp = initWhatsAppService(db, broadcast);
+462:                    await whatsapp.autoReconnectAll();
+468:                console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
+
+========== .ENV FILE ==========
+NODE_ENV=production
+PORT=5000
+JWT_SECRET=9488bb4537ec478aeca7536419a193d46f1dc1ea894353bba97f72f9ab53a913
+ORS_API_KEY=5b3ce3597851110001cf6248cfa0914bbad64af78bc4d5aad8b296fb
+APP_DOMAIN=brutusburger.online
+PORT=5000
+
+========== ECOSYSTEM CONFIG ==========
+module.exports = {
+    apps: [{
+        name: 'saas-web',
+        script: 'server.js',
+        cwd: './server',
+        instances: 1,
+        autorestart: true,
+        watch: false, // Desabilitado para performance e estabilidade na VPS
+        max_memory_restart: '4G', // Prevenir crashes por heap limit
+        env: {
+            NODE_ENV: 'production',
+            PORT: 3000
+        },
+        node_args: '--max-old-space-size=4096', // Aumentar o heap size do Node para 4GB
+        merge_logs: true,
+        log_date_format: 'YYYY-MM-DD HH:mm:ss',
+        cron_restart: '0 4 * * *' // Double-lock: Reiniciar todo dia às 04:00 AM
+    }]
+};
+
+========== TENANTS IN DB ==========
+demo_tenant_001|Brutus Burger|ACTIVE
+sorveteria_001|Sorveteria Qdelicia|ACTIVE
+981f332f-fc3e-414d-a69a-04b02267118c|DEGUST|ACTIVE
+4b095f71-0d97-4e48-80aa-1e20fee1b457|Fiorella|ACTIVE
+========== DONE ==========

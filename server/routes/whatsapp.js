@@ -81,16 +81,23 @@ export default function (db) {
             const rawStatus = service.getStatus(req.tenantId);
             const qrCode = await service.getQRCodeDataURL(req.tenantId);
 
-            // Interface do frontend espera strings em lowercase e campos específicos
             const status = rawStatus.toLowerCase();
             const connected = status === 'ready';
             const qrAvailable = !!qrCode;
+
+            // Calcular tempo restante do QR se estiver ativo
+            let qrExpiresIn = null;
+            const expiresAt = service.qrExpiresAt?.get(req.tenantId);
+            if (expiresAt) {
+                qrExpiresIn = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
+            }
 
             res.json({
                 status,
                 connected,
                 qrAvailable,
-                qrCode: qrCode || null
+                qrCode: qrCode || null,
+                qrExpiresIn
             });
         } catch (error) {
             res.status(500).json({ error: error.message });

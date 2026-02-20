@@ -240,6 +240,19 @@
             border-radius: 12px;
         }
 
+        .qr-timer {
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            color: var(--warning);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        .qr-timer.expired {
+            color: var(--danger);
+        }
+
         .form-group {
             margin-bottom: 24px;
         }
@@ -408,7 +421,8 @@
                         <i class="fas fa-spinner spinner fa-2x"></i>
                         <span>Gerando QR Code...</span>
                     </div>
-                    <p>Escaneie o QR Code com seu WhatsApp Conectado.</p>
+                    <div id="qrTimer" class="qr-timer"></div>
+                    <p>Escaneie o QR Code com seu WhatsApp.</p>
                 </div>
 
                 <div id="connectedSection" style="display: none; text-align: center; padding: 20px;">
@@ -420,11 +434,11 @@
 
                 <div style="margin-top: 24px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
                     <button class="btn btn-whatsapp" id="btnConnect" onclick="initializeWhatsApp()">
-                        <i class="fab fa-whatsapp"></i> CONECTAR
+                        <i class="fab fa-whatsapp"></i> GERAR QR CODE
                     </button>
-                    <button class="btn btn-secondary" id="btnRestart" onclick="restartWhatsApp()"
+                    <button class="btn btn-secondary" id="btnReconnect" onclick="reconnectWhatsApp()"
                         style="display: none;">
-                        <i class="fas fa-sync"></i> REINICIAR
+                        <i class="fas fa-sync"></i> RECONECTAR
                     </button>
                     <button class="btn btn-danger" id="btnDisconnect" onclick="disconnectWhatsApp()"
                         style="display: none;">
@@ -705,13 +719,16 @@
             } catch (error) { console.error(error); }
         }
 
+        let qrCountdownInterval = null;
+
         function updateStatusUI(data) {
             const badge = document.getElementById('statusBadge');
             const qrSection = document.getElementById('qrSection');
             const connectedSection = document.getElementById('connectedSection');
             const btnConnect = document.getElementById('btnConnect');
-            const btnRestart = document.getElementById('btnRestart');
+            const btnReconnect = document.getElementById('btnReconnect');
             const btnDisconnect = document.getElementById('btnDisconnect');
+            const qrTimer = document.getElementById('qrTimer');
 
             if (data.connected) {
                 badge.textContent = 'CONECTADO';
@@ -719,9 +736,10 @@
                 qrSection.style.display = 'none';
                 connectedSection.style.display = 'block';
                 btnConnect.style.display = 'none';
-                btnRestart.style.display = 'inline-flex';
+                btnReconnect.style.display = 'inline-flex';
                 btnDisconnect.style.display = 'inline-flex';
                 btnReset.style.display = 'inline-flex';
+                stopQrCountdown();
                 if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
             } else if (data.qrAvailable || data.status === 'initializing') {
                 badge.textContent = 'AGUARDANDO SCAN';
@@ -729,19 +747,67 @@
                 qrSection.style.display = 'block';
                 connectedSection.style.display = 'none';
                 btnConnect.style.display = 'none';
-                btnRestart.style.display = 'inline-flex';
+                btnReconnect.style.display = 'inline-flex';
                 btnDisconnect.style.display = 'none';
                 btnReset.style.display = 'inline-flex';
                 if (data.qrAvailable) loadQRCode();
+                // Timer de countdown
+                if (data.qrExpiresIn != null && data.qrExpiresIn > 0) {
+                    startQrCountdown(data.qrExpiresIn);
+                }
+            } else if (data.status === 'qr_expired' || data.status === 'scan_timeout') {
+                badge.textContent = data.status === 'qr_expired' ? 'QR EXPIRADO' : 'TEMPO ESGOTADO';
+                badge.className = 'status-badge status-disconnected';
+                qrSection.style.display = 'none';
+                connectedSection.style.display = 'none';
+                btnConnect.style.display = 'inline-flex';
+                btnConnect.innerHTML = '<i class="fab fa-whatsapp"></i> GERAR NOVO QR';
+                btnReconnect.style.display = 'inline-flex';
+                btnDisconnect.style.display = 'none';
+                btnReset.style.display = 'inline-flex';
+                stopQrCountdown();
+                if (qrTimer) {
+                    qrTimer.className = 'qr-timer expired';
+                    qrTimer.textContent = data.status === 'qr_expired' ? 'QR Code expirou. Gere um novo.' : 'Tempo esgotado. Tente novamente.';
+                }
             } else {
                 badge.textContent = 'DESCONECTADO';
                 badge.className = 'status-badge status-disconnected';
                 qrSection.style.display = 'none';
                 connectedSection.style.display = 'none';
                 btnConnect.style.display = 'inline-flex';
-                btnRestart.style.display = 'none';
+                btnConnect.innerHTML = '<i class="fab fa-whatsapp"></i> GERAR QR CODE';
+                btnReconnect.style.display = 'inline-flex';
                 btnDisconnect.style.display = 'none';
                 btnReset.style.display = 'inline-flex';
+                stopQrCountdown();
+            }
+        }
+
+        function startQrCountdown(seconds) {
+            stopQrCountdown();
+            const qrTimer = document.getElementById('qrTimer');
+            if (!qrTimer) return;
+            let remaining = seconds;
+            qrTimer.className = 'qr-timer';
+            const update = () => {
+                const min = Math.floor(remaining / 60);
+                const sec = remaining % 60;
+                qrTimer.textContent = `QR expira em ${min}:${sec.toString().padStart(2, '0')}`;
+                if (remaining <= 0) {
+                    stopQrCountdown();
+                    loadStatus();
+                }
+                remaining--;
+            };
+            update();
+            qrCountdownInterval = setInterval(update, 1000);
+        }
+
+        function stopQrCountdown() {
+            if (qrCountdownInterval) {
+                clearInterval(qrCountdownInterval);
+                qrCountdownInterval = null;
             }
         }
 
@@ -758,8 +824,10 @@
 
         async function initializeWhatsApp() {
             const btn = document.getElementById('btnConnect');
-            btn.innerHTML = '<i class="fas fa-spinner spinner"></i> INICIANDO...';
+            btn.innerHTML = '<i class="fas fa-spinner spinner"></i> GERANDO...';
             btn.disabled = true;
+            const qrTimer = document.getElementById('qrTimer');
+            if (qrTimer) { qrTimer.textContent = ''; qrTimer.className = 'qr-timer'; }
             try {
                 const res = await fetch('/api/whatsapp/initialize', { method: 'POST', headers: API_HEADERS });
                 const data = await res.json();
@@ -768,16 +836,17 @@
                     loadStatus();
                 }
             } catch (e) { alert('Erro ao iniciar'); }
+            btn.innerHTML = '<i class="fab fa-whatsapp"></i> GERAR QR CODE';
             btn.disabled = false;
         }
 
-        async function restartWhatsApp() {
-            if (!confirm('Reiniciar conexão?')) return;
+        async function reconnectWhatsApp() {
+            if (!confirm('Tentar reconectar agora? Isso usará a sessão atual sem precisar de novo QR.')) return;
             try {
                 await fetch('/api/whatsapp/restart', { method: 'POST', headers: API_HEADERS });
                 pollInterval = setInterval(loadStatus, 3000);
                 loadStatus();
-            } catch (e) { alert('Erro'); }
+            } catch (e) { alert('Erro ao tentar reconectar'); }
         }
 
         async function disconnectWhatsApp() {

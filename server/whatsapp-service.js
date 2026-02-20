@@ -73,6 +73,11 @@ class WhatsAppService {
         this.qrAttempts = new Map(); // tenantId -> attempts
         this.maxQrAttempts = 5;
         this.lastMessageTime = new Map(); // tenantId -> timestamp (for deadlock detection)
+        this.qrExpiresAt = new Map(); // tenantId -> timestamp (QR expiration)
+        this.qrTimers = new Map(); // tenantId -> timeout handle (auto-cancel QR)
+
+        // QR Code timeout: 2 minutos
+        this.qrTimeoutMs = 2 * 60 * 1000;
 
         // Limite para decretar "Deadlock" (30 minutos sem nenhuma atividade ou erro)
         this.deadlockThreshold = 30 * 60 * 1000;
@@ -112,41 +117,42 @@ class WhatsAppService {
         console.log('[WhatsApp] Iniciando auto-reconnect de todos os tenants...');
 
         try {
-            // Buscar todos os tenants ativos com WhatsApp configurado
             const tenants = await this.db.all(`
                 SELECT id, name, settings 
                 FROM tenants 
                 WHERE status = 'ACTIVE'
             `);
 
-            for (const tenant of tenants) {
-                const settings = JSON.parse(tenant.settings || '{}');
+            let reconnected = 0;
+            let skipped = 0;
 
-                // Verificar se existe sessão salva no disco
+            for (const tenant of tenants) {
+                // [FIX] So reconectar tenants que ja tem sessao (creds.json) no disco.
+                // Tenants sem sessao precisam gerar QR manualmente via painel admin.
                 const sessionDir = path.join(SESSIONS_DIR, `session-${tenant.id}`);
                 const hasSession = fs.existsSync(sessionDir) && fs.existsSync(path.join(sessionDir, 'creds.json'));
 
-                // Reconectar se:
-                // 1. Bot habilitado (básico ou IA) OU
-                // 2. Existe sessão salva no disco (foi conectado antes)
-                if (settings.whatsappBotEnabled || settings.aiBot?.enabled || hasSession) {
-                    console.log(`[WhatsApp] Auto-conectando tenant: ${tenant.name} (${tenant.id})${hasSession ? ' [sessão existente]' : ''}`);
-
-                    try {
-                        await this.initializeForTenant(tenant.id);
-                    } catch (err) {
-                        console.error(`[WhatsApp] Erro ao conectar ${tenant.id}:`, err.message);
-                    }
-
-                    // Pequeno delay entre conexoes para nao sobrecarregar
-                    await new Promise(r => setTimeout(r, 2000));
+                if (!hasSession) {
+                    skipped++;
+                    continue;
                 }
+
+                console.log(`[WhatsApp] Auto-conectando tenant: ${tenant.name} (${tenant.id}) [sessao existente]`);
+
+                try {
+                    await this.initializeForTenant(tenant.id);
+                    reconnected++;
+                } catch (err) {
+                    console.error(`[WhatsApp] Erro ao conectar ${tenant.id}:`, err.message);
+                }
+
+                await new Promise(r => setTimeout(r, 2000));
             }
 
             // Iniciar health check periodico
             this.startHealthCheck();
 
-            console.log('[WhatsApp] Auto-reconnect concluido');
+            console.log(`[WhatsApp] Auto-reconnect concluido. Reconectados: ${reconnected}, Ignorados (sem sessao): ${skipped}`);
         } catch (error) {
             console.error('[WhatsApp] Erro no auto-reconnect:', error.message);
         }
@@ -160,22 +166,30 @@ class WhatsAppService {
             clearInterval(this.healthCheckInterval);
         }
 
-        const CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutos
+        const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
 
         this.healthCheckInterval = setInterval(async () => {
-            console.log(`[HealthCheck] Verificando ${this.clients.size} conexões ativas...`);
+            const activeCount = this.clients.size;
+            const allStatuses = [...this.statuses.entries()].map(([id, s]) => `${id.substring(0, 8)}:${s}`).join(', ');
+            console.log(`[HealthCheck] Verificando ${activeCount} conexões. Status: [${allStatuses}]`);
+
             for (const [tenantId, sock] of this.clients) {
                 const status = this.statuses.get(tenantId);
 
-                // Pular se já estiver em processo de conexão
-                if (status === 'INITIALIZING' || status === 'RECONNECTING' || status === 'CONNECTING' || this.pendingInitializations.has(tenantId)) {
+                // [FIX] Pular tenants em QUALQUER estado transitório ou terminal
+                // QR_READY = esperando scan do usuário (NÃO deve reconectar)
+                // SCAN_TIMEOUT = limite de QRs atingido (NÃO deve reconectar)
+                // FAILED = falha permanente, aguardando auto-reset de 1h
+                // LOGGED_OUT = usuário deslogou manualmente
+                const skipStatuses = ['INITIALIZING', 'RECONNECTING', 'CONNECTING', 'QR_READY', 'QR_EXPIRED', 'SCAN_TIMEOUT', 'FAILED', 'LOGGED_OUT'];
+                if (skipStatuses.includes(status) || this.pendingInitializations.has(tenantId)) {
                     continue;
                 }
 
                 try {
                     // 1. Verificar se socket está conectado fisicamente
                     if (!sock?.user) {
-                        console.log(`[HealthCheck] ⚠️ Tenant ${tenantId} parece instável (Status: ${status}). Tentando reconectar...`);
+                        console.log(`[HealthCheck] Tenant ${tenantId} desconectado (Status: ${status}). Reconectando...`);
                         await this.reconnectTenant(tenantId);
                         continue;
                     }
@@ -185,16 +199,52 @@ class WhatsAppService {
                     const inactiveTime = Date.now() - lastActivity;
 
                     if (inactiveTime > this.deadlockThreshold && status === 'READY') {
-                        console.warn(`[HealthCheck] 🚨 Tenant ${tenantId} detectado em Deadlock (${Math.round(inactiveTime / 60000)}min inativo). Forçando reinicialização.`);
-                        await this.reconnectTenant(tenantId, true); // true = force hard reset
+                        console.warn(`[HealthCheck] Tenant ${tenantId} em Deadlock (${Math.round(inactiveTime / 60000)}min inativo). Hard Reset.`);
+                        await this.reconnectTenant(tenantId, true);
                     }
                 } catch (err) {
-                    console.error(`[HealthCheck] Erro ao verificar tenant ${tenantId}:`, err.message);
+                    console.error(`[HealthCheck] Erro tenant ${tenantId}:`, err.message);
                 }
             }
         }, CHECK_INTERVAL);
 
-        console.log('[WhatsApp] Health check iniciado (intervalo: 2 min)');
+        console.log('[WhatsApp] Health check iniciado (intervalo: 5 min)');
+    }
+
+    /**
+     * Iniciar timer de expiracao do QR Code
+     */
+    _startQrTimer(tenantId, sock) {
+        this._clearQrTimer(tenantId);
+        const expiresAt = Date.now() + this.qrTimeoutMs;
+        this.qrExpiresAt.set(tenantId, expiresAt);
+
+        const timer = setTimeout(() => {
+            console.log(`[WhatsApp] QR Code expirado para tenant ${tenantId}. Fechando socket.`);
+            this.statuses.set(tenantId, 'QR_EXPIRED');
+            this.qrCodes.delete(tenantId);
+            this.qrExpiresAt.delete(tenantId);
+            this.qrTimers.delete(tenantId);
+            this.pendingInitializations.delete(tenantId);
+            if (sock) {
+                try { sock.end(); } catch (e) { }
+            }
+            this.clients.delete(tenantId);
+        }, this.qrTimeoutMs);
+
+        this.qrTimers.set(tenantId, timer);
+    }
+
+    /**
+     * Limpar timer de expiracao do QR Code
+     */
+    _clearQrTimer(tenantId) {
+        const timer = this.qrTimers.get(tenantId);
+        if (timer) {
+            clearTimeout(timer);
+            this.qrTimers.delete(tenantId);
+        }
+        this.qrExpiresAt.delete(tenantId);
     }
 
     /**
@@ -330,8 +380,10 @@ class WhatsAppService {
                     this.qrAttempts.set(tenantId, attempts);
 
                     if (attempts > this.maxQrAttempts) {
-                        console.log(`[WhatsApp] ⚠️ Limite de QR Codes atingido para ${tenantId} (${attempts}/${this.maxQrAttempts}). Parando para evitar spam.`);
+                        console.log(`[WhatsApp] Limite de QR Codes atingido para ${tenantId} (${attempts}/${this.maxQrAttempts}). Parando.`);
                         this.statuses.set(tenantId, 'SCAN_TIMEOUT');
+                        this.qrExpiresAt.delete(tenantId);
+                        this._clearQrTimer(tenantId);
                         if (sock) {
                             try { sock.end(); } catch (e) { }
                         }
@@ -339,7 +391,9 @@ class WhatsAppService {
                     }
 
                     if (attempts === 1) {
-                        console.log(`[WhatsApp] QR Code gerado para tenant ${tenantId}.`);
+                        console.log(`[WhatsApp] QR Code gerado para tenant ${tenantId}. Expira em ${this.qrTimeoutMs / 1000}s.`);
+                        // Iniciar timer de expiracao do QR (so no primeiro QR)
+                        this._startQrTimer(tenantId, sock);
                     }
 
                     // Gerar QR code como imagem base64
@@ -389,8 +443,9 @@ class WhatsAppService {
                     console.log(`WhatsApp pronto para tenant ${tenantId}`);
                     this.statuses.set(tenantId, 'READY');
                     this.qrCodes.delete(tenantId);
+                    this._clearQrTimer(tenantId);
                     this.reconnectAttempts.set(tenantId, 0);
-                    this.lastMessageTime.set(tenantId, Date.now()); // Reset deadlock timer
+                    this.lastMessageTime.set(tenantId, Date.now());
                 }
             });
 
@@ -1077,9 +1132,10 @@ class WhatsAppService {
     }
 
     /**
-     * Reiniciar conexão WhatsApp
+     * Reiniciar conexão WhatsApp (Forçar Reconexão)
      */
     async restart(tenantId) {
+        console.log(`[WhatsApp] 🔄 Reinicialização manual solicitada para tenant: ${tenantId}`);
         await this.disconnect(tenantId);
         await new Promise(r => setTimeout(r, 2000));
         await this.initializeForTenant(tenantId);
