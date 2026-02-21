@@ -80,7 +80,7 @@ class WhatsAppService {
         this.qrTimeoutMs = 2 * 60 * 1000;
 
         // Limite para decretar "Deadlock" (30 minutos sem nenhuma atividade ou erro)
-        this.deadlockThreshold = 30 * 60 * 1000;
+        this.deadlockThreshold = 24 * 60 * 60 * 1000;
 
         // Garantir que a tabela de mapeamento existe
         this.ensurePidJidTable();
@@ -200,7 +200,7 @@ class WhatsAppService {
 
                     if (inactiveTime > this.deadlockThreshold && status === 'READY') {
                         console.warn(`[HealthCheck] Tenant ${tenantId} em Deadlock (${Math.round(inactiveTime / 60000)}min inativo). Hard Reset.`);
-                        await this.reconnectTenant(tenantId, true);
+                        await this.reconnectTenant(tenantId, false);
                     }
                 } catch (err) {
                     console.error(`[HealthCheck] Erro tenant ${tenantId}:`, err.message);
@@ -285,7 +285,7 @@ class WhatsAppService {
                 }
                 const authDir = path.join(SESSIONS_DIR, `session-${tenantId}`);
                 if (fs.existsSync(authDir)) {
-                    fs.rmSync(authDir, { recursive: true, force: true });
+                    // fs.rmSync(authDir, { recursive: true, force: true }); // AGENTE: Protecao contra auto-delete
                 }
             }
 
@@ -324,7 +324,7 @@ class WhatsAppService {
             }
 
             // Verificar se ja existe cliente
-            if (this.clients.has(tenantId) && this.clients.get(tenantId)?.user) {
+            if (this.clients.has(tenantId) && this.clients.get(tenantId)?.user && this.statuses.get(tenantId) === 'READY') {
                 console.log(`WhatsApp client ja existe e esta conectado para tenant ${tenantId}`);
                 return;
             }
@@ -415,13 +415,16 @@ class WhatsAppService {
 
                     console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Motivo: ${statusCode} (${reason}). Reconectando: ${shouldReconnect}`);
 
+                    // Limpar socket antigo do mapa para permitir nova inicialização
+                    this.clients.delete(tenantId);
+
                     if (BoomError?.data) {
                         // console.log(`[WhatsApp] Detalhes do Erro:`, JSON.stringify(BoomError.data));
                     }
 
                     // [FIX] Impedir loop infinito de reconexão se atingiu limite de QR
                     if (this.statuses.get(tenantId) === 'SCAN_TIMEOUT') {
-                        console.log(`[WhatsApp] 🛑 Tenant ${tenantId} parou por excesso de QR. Reconexão automática ABORTADA.`);
+                        console.log(`[WhatsApp] \uD83D\uDED1 Tenant ${tenantId} parou por excesso de QR. Reconex\u00E3o autom\u00E1tica ABORTADA.`);
                         this.clients.delete(tenantId);
                         return;
                     }
@@ -436,7 +439,7 @@ class WhatsAppService {
                         this.clients.delete(tenantId);
                         // Apagar sessao se foi logout
                         try {
-                            fs.rmSync(authDir, { recursive: true, force: true });
+                            // fs.rmSync(authDir, { recursive: true, force: true }); // AGENTE: Protecao contra auto-delete
                         } catch (e) { /* ignore */ }
                     }
                 } else if (connection === 'open') {
