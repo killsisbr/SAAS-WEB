@@ -306,6 +306,151 @@ class WhatsAppService {
     }
 
     /**
+     * Verificar se a loja esta aberta (manual override + horario automatico)
+     */
+    async isStoreOpen(tenantId, currentSettings = null) {
+        let settings = currentSettings;
+
+        // Se settings não fornecido, buscar no banco
+        if (!settings) {
+            try {
+                const tenant = await this.db.get('SELECT settings FROM tenants WHERE id = ?', [tenantId]);
+                if (tenant && tenant.settings) {
+                    settings = JSON.parse(tenant.settings);
+                }
+            } catch (e) {
+                console.error(`[WhatsApp] Erro ao verificar status da loja para ${tenantId}:`, e.message);
+                return true; // Fallback: Assume aberto em caso de erro de DB
+            }
+        }
+
+        if (!settings) return true;
+
+        // 1. Verificação Manual (Override)
+        if (settings.isOpen === false) {
+            return false;
+        }
+
+        // 2. Verificação de "Dia de Folga" (Day-Off)
+        if (settings.dayOffDates && Array.isArray(settings.dayOffDates)) {
+            const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            if (settings.dayOffDates.includes(todayStr)) {
+                return false;
+            }
+        }
+
+        // 3. Verificação de Horário (Schedule)
+        return this.isWithinSchedule(settings.schedule);
+    }
+
+    /**
+     * Lógica de comparação de horários
+     */
+    isWithinSchedule(schedule) {
+        if (!schedule) return true; // Sem horário = Sem limites
+
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0=Domingo, 1=Segunda...
+        const dayKeys = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+        const dayKey = dayKeys[dayOfWeek];
+        const todaySchedule = schedule[dayKey];
+
+        if (!todaySchedule || !todaySchedule.open || !todaySchedule.close) {
+            return false; // Fechado se não houver horário para o dia
+        }
+
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const [openH, openM] = todaySchedule.open.split(':').map(Number);
+        const [closeH, closeM] = todaySchedule.close.split(':').map(Number);
+
+        const openMinutes = openH * 60 + openM;
+        const closeMinutes = closeH * 60 + closeM;
+
+        // Caso especial: Atravessa meia-noite (ex: 18:00 - 02:00)
+        if (closeMinutes < openMinutes) {
+            return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+        }
+
+        return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+    }
+
+    /**
+     * Calcula o próximo horário de abertura formatado
+     */
+    getNextOpeningTime(settings) {
+        if (!settings || !settings.schedule) return null;
+
+        const schedule = settings.schedule;
+        const dayOffDates = settings.dayOffDates || [];
+        const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const dayKeys = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+
+        const now = new Date();
+
+        // Verificar os próximos 7 dias
+        for (let i = 0; i < 7; i++) {
+            const nextDate = new Date(now);
+            nextDate.setDate(now.getDate() + i);
+
+            const dayOfWeek = nextDate.getDay();
+            const dayKey = dayKeys[dayOfWeek];
+            const dateStr = nextDate.toISOString().split('T')[0];
+
+            // 1. Pular se for dia de folga
+            if (dayOffDates.includes(dateStr)) continue;
+
+            const daySchedule = schedule[dayKey];
+            if (!daySchedule || !daySchedule.open) continue;
+
+            // 2. Se for hoje, verificar se ainda vai abrir
+            if (i === 0) {
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const [openH, openM] = daySchedule.open.split(':').map(Number);
+                const openMinutes = openH * 60 + openM;
+
+                if (currentMinutes < openMinutes) {
+                    return `hoje às ${daySchedule.open}`;
+                }
+                continue; // Já passou da abertura de hoje, ver próximos dias
+            }
+
+            // 3. Se for amanhã ou depois
+            const dayLabel = i === 1 ? 'amanhã' : dayNames[dayOfWeek];
+            return `${dayLabel} às ${daySchedule.open}`;
+        }
+
+        return null;
+    }
+
+    /**
+     * Enviar mensagem de loja fechada
+     */
+    async sendClosedMessage(tenantId, jid, settings, sock = null) {
+        // Anti-duplicação: não enviar msg de fechado repetidamente no mesmo curto período
+        if (this.hasRecentlySentMessage(tenantId, jid, 'closed')) {
+            return;
+        }
+
+        const restaurantName = settings.restaurantName || 'Restaurante';
+        const nextOpen = this.getNextOpeningTime(settings);
+
+        let subMsg = '';
+        if (nextOpen) {
+            subMsg = `Abriremos novamente *${nextOpen}*.`;
+        } else {
+            subMsg = 'No momento não temos horários de funcionamento definidos.';
+        }
+
+        const message = `Olá! Obrigado por entrar em contato com *${restaurantName}*!\n\n` +
+            `⚠️ *No momento estamos fechados.*\n` +
+            `${subMsg}\n\n` +
+            `Volte mais tarde para realizar seu pedido!`;
+
+        await this.safeSendMessage(tenantId, jid, message, sock);
+        this.markMessageSent(tenantId, jid, 'closed');
+    }
+
+    /**
      * Inicializar WhatsApp para um tenant usando Baileys
      */
     async initializeForTenant(tenantId) {
@@ -594,6 +739,14 @@ class WhatsAppService {
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             const currentSettings = tenant ? JSON.parse(tenant.settings || '{}') : settings;
+
+            // ============ VERIFICAR SE LOJA ESTÁ ABERTA ============
+            const isOpen = await this.isStoreOpen(tenantId, currentSettings);
+            if (!isOpen) {
+                console.log(`[WhatsApp] 🛑 Loja ${tenantId} FECHADA. Enviando mensagem de indisponibilidade.`);
+                await this.sendClosedMessage(tenantId, jid, currentSettings, sock);
+                return; // INTERROMPE O PROCESSAMENTO (Não responde mais nada)
+            }
 
             // Debug: mostrar status do bot
             // console.log(`[Bot Config] whatsappBotEnabled: ${currentSettings.whatsappBotEnabled}`);

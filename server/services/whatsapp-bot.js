@@ -301,12 +301,20 @@ export class WhatsAppBot {
             }
         }
 
-        // Override manual: se isOpen esta definido explicitamente como false, respeitar
+        // 1. Override manual: se isOpen esta definido explicitamente como false, respeitar
         if (settings.isOpen === false) {
             return false;
         }
 
-        // Se isOpen esta true OU nao definido, verificar horario automatico
+        // 2. Verificação de "Dia de Folga" (Day-Off)
+        if (settings.dayOffDates && Array.isArray(settings.dayOffDates)) {
+            const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            if (settings.dayOffDates.includes(todayStr)) {
+                return false;
+            }
+        }
+
+        // 3. Se isOpen esta true OU nao definido, verificar horario automatico
         return this.isWithinSchedule(settings.schedule);
     }
 
@@ -351,19 +359,69 @@ export class WhatsAppBot {
     }
 
     /**
+     * Calcula o próximo horário de abertura formatado
+     */
+    getNextOpeningTime(settings) {
+        if (!settings || !settings.schedule) return null;
+
+        const schedule = settings.schedule;
+        const dayOffDates = settings.dayOffDates || [];
+        const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const dayKeys = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+
+        const now = new Date();
+
+        // Verificar os próximos 7 dias
+        for (let i = 0; i < 7; i++) {
+            const nextDate = new Date(now);
+            nextDate.setDate(now.getDate() + i);
+
+            const dayOfWeek = nextDate.getDay();
+            const dayKey = dayKeys[dayOfWeek];
+            const dateStr = nextDate.toISOString().split('T')[0];
+
+            // 1. Pular se for dia de folga
+            if (dayOffDates.includes(dateStr)) continue;
+
+            const daySchedule = schedule[dayKey];
+            if (!daySchedule || !daySchedule.open) continue;
+
+            // 2. Se for hoje, verificar se ainda vai abrir
+            if (i === 0) {
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const [openH, openM] = daySchedule.open.split(':').map(Number);
+                const openMinutes = openH * 60 + openM;
+
+                if (currentMinutes < openMinutes) {
+                    return `hoje às ${daySchedule.open}`;
+                }
+                continue; // Já passou da abertura de hoje, ver próximos dias
+            }
+
+            // 3. Se for amanhã ou depois
+            const dayLabel = i === 1 ? 'amanhã' : dayNames[dayOfWeek];
+            return `${dayLabel} às ${daySchedule.open}`;
+        }
+
+        return null;
+    }
+
+    /**
      * Enviar mensagem de loja fechada
      */
     async sendClosedMessage(chat) {
-        const schedule = this.settings?.schedule || {};
-        let horarioMsg = '';
+        const settings = this.settings || {};
+        const nextOpen = this.getNextOpeningTime(settings);
 
-        // Tentar mostrar horario de funcionamento
-        if (schedule.seg && schedule.seg.open) {
-            horarioMsg = `\n\nNosso horario de funcionamento:\nSeg-Sex: ${schedule.seg.open} - ${schedule.seg.close || '22:00'}`;
+        let subMsg = '';
+        if (nextOpen) {
+            subMsg = `Abriremos novamente *${nextOpen}*.`;
+        } else {
+            subMsg = 'No momento estamos fechados e sem horários definidos.';
         }
 
         const message = `Ola! Obrigado por entrar em contato com ${this.restaurantName}!` +
-            `\n\n*No momento estamos fechados.*${horarioMsg}` +
+            `\n\n*No momento estamos fechados.*\n${subMsg}` +
             `\n\nVolte mais tarde para fazer seu pedido!`;
 
         await chat.sendMessage(message);
