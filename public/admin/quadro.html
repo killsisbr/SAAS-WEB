@@ -1011,16 +1011,7 @@
                 style="background: #8b5cf6; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                 <i class="fas fa-leaf"></i> Acai
             </button>
-            <!-- ========================================
-                 AUTO-PRINT TOGGLE
-                 Quando ativado, imprime automaticamente novos pedidos
-                 Estado salvo no localStorage para persistir entre recargas
-                 ======================================== -->
-            <button id="autoPrintToggle" onclick="toggleAutoPrint()" class="btn-header"
-                title="Auto-impressao: Imprime automaticamente novos pedidos"
-                style="background: #64748b; color: white; border: 2px solid var(--dark); border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-print"></i> <span id="autoPrintStatus">Auto OFF</span>
-            </button>
+
             <div class="header-status-container">
                 <a href="whatsapp" class="btn-header-wa" title="Ir para WhatsApp">
                     <i class="fab fa-whatsapp"></i>
@@ -2944,34 +2935,59 @@
             }
         }
 
+        // FUNÇÃO DE RENDERIZAÇÃO FALTANTE
+        function renderBuffetItem(item, type) {
+            const isAvailable = item.is_available === 1;
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 6px; border: 1px solid ${isAvailable ? '#333' : '#ef4444'}">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #fff;">${item.name}</div>
+                        ${item.price > 0 ? `<div style="font-size: 0.8rem; color: #4ade80;">+ R$ ${parseFloat(item.price).toFixed(2)}</div>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="toggleItemAvailability('${item.id}', ${isAvailable ? 0 : 1}, '${type}')" 
+                                style="background: ${isAvailable ? '#22c55e' : '#666'}; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                            ${isAvailable ? 'DISPONÍVEL' : 'ESGOTADO'}
+                        </button>
+                        <button onclick="deleteBuffetItem('${item.id}')" 
+                                style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; width: 32px; height: 32px; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         async function addAcaiItem() {
-            const input = document.getElementById('newAcaiItem');
-            const name = input.value.trim();
+            const inputName = document.getElementById('newAcaiName');
+            const inputPrice = document.getElementById('newAcaiPrice');
+            const name = inputName.value.trim();
+            const price = parseFloat(inputPrice.value) || 0;
+
             if (!name) {
                 showToast('Digite o nome do item');
                 return;
             }
 
-            // Verificar se temos grupos de acai
             if (acaiGroupsList.length === 0) {
-                showToast('Nenhum grupo de acai encontrado. Crie um primeiro na pagina de Adicionais.');
+                showToast('Nenhum grupo de acai encontrado.');
                 return;
             }
 
-            // Usar o primeiro grupo de acai encontrado
             const targetGroup = acaiGroupsList[0];
 
             try {
                 await apiFetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
                     method: 'POST',
-                    body: { name, price: 0 }
+                    body: { name, price }
                 });
 
-                input.value = '';
-                showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
-                await loadAcaiItems(); // Recarregar lista
+                inputName.value = '';
+                inputPrice.value = '';
+                showToast(`"${name}" adicionado!`, 'success');
+                await loadAcaiItems();
             } catch (e) {
-                console.error('Erro ao adicionar item:', e);
+                console.error('Erro ao adicionar acai:', e);
                 showToast('Erro de conexao', 'error');
             }
         }

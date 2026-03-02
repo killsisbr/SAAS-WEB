@@ -170,9 +170,9 @@
         }
 
         .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .product-card {
@@ -183,24 +183,30 @@
             box-shadow: 6px 6px 0 var(--dark);
             transition: all 0.2s;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: center;
+            padding: 12px;
+            gap: 20px;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
+            transform: translate(-2px, -2px);
             box-shadow: 8px 8px 0 var(--dark);
         }
 
         .product-image {
-            width: 100%;
-            height: 180px;
+            width: 80px;
+            height: 80px;
+            min-width: 80px;
+            border-radius: 12px;
             object-fit: cover;
             background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-muted);
-            border-bottom: 3px solid var(--dark);
+            border: 3px solid var(--dark);
+            overflow: hidden;
         }
 
         .product-image img {
@@ -210,51 +216,121 @@
         }
 
         .product-info {
-            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            gap: 15px;
+        }
+
+        .product-meta {
             flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 4px;
         }
 
         .product-name {
             font-weight: 800;
-            font-size: 1.2rem;
-            margin-bottom: 8px;
+            font-size: 1.25rem;
+            margin-bottom: 0;
             font-family: 'Bebas Neue', sans-serif;
             letter-spacing: 1px;
-        }
-
-        .product-price {
-            color: var(--primary);
-            font-weight: 800;
-            font-size: 1.4rem;
-            margin-bottom: 8px;
-            font-family: 'Bebas Neue', sans-serif;
+            line-height: 1;
         }
 
         .product-category {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 1px;
-            margin-bottom: 16px;
+            margin-bottom: 0;
             background: var(--bg);
-            padding: 4px 8px;
+            padding: 2px 8px;
             border-radius: 6px;
-            border: 1px solid var(--dark);
-            align-self: flex-start;
+            border: 2px solid var(--dark);
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .product-price-tag {
+            background: var(--secondary);
+            color: var(--dark);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            padding: 4px 12px;
+            border: 3px solid var(--dark);
+            border-radius: 10px;
+            box-shadow: 3px 3px 0 var(--dark);
+            white-space: nowrap;
         }
 
         .product-actions {
             display: flex;
-            gap: 8px;
-            margin-top: auto;
+            gap: 10px;
+            margin-top: 0;
         }
 
-        .product-actions button {
-            flex: 1;
-            padding: 10px;
+        .btn-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 1.2rem;
+            border-radius: 10px;
+        }
+
+        .btn-icon i {
+            pointer-events: none;
+        }
+
+        .btn-edit-retro {
+            background: var(--card);
+            color: var(--dark);
+            border: 3px solid var(--dark);
+        }
+
+        .btn-edit-retro:hover {
+            background: var(--secondary);
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-delete-retro {
+            background: #ff4757;
+            color: white;
+            border: 3px solid var(--dark);
+        }
+
+        .btn-delete-retro:hover {
+            background: #ff6b81;
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        /* Tablet */
+        @media (max-width: 768px) {
+            .product-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .product-info {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .product-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
 
         .modal {
@@ -359,6 +435,10 @@
                 font-size: 2rem;
             }
 
+            .btn-back-mobile {
+                display: flex;
+            }
+
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
                 gap: 16px;
@@ -419,12 +499,30 @@
                 font-size: 1.5rem;
             }
 
-            .form-group input,
-            .form-group select,
             .form-group textarea {
                 padding: 10px;
                 font-size: 0.9rem;
             }
+        }
+
+        /* Confirm Modal Styles */
+        #confirmModal .modal-content {
+            max-width: 400px;
+            text-align: center;
+        }
+
+
+        .confirm-icon {
+            font-size: 3rem;
+            color: #ff4757;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
         }
     </style>
 </head>
@@ -444,8 +542,6 @@
 
                 <div class="nav-label">IA & Automação</div>
                 <a href="whatsapp" class="nav-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a href="mapeamentos" class="nav-item"><i class="fas fa-link"></i> Mapeamentos</a>
-                <a href="ia-sugestoes" class="nav-item"><i class="fas fa-brain"></i> Sugestões IA</a>
 
                 <div class="nav-label">Configuracoes</div>
                 <a href="config" class="nav-item"><i class="fas fa-cog"></i> Configuracoes</a>
@@ -454,6 +550,9 @@
 
         <main class="main">
             <div class="header">
+                <a href="./" class="btn btn-secondary hide-on-desktop" style="margin-bottom: 16px;"><i
+                        class="fas fa-arrow-left"></i>
+                    Voltar</a>
                 <h1>Meus Produtos</h1>
                 <button class="btn btn-primary" onclick="openModal()">
                     <i class="fas fa-plus"></i> NOVO PRODUTO
@@ -562,6 +661,21 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 style="margin-bottom: 12px;">Tem certeza?</h2>
+            <p style="color: var(--text-muted); font-weight: 600;">Este produto será excluído permanentemente.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">CANCELAR</button>
+                <button class="btn btn-delete-retro" id="confirmDeleteBtn">EXCLUIR</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/shared.js"></script>
     <script>
         let products = [];
@@ -609,15 +723,21 @@
             grid.innerHTML = products.map(p => `
                 <div class="product-card">
                     <div class="product-image">
-                        ${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.name}">` : '<i class="fas fa-image fa-3x"></i>'}
+                        ${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.name}">` : '<i class="fas fa-image fa-2x"></i>'}
                     </div>
                     <div class="product-info">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-category">${categories.find(c => c.id === p.category_id)?.name || 'Sem categoria'}</div>
-                        <div class="product-price">${formatCurrency(p.price)}</div>
+                        <div class="product-meta">
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-category">${categories.find(c => c.id === p.category_id)?.name || 'Sem categoria'}</div>
+                        </div>
+                        <div class="product-price-tag">${formatCurrency(p.price)}</div>
                         <div class="product-actions">
-                            <button class="btn btn-secondary" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i> EDITAR</button>
-                            <button class="btn btn-delete" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-edit-retro btn-icon" onclick="editProduct('${p.id}')" title="Editar">
+                                <i class="fas fa-pen-to-square"></i>
+                            </button>
+                            <button class="btn btn-delete-retro btn-icon" onclick="deleteProduct('${p.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -754,16 +874,40 @@
             document.getElementById('productModal').classList.add('active');
         }
 
-        async function deleteProduct(id) {
-            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+        let productToDelete = null;
+
+        function deleteProduct(id) {
+            console.log('Solicitando exclusão do produto:', id);
+            productToDelete = id;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            productToDelete = null;
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (!productToDelete) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'EXCLUINDO...';
+
             try {
-                await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
+                await apiFetch(`/api/products/${productToDelete}`, { method: 'DELETE' });
                 showToast('Produto removido', 'success');
+                closeConfirmModal();
                 loadData();
             } catch (error) {
+                console.error('Erro ao excluir:', error);
                 showToast('Erro ao excluir', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
-        }
+        });
 
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();

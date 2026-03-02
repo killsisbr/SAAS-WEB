@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import archiver from 'archiver';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,6 +67,64 @@ class BackupService {
     }
 
     /**
+     * Criar backup completo em formato ZIP (Banco + Imagens)
+     * @param {string} suffix - Sufixo opcional
+     * @returns {Promise<object>}
+     */
+    async createFullZipBackup(suffix = '') {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `full_backup_${timestamp}${suffix ? '_' + suffix : ''}.zip`;
+        const backupPath = path.join(this.backupDir, fileName);
+        const uploadsDir = path.resolve(__dirname, '..', '..', 'public', 'uploads');
+
+        return new Promise((resolve, reject) => {
+            try {
+                const output = fs.createWriteStream(backupPath);
+                const archive = archiver('zip', {
+                    zlib: { level: 9 } // Nível de compressão máximo
+                });
+
+                output.on('close', () => {
+                    const stats = fs.statSync(backupPath);
+                    console.log(`[BackupService] Backup Full ZIP criado: ${fileName} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+                    resolve({
+                        success: true,
+                        fileName,
+                        path: backupPath,
+                        size: stats.size,
+                        timestamp: new Date().toISOString()
+                    });
+                });
+
+                archive.on('error', (err) => {
+                    console.error('[BackupService] Erro no archiver:', err.message);
+                    resolve({ success: false, error: err.message });
+                });
+
+                archive.pipe(output);
+
+                // Adicionar banco de dados
+                if (fs.existsSync(this.dbPath)) {
+                    archive.file(this.dbPath, { name: 'deliveryhub.sqlite' });
+                }
+
+                // Adicionar pasta de uploads (imagens de todos os tenants)
+                if (fs.existsSync(uploadsDir)) {
+                    archive.directory(uploadsDir, 'uploads');
+                } else {
+                    console.warn('[BackupService] Pasta de uploads não encontrada para o ZIP:', uploadsDir);
+                }
+
+                archive.finalize();
+            } catch (err) {
+                console.error('[BackupService] Erro fatal ao criar ZIP:', err.message);
+                resolve({ success: false, error: err.message });
+            }
+        });
+    }
+
+
+    /**
      * Restaurar backup
      * @param {string} backupFileName - Nome do arquivo de backup
      * @returns {object} Resultado da restauração
@@ -106,7 +165,7 @@ class BackupService {
     listBackups() {
         try {
             const files = fs.readdirSync(this.backupDir)
-                .filter(f => f.endsWith('.sqlite'))
+                .filter(f => f.endsWith('.sqlite') || f.endsWith('.zip'))
                 .map(f => {
                     const filePath = path.join(this.backupDir, f);
                     const stats = fs.statSync(filePath);
@@ -161,13 +220,15 @@ class BackupService {
 
         const intervalMs = intervalHours * 60 * 60 * 1000;
 
-        // Criar backup inicial
+        // Criar backups iniciais
         this.createBackup('autosave');
+        this.createFullZipBackup('autosave');
 
         // Agendar próximos
-        this.autosaveInterval = setInterval(() => {
+        this.autosaveInterval = setInterval(async () => {
             this.createBackup('autosave');
-            this.cleanOldBackups(7); // Manter últimos 7 backups
+            await this.createFullZipBackup('autosave');
+            this.cleanOldBackups(10); // Manter últimos 10 arquivos (5 pares de DB+ZIP)
         }, intervalMs);
 
         console.log(`[BackupService] Autosave iniciado (intervalo: ${intervalHours}h)`);
