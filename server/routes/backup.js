@@ -266,19 +266,70 @@ export default function (db) {
                 try {
                     await db.run(`INSERT OR REPLACE INTO addon_groups (id, tenant_id, product_id, category_id, name, min_selection, max_selection, order_index)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [group.id, tenantId, group.product_id, group.category_id, group.name, group.min_selection, group.max_selection, group.order_index]);
+                        [group.id, tenantId, group.product_id || null, group.category_id || null, group.name, group.min_selection, group.max_selection, group.order_index]);
                     restored.addons++;
-                } catch (e) { }
+                } catch (e) {
+                    console.error('[Backup Import] Skip addon group:', e.message);
+                }
             }
             for (const item of (data.addonItems || [])) {
                 try {
                     await db.run(`INSERT OR REPLACE INTO addon_items (id, group_id, name, price, is_available, order_index)
                         VALUES (?, ?, ?, ?, ?, ?)`,
                         [item.id, item.group_id, item.name, item.price, item.is_available, item.order_index]);
-                } catch (e) { }
+                } catch (e) {
+                    console.error('[Backup Import] Skip addon item:', e.message);
+                }
             }
 
-            // 5. Restaurar Buffet e Acai
+            // 4b. Auto-migrar adicionais do campo JSON legado (products.addons) para addon_groups/addon_items
+            // Garante que adicionais configurados por produto sejam preservados mesmo em backups antigos
+            if ((data.addonGroups || []).length === 0) {
+                console.log('[Backup Import] Nenhum addon_group no backup. Tentando migrar do campo JSON legado...');
+                const restoredProducts = data.products || [];
+                const categoryGroupMap = new Map();
+
+                for (const prod of restoredProducts) {
+                    if (!prod.has_addons || !prod.addons) continue;
+                    try {
+                        let addons = typeof prod.addons === 'string' ? JSON.parse(prod.addons) : prod.addons;
+                        if (!Array.isArray(addons) || addons.length === 0) continue;
+
+                        // Criar/reusar grupo por category_id do produto
+                        const catKey = prod.category_id || 'geral';
+                        if (!categoryGroupMap.has(catKey)) {
+                            const gId = `migrated_${catKey}_${Date.now()}`;
+                            await db.run(`INSERT OR IGNORE INTO addon_groups (id, tenant_id, product_id, category_id, name, min_selection, max_selection, order_index)
+                                VALUES (?, ?, ?, ?, 'Adicionais', 0, 10, 1)`,
+                                [gId, tenantId, null, prod.category_id || null]);
+                            categoryGroupMap.set(catKey, gId);
+                            restored.addons++;
+                        }
+                        const groupId = categoryGroupMap.get(catKey);
+
+                        for (let idx = 0; idx < addons.length; idx++) {
+                            const a = addons[idx];
+                            const aName = a.name || a.nome;
+                            const aPrice = parseFloat(a.price || a.preco || 0);
+                            if (!aName) continue;
+
+                            // Evitar duplicatas
+                            const existing = await db.get('SELECT id FROM addon_items WHERE group_id = ? AND LOWER(name) = ?', [groupId, aName.toLowerCase()]);
+                            if (!existing) {
+                                const iId = `migrated_item_${groupId}_${idx}_${Date.now()}`;
+                                await db.run(`INSERT INTO addon_items (id, group_id, name, price, is_available, order_index)
+                                    VALUES (?, ?, ?, ?, 1, ?)`, [iId, groupId, aName, aPrice, idx]);
+                                restored.addons++;
+                            }
+                        }
+                        console.log(`[Backup Import] Migrados ${addons.length} adicionais legados do produto "${prod.name}"`);
+                    } catch (e) {
+                        console.error('[Backup Import] Erro ao migrar addons legados:', prod.name, e.message);
+                    }
+                }
+            }
+
+
             for (const item of (data.buffetItems || [])) {
                 try {
                     await db.run(`INSERT OR REPLACE INTO buffet_items (id, tenant_id, nome, ativo, order_index)

@@ -209,7 +209,8 @@ export function findProductsInMessage(message, products) {
     // Passo 4: Heurística Bruta para Observações (Blindagem sem IA)
     if (results.length > 0) {
         // Tenta achar "sem X" ou "com Y" globalmente na mensagem pura e anexar ao último item adicionado
-        const obsMatch = message.toLowerCase().match(/\b((?:sem|com|menos|mais)\s+[a-zãõáéíóúâêôç]+(?:\s+e\s+[a-zãõáéíóúâêôç]+)?)\b/i);
+        // Suporta: "sem cebola e sem picles", "com bacon, sem cebola e sem tomate", etc.
+        const obsMatch = message.toLowerCase().match(/\b((?:sem|com|menos|mais)\s+[a-zãõáéíóúâêôç]+(?:(?:\s+e\s+|\s*,\s*)(?:(?:sem|com|menos|mais)\s+)?[a-zãõáéíóúâêôç]+)*)/i);
         if (obsMatch) {
             const lastItem = results[results.length - 1];
             if (!lastItem.observation) {
