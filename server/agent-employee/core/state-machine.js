@@ -163,7 +163,7 @@ export async function processMessage(params) {
  * Estado: GREETING - Saudação inicial
  */
 async function handleGreeting(params, session, intent, interpreter, context) {
-    const { tenantId, customerId, products } = params;
+    const { tenantId, customerId, products, settings } = params;
 
     // Montar cardápio para o contexto
     const menuItems = (products || []).slice(0, 15).map(p =>
@@ -178,15 +178,19 @@ async function handleGreeting(params, session, intent, interpreter, context) {
         return processOrderIntent(params, session, intent, interpreter, context);
     }
 
+    // [NOVO] Adicionar link web logo na saudação
+    const domain = settings?.domain || `${process.env.APP_DOMAIN || 'localhost:5000'}/loja/${tenantId}`;
+    const linkMsg = `\n\nSe preferir pedir mais rápido, acesse nosso cardápio digital: *${domain}* 📲`;
+
     const aiResponse = await interpreter.generateResponse(AGENT_STATES.GREETING, context);
-    if (aiResponse) return { text: aiResponse };
+    if (aiResponse) return { text: aiResponse + linkMsg };
 
     // Fallback manual
     return {
         text: DEFAULT_MESSAGES.greeting
             .replace('{employeeName}', context.employeeName)
             .replace('{storeName}', context.storeName)
-            .replace('{menuItems}', menuItems)
+            .replace('{menuItems}', menuItems) + linkMsg
     };
 }
 
@@ -448,13 +452,25 @@ async function handleOrdering(params, session, intent, interpreter, context) {
  */
 async function moveToDeliveryType(params, session, interpreter, context) {
     const { tenantId, customerId, settings } = params;
+    const { customerContext } = context;
 
     console.log('[DEBUG] moveToDeliveryType -> settings.allow_pickup =', settings?.allow_pickup, typeof settings?.allow_pickup);
 
     // [NOVO] Se retirada NÃO estiver permitida, pular direto para coleta de endereço
     if (settings && settings.allow_pickup === false) {
         console.log(`[AgentEmployee] Retirada desabilitada para o tenant ${tenantId}. Pulando para ADDRESS.`);
+        session.deliveryType = 'delivery';
         cartService.setState(tenantId, customerId, AGENT_STATES.ADDRESS);
+
+        // Fast-track: Verifica último endereço
+        const lastAddr = customerContext?.lastAddress;
+        if (lastAddr) {
+            const addrStr = typeof lastAddr === 'object' ? (lastAddr.full || lastAddr.street || JSON.stringify(lastAddr)) : lastAddr;
+            return {
+                text: `Ótimo! Tudo anotado. 🍔\n\nSua última entrega foi no endereço:\n*${addrStr}*\n\nQuer entregar neste mesmo endereço ou é em outro lugar hoje? (Responda "Sim" para confirmar ou envie o novo endereço)`
+            };
+        }
+
         const cartView = cartService.formatCart(tenantId, customerId);
         return {
             text: `Ótimo! Tudo anotado. 🍔\n\n${cartView}\n\nPara o envio, qual seria o seu *endereço*?`
@@ -508,7 +524,8 @@ async function handleDeliveryType(params, session, intent, interpreter, context)
         } else {
             session.deliveryFee = 0;
             cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-            return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
+            // Delega para o handleName que já tem a lógica de pulo pre-processada
+            return await handleName({ ...params, message: '' }, session, { type: 'UNKNOWN' }, interpreter, context);
         }
     }
 
@@ -572,7 +589,7 @@ async function handleAddress(params, session, intent, interpreter, context) {
         cartService.setDeliveryFee(tenantId, customerId, fee);
 
         cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-        return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
+        return await handleName({ ...params, message: '' }, session, { type: 'UNKNOWN' }, interpreter, context);
     }
 
     // 5. Se cliente tem último endereço e ainda não definiu o atual, oferecer
@@ -589,7 +606,7 @@ async function handleAddress(params, session, intent, interpreter, context) {
             const fee = parseFloat(settings?.deliveryFee) || 5;
             cartService.setDeliveryFee(tenantId, customerId, fee);
             cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-            return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
+            return await handleName({ ...params, message: '' }, session, { type: 'UNKNOWN' }, interpreter, context);
         }
 
         // Se não for confirmação nem endereço novo, oferece o antigo

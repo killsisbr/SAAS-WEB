@@ -2,90 +2,239 @@
 ┌────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 26 │ fullpvp          │ default     │ N/A     │ fork    │ 372025   │ 21h    │ 924  │ online    │ 0%       │ 2.1gb    │ root     │ disabled │
-│ 27 │ saas-web         │ default     │ 1.0.0   │ fork    │ 384603   │ 21m    │ 419  │ online    │ 0%       │ 135.9mb  │ root     │ disabled │
+│ 50 │ fullpvp          │ default     │ N/A     │ fork    │ 514802   │ 18h    │ 4    │ online    │ 0%       │ 3.7mb    │ root     │ disabled │
+│ 29 │ saas-web         │ default     │ 1.0.0   │ fork    │ 529878   │ 8m     │ 4    │ online    │ 0%       │ 140.2mb  │ root     │ disabled │
+│ 30 │ vps-hud          │ default     │ 1.0.0   │ fork    │ 472851   │ 2D     │ 0    │ online    │ 0%       │ 52.8mb   │ root     │ disabled │
 └────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 Module
 ┌────┬──────────────────────────────┬───────────────┬──────────┬──────────┬──────┬──────────┬──────────┬──────────┐
 │ id │ module                       │ version       │ pid      │ status   │ ↺    │ cpu      │ mem      │ user     │
 ├────┼──────────────────────────────┼───────────────┼──────────┼──────────┼──────┼──────────┼──────────┼──────────┤
-│ 6  │ pm2-logrotate                │ 3.0.0         │ 197449   │ online   │ 3    │ 0%       │ 78.6mb   │ root     │
+│ 6  │ pm2-logrotate                │ 3.0.0         │ 493624   │ online   │ 24   │ 0%       │ 70.9mb   │ root     │
 └────┴──────────────────────────────┴───────────────┴──────────┴──────────┴──────┴──────────┴──────────┴──────────┘
 
 ========== PM2 LIST (JSON) ==========
-[{"pid":197449,"name":"pm2-logrotate","pm2_env":{"exit_code":0,"prev_restart_delay":0,"node_version":"22.20.0","version":"3.0.0","unstable_restarts":1,"restart_time":3,"pm_id":6,"created_at":1770921274389,"axm_dynamic":{},"axm_options":{"error":true,"heapdump":true,"feature.profiler.heapsnapshot":false,"feature.profiler.heapsampling":true,"feature.profiler.cpu_js":true,"latency":true,"catchExceptions":true,"profiling":true,"metrics":{"http":true,"runtime":true,"eventLoop":true,"network":false,"v8":true},"standalone":false,"module_conf":{"rotateModule":true,"rotateInterval":"0 0 * * *","workerInterval":30,"dateFormat":"YYYY-MM-DD_HH-mm-ss","compress":true,"retain":10,"max_size":"10M"},"apm":{"version":"6.1.0","type":"node"},"module_name":"pm2-logrotate","module_version":"3.0.0","max_size":"10M","retain":10,"compress":true,"dateFormat":"YYYY-MM-DD_HH-mm-ss","workerInterval":30,"rotateInterval":"0 0 * * *","rotateModule":true,"alert_enabled":true,"widget":{"block":{"main_probes":["Global logs size","Files count"],"actions":true,"mem":true,"cpu":true,"issues":true},"el":{"actions":false,"probes":false},"theme":["#111111","#1B2228","#31C2F1","#807C7C"],"logo":"https://raw.githubusercontent.com/pm2-hive/pm2-logrotate/master/pres/logo.png","type":"generic"},"isModule":true,"description":"Module to rotate logs of every pm2 application","pmx_version":"1.6.8"},"axm_monitor":{"Used Heap Size":{"value":"10.86","type":"internal/v8/heap/used","unit":"MiB","historic":true},"Heap Usage":{"value":71.1,"type":"internal/v8/heap/usage","unit":"%","historic":true},"Heap Size":{"value":"15.28","type":"internal/v8/heap/total","unit":"MiB","historic":true},"Files count":{"alert":{},"type":"Files count","historic":true,"agg_type":"avg","value":99},"Global logs size":{"alert":{},"type":"Global logs size","historic":true,"agg_type":"avg","value":"1.19 GB"},"Event Loop Latency p95":{"value":"1.66","type":"internal/libuv/latency/p95","unit":"ms","historic":true},"Event Loop Latency":{"value":"0
+[{"pid":493624,"name":"pm2-logrotate","pm2_env":{"script":"app.js","PM2_PROGRAMMATIC":"true","pmx_module":true,"cwd":"/root/.pm2/modules/pm2-logrotate/node_modules/pm2-logrotate","namespace":"default","kill_retry_time":100,"windowsHide":true,"username":"root","treekill":true,"automation":true,"pmx":true,"instance_var":"NODE_APP_INSTANCE","autorestart":true,"autostart":true,"vizion":true,"merge_logs":true,"max_memory_restart":524288000,"env":{"updateEnv":true,"pm2-logrotate":"{\"max_size\":\"10M\",\"retain\":\"10\",\"compress\":\"true\",\"dateFormat\":\"YYYY-MM-DD_HH-mm-ss\",\"workerInterval\":\"30\",\"rotateInterval\":\"0 0 * * *\",\"rotateModule\":true}","max_size":"10M","retain":"10","compress":"true","dateFormat":"YYYY-MM-DD_HH-mm-ss","workerInterval":"30","rotateInterval":"0 0 * * *","rotateModule":true,"PM2_HOME":"/root/.pm2","PM2_JSON_PROCESSING":"true","PM2_USAGE":"CLI","_":"/usr/bin/pm2","DBUS_SESSION_BUS_ADDRESS":"unix:path=/run/user/0/bus","PATH":"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin","SSH_CLIENT":"179.48.116.132 12032 22","XDG_RUNTIME_DIR":"/run/user/0","XDG_SESSION_ID":"7719","SHLVL":"0","USER":"root","XDG_SESSION_CLASS":"user","SSH_CONNECTION":"179.48.116.132 12032 82.29.58.126 22","LANG":"C.UTF-8","HOME":"/root","XDG_SESSION_TYPE":"tty","LOGNAME":"root","PWD":"/root","SHELL":"/bin/bash","unique_id":"2555865e-a416-40ea-97fe-f00b77526091","PM2_PROGRAMMATIC":"true"},"name":"pm2-logrotate","node_args":[],"pm_exec_path":"/root/.pm2/modules/pm2-logrotate/node_modules/pm2-logrotate/app.js","pm_cwd":"/root/.pm2/modules/pm2-logrotate/node_modules/pm2-logrotate","exec_interpreter":"node","exec_mode":"fork_mode","instances":1,"pm_out_log_path":"/root/.pm2/logs/pm2-logrotate-out.log","pm_err_log_path":"/root/.pm2/logs/pm2-logrotate-error.log","pm_pid_path":"/root/.pm2/pids/pm2-logrotate-6.pid","km_link":false,"vizion_running":false,"NODE_APP_INSTANCE":0,"pm2-logrotate":"{\"max_size\":\"10M\",\"retain\":
 ========== LAST 100 LINES ERROR LOG ==========
 [TAILING] Tailing last 100 lines for [saas-web] process (change the value with --lines option)
 /root/.pm2/logs/saas-web-error.log last 100 lines:
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Decrypted message with closed session.
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Decrypted message with closed session.
+29|saas-we | Decrypted message with closed session.
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+29|saas-we | Closing open session in favor of incoming prekey bundle
+
 
 ========== LAST 150 LINES OUT LOG ==========
 [TAILING] Tailing last 150 lines for [saas-web] process (change the value with --lines option)
 /root/.pm2/logs/saas-web-out.log last 150 lines:
-27|saas-we | Database conectado e otimizado: /root/killsis/SAAS-WEB/server/database/deliveryhub.sqlite
-27|saas-we | Schema aplicado
-27|saas-we | Seeds ignorados (banco ja possui dados)
-27|saas-we | Rotas carregadas
-27|saas-we | [CacheService] Inicializado com TTL padrão de 10 minutos
-27|saas-we | [Cache] Serviço inicializado
-27|saas-we | [BackupService] Inicializado. Diretório: /root/killsis/SAAS-WEB/server/backups
-27|saas-we | [BackupService] Backup criado: db_backup_2026-02-20T20-18-13-463Z_autosave.sqlite (2728.00 KB)
-27|saas-we | [BackupService] Autosave iniciado (intervalo: 24h)
-27|saas-we | [Backup] Serviço de autosave iniciado
-27|saas-we | [OllamaManager] Verificando modelo: gemma3:4b
-27|saas-we | [OllamaManager] ✅ Modelo gemma3:4b pronto.
-27|saas-we | ============================================================
-27|saas-we |   DeliveryHub SaaS rodando em http://localhost:5000
-27|saas-we | ============================================================
-27|saas-we | [WhatsApp] Iniciando auto-reconnect de todos os tenants...
-27|saas-we | [WhatsApp] Auto-conectando tenant: Brutus Burger (demo_tenant_001) [sessao existente]
-27|saas-we | Inicializando WhatsApp (Baileys) para tenant demo_tenant_001
-27|saas-we | [WhatsApp] Tabela pid_jid_mappings verificada/criada
-27|saas-we | [Baileys] Usando versao WA: 2.3000.1033105955, isLatest: true
-27|saas-we | WhatsApp pronto para tenant demo_tenant_001
-27|saas-we | [WhatsApp] Health check iniciado (intervalo: 5 min)
-27|saas-we | [WhatsApp] Auto-reconnect concluido. Reconectados: 1, Ignorados (sem sessao): 3
-27|saas-we | [WhatsApp] Auto-reconnect concluído (Baileys)
-27|saas-we |   Rotas disponiveis:
-27|saas-we |     - Landing:    http://localhost:5000/
-27|saas-we |     - Onboarding: http://localhost:5000/onboarding
-27|saas-we |     - Admin:      http://localhost:5000/admin
-27|saas-we |     - Loja:       http://localhost:5000/loja/:slug
-27|saas-we |     - SuperAdmin: http://localhost:5000/superadmin
-27|saas-we | ============================================================
-27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
-27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
-27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
-27|saas-we | [HealthCheck] Verificando 1 conexões. Status: [demo_ten:READY]
+29|saas-we |     rootKey: <Buffer 2a 6e de a4 86 8d c8 28 1e d1 f4 c0 a2 a9 f7 27 ab 12 05 d4 6f ce 3d 37 28 fc 43 3b b5 65 a5 2c>
+29|saas-we |   },
+29|saas-we |   indexInfo: {
+29|saas-we |     baseKey: <Buffer 05 89 ac a6 d7 fa 86 e1 97 b1 6d d4 b7 81 09 06 ad 96 4b ba 3c 8d 98 09 6d bd b3 1c 08 e1 bb e5 05>,
+29|saas-we |     baseKeyType: 2,
+29|saas-we |     closed: -1,
+29|saas-we |     used: 1772413583116,
+29|saas-we |     created: 1772413583116,
+29|saas-we |     remoteIdentityKey: <Buffer 05 9a 91 29 f0 3c 26 85 58 44 74 86 e0 88 b0 f2 99 f2 fb 8d 53 57 18 86 bd 21 64 0e 2b 5d 11 cc 5e>
+29|saas-we |   }
+29|saas-we | }
+29|saas-we | [SafeSend] ✅ Mensagem enviada com sucesso para 554298339298@s.whatsapp.net
+29|saas-we | [AntiDup] Marcado welcome para 10282252427359@lid (tenant: demo_tenant_001)
+29|saas-we | [AntiDup] Marcado link para 10282252427359@lid (tenant: demo_tenant_001)
+29|saas-we | [AutoWelcome] ✅ Marcado como enviado para 10282252427359@lid
+29|saas-we | [AutoMap] ✅ Mapeado LID 10282252427359 -> 554298339298
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [ORS] Calculando rota: Loja(-25.236655, -50.601611) -> Cliente(-25.2418123, -50.5903905)
+29|saas-we | [ORS] Distancia calculada: 2.15km (route), Tempo: 5 min
+29|saas-we | [ORS] Hibrido: Distancia 2.15km dentro da base (5km) = R$ 7
+29|saas-we | [ORS] Arredondado para cima (<=10km): R$ 7
+29|saas-we | [Orders] Recebido: customerPhone=4298339298@c.us, whatsappId=554298339298@c.us
+29|saas-we | [Orders] Atualizando customerPhone de 4298339298@c.us para 4298339298@c.us
+29|saas-we | [Confirmacao] 🎯 Prioridade TOTAL para telefone do checkout: 554298339298@s.whatsapp.net
+29|saas-we | [OrderConfirmation] Usando whatsappId como telefone: 554298339298@s.whatsapp.net
+29|saas-we | [SafeSend] 📤 Enviando mensagem para 554298339298@s.whatsapp.net...
+29|saas-we | [SafeSend] Mensagem: ✅ *Pedido Confirmado!*
+29|saas-we | 
+29|saas-we | Número do pedido: #4835
+29|saas-we | 
+29|saas-we | I...
+29|saas-we | [SafeSend] 📤 Enviando mensagem para 120363403943975805@g.us...
+29|saas-we | [SafeSend] Mensagem: 🍔 *NOVO PEDIDO #4835*
+29|saas-we | 
+29|saas-we | ━━━━━━━━━━━━━━━━━━━━
+29|saas-we | 📦 *I...
+29|saas-we | [SafeSend] ✅ Mensagem enviada com sucesso para 554298339298@s.whatsapp.net
+29|saas-we | [Confirmacao] ✅ WhatsApp enviado para 554298339298@s.whatsapp.net
+29|saas-we | [SafeSend] ✅ Mensagem enviada com sucesso para 120363403943975805@g.us
+29|saas-we | [Grupo] ✅ Pedido #4835 enviado para grupo
+29|saas-we | [AutoMap] ✅ Mapeado LID 10282252427359 -> 554298339298
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | Closing session: SessionEntry {
+29|saas-we |   _chains: {
+29|saas-we |     BT8XdQbMSy9A1odefBq3TtmstJLNqsyVDLZMqHn5PvBC: { chainKey: [Object], chainType: 2, messageKeys: {} },
+29|saas-we |     'BZtcC9Anrp7DkzI+wxATuKU5xXxXbVziCojiKO+9yu1m': { chainKey: [Object], chainType: 1, messageKeys: {} }
+29|saas-we |   },
+29|saas-we |   registrationId: 1569720642,
+29|saas-we |   currentRatchet: {
+29|saas-we |     ephemeralKeyPair: {
+29|saas-we |       pubKey: <Buffer 05 9b 5c 0b d0 27 ae 9e c3 93 32 3e c3 10 13 b8 a5 39 c5 7c 57 6d 5c e2 0a 88 e2 28 ef bd ca ed 66>,
+29|saas-we |       privKey: <Buffer b8 c7 a9 db da 69 56 15 f4 f5 a7 b9 40 01 d4 66 23 e6 e4 2d 0b de f7 81 cc 20 69 77 e5 39 73 56>
+29|saas-we |     },
+29|saas-we |     lastRemoteEphemeralKey: <Buffer 05 3f 17 75 06 cc 4b 2f 40 d6 87 5e 7c 1a b7 4e d9 ac b4 92 cd aa cc 95 0c b6 4c a8 79 f9 3e f0 42>,
+29|saas-we |     previousCounter: 0,
+29|saas-we |     rootKey: <Buffer 03 c1 24 8d cc b2 a5 1e 11 07 e8 eb c0 4d 99 c4 84 d8 08 f8 5d 47 78 b3 0c 71 bc e3 93 c1 ef 39>
+29|saas-we |   },
+29|saas-we |   indexInfo: {
+29|saas-we |     baseKey: <Buffer 05 2e 68 c4 fd e9 de 4b 0a d3 86 4d 03 a4 7d 72 a3 61 bc 06 46 ad 18 db fe 7a 59 a5 13 11 79 45 12>,
+29|saas-we |     baseKeyType: 2,
+29|saas-we |     closed: -1,
+29|saas-we |     used: 1772240196226,
+29|saas-we |     created: 1772240196226,
+29|saas-we |     remoteIdentityKey: <Buffer 05 cf 4c 70 fc 21 1b 80 87 b9 92 c4 2c 72 09 2e a0 2d 26 cd b3 95 a9 99 c5 e8 2a 0f 9c e6 70 eb 59>
+29|saas-we |   }
+29|saas-we | }
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | Database conectado e otimizado: /root/killsis/SAAS-WEB/server/database/deliveryhub.sqlite
+29|saas-we | Schema aplicado
+29|saas-we | Seeds ignorados (banco ja possui dados)
+29|saas-we | Rotas carregadas
+29|saas-we | [CacheService] Inicializado com TTL padrão de 10 minutos
+29|saas-we | [Cache] Serviço inicializado
+29|saas-we | [BackupService] Inicializado. Diretório: /root/killsis/SAAS-WEB/server/backups
+29|saas-we | [BackupService] Backup criado: db_backup_2026-03-02T02-23-09-719Z_autosave.sqlite (3136.00 KB)
+29|saas-we | [BackupService] Autosave iniciado (intervalo: 24h)
+29|saas-we | [Backup] Serviço de autosave iniciado
+29|saas-we | [OllamaManager] Verificando modelo: gemma:2b
+29|saas-we | [OllamaManager] ✅ Modelo gemma:2b pronto.
+29|saas-we | ============================================================
+29|saas-we |   DeliveryHub SaaS rodando em http://localhost:5000
+29|saas-we | ============================================================
+29|saas-we | [WhatsApp] Iniciando auto-reconnect de todos os tenants...
+29|saas-we | [WhatsApp] Auto-conectando tenant: Brutus Burger (demo_tenant_001) [sessao existente]
+29|saas-we | [WhatsApp] Tabela pid_jid_mappings verificada/criada
+29|saas-we | Inicializando WhatsApp (Baileys) para tenant demo_tenant_001
+29|saas-we | [Baileys] Usando versao WA: 2.3000.1033846690, isLatest: true
+29|saas-we | WhatsApp pronto para tenant demo_tenant_001
+29|saas-we | [WhatsApp] Auto-conectando tenant: DEGUST (981f332f-fc3e-414d-a69a-04b02267118c) [sessao existente]
+29|saas-we | Inicializando WhatsApp (Baileys) para tenant 981f332f-fc3e-414d-a69a-04b02267118c
+29|saas-we | [Baileys] Usando versao WA: 2.3000.1033846690, isLatest: true
+29|saas-we | WhatsApp pronto para tenant 981f332f-fc3e-414d-a69a-04b02267118c
+29|saas-we | [WhatsApp] Health check iniciado (intervalo: 5 min)
+29|saas-we | [WhatsApp] Auto-reconnect concluido. Reconectados: 2, Ignorados (sem sessao): 3
+29|saas-we | [WhatsApp] Auto-reconnect concluído (Baileys)
+29|saas-we |   Rotas disponiveis:
+29|saas-we |     - Landing:    http://localhost:5000/
+29|saas-we |     - Onboarding: http://localhost:5000/onboarding
+29|saas-we |     - Admin:      http://localhost:5000/admin
+29|saas-we |     - Loja:       http://localhost:5000/loja/:slug
+29|saas-we |     - SuperAdmin: http://localhost:5000/superadmin
+29|saas-we | ============================================================
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001', 5 ]
+29|saas-we | [Orders API] Encontrados 5 pedidos
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001' ]
+29|saas-we | [Orders API] Encontrados 140 pedidos
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001', 5 ]
+29|saas-we | [Orders API] Encontrados 5 pedidos
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001' ]
+29|saas-we | [Orders API] Encontrados 140 pedidos
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001', 5 ]
+29|saas-we | [Orders API] Encontrados 5 pedidos
+29|saas-we | [HealthCheck] Verificando 2 conexões. Status: [demo_ten:READY, 981f332f:READY]
+29|saas-we | [Orders API] tenant: 127371eb-14c6-44bc-a9e5-e6b0b7d61d11, date: undefined, query params: [ '127371eb-14c6-44bc-a9e5-e6b0b7d61d11', 5 ]
+29|saas-we | [Orders API] Encontrados 0 pedidos
+29|saas-we | [WhatsApp] Listagem de grupos não suportada na versão Baileys
+29|saas-we | [Orders API] tenant: demo_tenant_001, date: undefined, query params: [ 'demo_tenant_001' ]
+29|saas-we | [Orders API] Encontrados 140 pedidos
 
 
 ========== PORT 5000 CHECK ==========
-5000/tcp:            384603
+5000/tcp:            529878
 
 ========== PORT 3000 CHECK ==========
 Port 3000 is FREE
 
 ========== NODE PROCESSES ==========
-root      156250  0.5  1.2 1058772 100972 ?      Sl   Feb09  91:02 node /usr/bin/pm2 logs deliveryhub --lines 20 --no-daemon
-root      197449  0.2  0.9 1322784 80680 ?       Ssl  Feb12  23:36 node /root/.pm2/modules/pm2-logrotate/node_modules/pm2-log
-root      383884  0.0  0.7 1049992 62268 pts/0   Sl+  18:53   0:00 node /root/.nvm/versions/node/v22.20.0/bin/pm2 log 27
-root      384603  0.3  1.7 11847532 139396 ?     Ssl  20:18   0:04 node /root/killsis/SAAS-WEB/server/server.js
+root      156250  0.3  0.8 1060304 71152 ?       Sl   Feb08 106:01 node /usr/bin/pm2 logs deliveryhub --lines 20 --no-daemon
+root      472851  0.1  0.6 1067452 54276 ?       Ssl  Feb27   6:19 node /root/VPSHUD/server.js
+root      493624  0.2  0.8 1341860 72828 ?       Ssl  Feb27   7:24 node /root/.pm2/modules/pm2-logrotate/node_modules/pm2-log
+root      529878  0.9  1.7 11851520 143852 ?     Ssl  23:23   0:05 node /root/killsis/SAAS-WEB/server/server.js
 
 ========== MEMORY USAGE ==========
                total        used        free      shared  buff/cache   available
-Mem:           7.8Gi       3.2Gi       315Mi       115Mi       4.7Gi       4.6Gi
+Mem:           7.8Gi       6.9Gi       170Mi       271Mi       1.2Gi       861Mi
 Swap:             0B          0B          0B
 
 ========== DISK USAGE ==========
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        96G   55G   42G  57% /
+/dev/sda1        96G   49G   48G  51% /
 
 ========== SERVER.JS HEAD (first 5 lines of start function) ==========
 17:import { initWhatsAppService, getWhatsAppService } from './whatsapp-service.js';
-452:        app.listen(PORT, async () => {
-458:            const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
-461:                    const whatsapp = initWhatsAppService(db, broadcast);
-462:                    await whatsapp.autoReconnectAll();
-468:                console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
+457:        app.listen(PORT, async () => {
+463:            const whatsappAutoConnect = process.env.WHATSAPP_AUTO_CONNECT !== 'false';
+466:                    const whatsapp = initWhatsAppService(db, broadcast);
+467:                    await whatsapp.autoReconnectAll();
+473:                console.log('[WhatsApp] Auto-reconnect desabilitado via WHATSAPP_AUTO_CONNECT=false');
 
 ========== .ENV FILE ==========
 NODE_ENV=production
@@ -121,4 +270,5 @@ demo_tenant_001|Brutus Burger|ACTIVE
 sorveteria_001|Sorveteria Qdelicia|ACTIVE
 981f332f-fc3e-414d-a69a-04b02267118c|DEGUST|ACTIVE
 4b095f71-0d97-4e48-80aa-1e20fee1b457|Fiorella|ACTIVE
+127371eb-14c6-44bc-a9e5-e6b0b7d61d11|QDelicia|ACTIVE
 ========== DONE ==========
