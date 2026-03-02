@@ -560,10 +560,11 @@
         /* Modal Historico */
         .order-card {
             background: var(--card-bg);
-            border: 1px solid var(--dark);
-            border-radius: 12px;
+            border: var(--border-width) var(--border-style) var(--dark);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
             padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
 
         /* === TEMA ELEGANT (LISTA PREMIUM) === */
@@ -1276,6 +1277,73 @@
             opacity: 0.7;
             padding: 0 5px;
             line-height: 1.3;
+        }
+
+        /* Mobile-first responsive - store */
+        @media (max-width: 480px) {
+            .paper-modal {
+                margin: 8px;
+                max-height: 95vh;
+                overflow-y: auto;
+                border-radius: 16px;
+            }
+
+            .pizza-card {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .pizza-card-img {
+                width: 180px;
+                height: 180px;
+            }
+
+            .product-social-card {
+                margin-bottom: 16px;
+                border-radius: 14px;
+            }
+
+            .social-img-container {
+                aspect-ratio: 1/1;
+            }
+
+            .product-elegant-image {
+                width: 70px;
+                height: 70px;
+            }
+
+            .product-elegant-item {
+                padding: 16px 0;
+                gap: 14px;
+            }
+
+            .product-arcade-card {
+                padding: 12px;
+            }
+
+            .arcade-btn {
+                font-size: 0.6rem;
+                padding: 10px;
+            }
+
+            #map-container {
+                height: 180px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .pizza-card-img {
+                width: 150px;
+                height: 150px;
+            }
+
+            .pizza-card {
+                padding: 16px 10px;
+            }
+
+            .pizza-card-name {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -2216,7 +2284,7 @@
                 if (dayOffDates.includes(dateStr)) continue;
 
                 const daySchedule = schedule[dayKey];
-                if (!daySchedule || !daySchedule.open) continue;
+                if (!daySchedule || !daySchedule.open || daySchedule.closed) continue;
 
                 // 2. Se for hoje, verificar se ainda vai abrir
                 if (i === 0) {
@@ -2254,7 +2322,7 @@
             const todaySchedule = schedule[dayKey];
 
             // Se nao tem horario para hoje = fechado
-            if (!todaySchedule || !todaySchedule.open || !todaySchedule.close) {
+            if (!todaySchedule || !todaySchedule.open || !todaySchedule.close || todaySchedule.closed) {
                 return false;
             }
 
@@ -5169,17 +5237,17 @@
                     const st = statusMap[order.status] || statusMap['pending'];
 
                     return `
-                        <div class="order-card shadow-sm mb-4 p-4 border rounded-xl bg-white">
+                        <div class="order-card">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <p class="font-bold text-lg">Pedido #${String(order.id).slice(-4)}</p>
-                                    <p class="text-xs opacity-50">${date}</p>
+                                    <p class="bebas text-2xl">Pedido #${String(order.id).slice(-4)}</p>
+                                    <p class="text-[10px] opacity-50 uppercase font-bold">${date}</p>
                                 </div>
-                                <span class="px-2 py-1 rounded-lg text-xs font-bold ${st.color}">${st.label}</span>
+                                <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase ${st.color} border border-dark/20">${st.label}</span>
                             </div>
-                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-gray-200">
-                                <span class="text-xs font-bold opacity-70">${order.items} itens</span>
-                                <span class="font-bold text-brand">R$ ${parseFloat(order.total).toFixed(2).replace('.', ',')}</span>
+                            <div class="flex justify-between items-center mt-3 pt-3 border-t-2 border-dashed border-dark/10">
+                                <span class="bebas text-xl opacity-60">${order.items} ${order.items === 1 ? 'ITEM' : 'ITENS'}</span>
+                                <span class="bebas text-3xl text-brand">R$ ${parseFloat(order.total).toFixed(2).replace('.', ',')}</span>
                             </div>
                         </div>
                     `;

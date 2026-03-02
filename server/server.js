@@ -373,6 +373,11 @@ app.get('/loja/:slug/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'index.html'));
 });
 
+// Servir assets estaticos do admin (JS, CSS, imagens) sob o prefixo do tenant
+app.use('/loja/:slug/admin/js', express.static(path.join(__dirname, '..', 'public', 'admin', 'js')));
+app.use('/loja/:slug/admin/css', express.static(path.join(__dirname, '..', 'public', 'admin', 'css')));
+app.use('/loja/:slug/admin/assets', express.static(path.join(__dirname, '..', 'public', 'admin', 'assets')));
+
 app.get('/loja/:slug/admin/*', (req, res) => {
     let page = req.params[0] || 'index';
 
@@ -442,7 +447,7 @@ async function start() {
             const { getOllamaManager } = await import('./services/ollama-manager.js');
             const ollamaManager = getOllamaManager();
             // Pegar modelo padrão das configs ou .env
-            const defaultModel = process.env.OLLAMA_MODEL || 'gemma3:4b';
+            const defaultModel = process.env.OLLAMA_MODEL || 'gemma:2b';
             await ollamaManager.ensureModel(defaultModel);
         } catch (err) {
             console.warn('[Ollama] Erro ao garantir modelo durante o boot:', err.message);

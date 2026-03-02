@@ -334,7 +334,7 @@ export class WhatsAppBot {
         const todaySchedule = schedule[dayKey];
 
         // Se nao tem horario para hoje = fechado
-        if (!todaySchedule || !todaySchedule.open || !todaySchedule.close) {
+        if (!todaySchedule || !todaySchedule.open || !todaySchedule.close || todaySchedule.closed) {
             return false;
         }
 
@@ -384,7 +384,7 @@ export class WhatsAppBot {
             if (dayOffDates.includes(dateStr)) continue;
 
             const daySchedule = schedule[dayKey];
-            if (!daySchedule || !daySchedule.open) continue;
+            if (!daySchedule || !daySchedule.open || daySchedule.closed) continue;
 
             // 2. Se for hoje, verificar se ainda vai abrir
             if (i === 0) {

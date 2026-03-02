@@ -657,8 +657,8 @@ async function finalizeOrder(params, cart) {
             INSERT INTO orders (
                 id, tenant_id, order_number, customer_name, customer_phone,
                 items, delivery_type, address, payment_method, observation,
-                subtotal, total, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', datetime('now'))
+                subtotal, delivery_fee, total, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', datetime('now'))
         `, [
             orderId,
             tenantId,
@@ -671,6 +671,7 @@ async function finalizeOrder(params, cart) {
             cart.paymentMethod || 'CASH',
             cart.observation || null,
             cart.total,   // subtotal (itens)
+            deliveryFee,  // taxa de entrega
             finalTotal    // total (itens + taxa)
         ]);
 

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -536,23 +537,17 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let lessons = [];
         let history = [];
 
         async function loadData() {
+            initStoreInfo();
             await Promise.all([loadStats(), loadLessons(), loadHistory()]);
         }
 
         async function loadStats() {
             try {
-                const res = await fetch('/api/ai/stats', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/ai/stats');
 
                 if (data.success) {
                     document.getElementById('pendingCount').textContent = data.stats.pendingLessons;
@@ -567,8 +562,7 @@
 
         async function loadLessons() {
             try {
-                const res = await fetch('/api/ai/lessons', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/ai/lessons');
 
                 if (data.success) {
                     lessons = data.lessons;
@@ -587,8 +581,7 @@
 
         async function loadHistory() {
             try {
-                const res = await fetch('/api/ai/lessons/history', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/ai/lessons/history');
 
                 if (data.success) {
                     history = data.lessons;
@@ -693,11 +686,9 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando...';
 
             try {
-                const res = await fetch(`/api/ai/lessons/${id}/test`, {
-                    method: 'POST',
-                    headers: API_HEADERS
+                const data = await apiFetch(`/api/ai/lessons/${id}/test`, {
+                    method: 'POST'
                 });
-                const data = await res.json();
 
                 if (data.success && data.testResult) {
                     const result = data.testResult;
@@ -733,20 +724,18 @@
             if (!confirm('Aplicar esta sugestão? A correção será ativada imediatamente.')) return;
 
             try {
-                const res = await fetch(`/api/ai/lessons/${id}/apply`, {
-                    method: 'POST',
-                    headers: API_HEADERS
+                const data = await apiFetch(`/api/ai/lessons/${id}/apply`, {
+                    method: 'POST'
                 });
-                const data = await res.json();
 
                 if (data.success) {
-                    alert('✅ Sugestão aplicada com sucesso!');
+                    showToast('✅ Sugestão aplicada com sucesso!');
                     loadData();
                 } else {
-                    alert('Erro: ' + (data.error || 'Falha ao aplicar'));
+                    showToast('Erro: ' + (data.error || 'Falha ao aplicar'), 'error');
                 }
             } catch (e) {
-                alert('Erro ao aplicar sugestão');
+                showToast('Erro ao aplicar sugestão', 'error');
             }
         }
 
@@ -755,20 +744,19 @@
             if (reason === null) return; // Cancelou
 
             try {
-                const res = await fetch(`/api/ai/lessons/${id}/reject`, {
+                const data = await apiFetch(`/api/ai/lessons/${id}/reject`, {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reason })
                 });
-                const data = await res.json();
 
                 if (data.success) {
+                    showToast('Sugestão rejeitada');
                     loadData();
                 } else {
-                    alert('Erro: ' + (data.error || 'Falha ao rejeitar'));
+                    showToast('Erro: ' + (data.error || 'Falha ao rejeitar'), 'error');
                 }
             } catch (e) {
-                alert('Erro ao rejeitar sugestão');
+                showToast('Erro ao rejeitar sugestão', 'error');
             }
         }
 

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -291,15 +292,6 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = {
-            'Authorization': `Bearer ${token}`,
-            'X-Tenant-Slug': TENANT_SLUG
-        };
-
         let currentPage = 1;
 
         async function loadLogs(page = 1) {
@@ -314,12 +306,9 @@
             if (endDate) url += `&endDate=${endDate}`;
 
             try {
-                const res = await fetch(url, { headers: API_HEADERS });
-                if (res.ok) {
-                    const data = await res.json();
-                    renderLogs(data.logs);
-                    renderPagination(data.pagination);
-                }
+                const data = await apiFetch(url);
+                renderLogs(data.logs);
+                renderPagination(data.pagination);
             } catch (e) {
                 console.error('Error loading logs:', e);
             }
@@ -327,14 +316,11 @@
 
         async function loadActions() {
             try {
-                const res = await fetch('/api/logs/actions', { headers: API_HEADERS });
-                if (res.ok) {
-                    const actions = await res.json();
-                    const select = document.getElementById('filterAction');
-                    actions.forEach(action => {
-                        select.innerHTML += `<option value="${action}">${action}</option>`;
-                    });
-                }
+                const actions = await apiFetch('/api/logs/actions');
+                const select = document.getElementById('filterAction');
+                actions.forEach(action => {
+                    select.innerHTML += `<option value="${action}">${action}</option>`;
+                });
             } catch (e) {
                 console.error('Error loading actions:', e);
             }

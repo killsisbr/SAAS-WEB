@@ -12,7 +12,7 @@ class OllamaManager {
     /**
      * Garante que o modelo padrão ou especificado esteja disponível
      */
-    async ensureModel(modelName = 'gemma3:4b') {
+    async ensureModel(modelName = 'gemma:2b') {
         try {
             console.log(`[OllamaManager] Verificando modelo: ${modelName}`);
             const status = await this.client.healthCheck();

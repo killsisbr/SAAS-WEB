@@ -8,7 +8,11 @@ const DEFAULT_MODEL = 'llama3:8b';
 
 class OllamaClient {
     constructor(options = {}) {
-        this.baseUrl = options.url || DEFAULT_OLLAMA_URL;
+        let url = options.url || DEFAULT_OLLAMA_URL;
+        if (url.includes('localhost')) {
+            url = url.replace('localhost', '127.0.0.1');
+        }
+        this.baseUrl = url;
         this.model = options.model || DEFAULT_MODEL;
         this.timeout = options.timeout || 60000;
     }
@@ -189,7 +193,11 @@ class OllamaClient {
      * Atualiza configurações
      */
     configure(options) {
-        if (options.url) this.baseUrl = options.url;
+        if (options.url) {
+            let url = options.url;
+            if (url.includes('localhost')) url = url.replace('localhost', '127.0.0.1');
+            this.baseUrl = url;
+        }
         if (options.model) this.model = options.model;
         if (options.timeout) this.timeout = options.timeout;
     }

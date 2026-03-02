@@ -355,8 +355,8 @@ class WhatsAppService {
         const dayKey = dayKeys[dayOfWeek];
         const todaySchedule = schedule[dayKey];
 
-        if (!todaySchedule || !todaySchedule.open || !todaySchedule.close) {
-            return false; // Fechado se não houver horário para o dia
+        if (!todaySchedule || !todaySchedule.open || !todaySchedule.close || todaySchedule.closed) {
+            return false; // Fechado se não houver horário ou marcado como folga
         }
 
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -400,7 +400,7 @@ class WhatsAppService {
             if (dayOffDates.includes(dateStr)) continue;
 
             const daySchedule = schedule[dayKey];
-            if (!daySchedule || !daySchedule.open) continue;
+            if (!daySchedule || !daySchedule.open || daySchedule.closed) continue;
 
             // 2. Se for hoje, verificar se ainda vai abrir
             if (i === 0) {

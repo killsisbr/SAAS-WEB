@@ -154,6 +154,7 @@ export default function (db) {
                     slug: tenant.slug,
                     logo_url: tenant.logo_url,
                     status: tenant.status,
+                    settings: tenant.settings ? (typeof tenant.settings === 'string' ? JSON.parse(tenant.settings) : tenant.settings) : {},
                     subscription: tenant.subscription ? {
                         plan: tenant.subscription.plan_name,
                         status: tenant.subscription.status,

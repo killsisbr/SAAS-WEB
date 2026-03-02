@@ -203,6 +203,7 @@ export default function (db) {
     // ========================================
     router.put('/settings', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
         try {
+            console.log(`[WhatsApp Settings PUT] req.body recebido:`, JSON.stringify(req.body, null, 2));
             const {
                 whatsappBotEnabled, whatsappGroupId, siteUrl, botMessages, aiBot, triggers,
                 whatsappOrderMode, pixKey, deliveryFee, aiEmployee  // aiEmployee para Funcionário IA
@@ -268,26 +269,35 @@ export default function (db) {
     // POST /api/whatsapp/test-ollama - Testar conexão com Ollama
     // ========================================
     router.post('/test-ollama', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        console.log(`[Test-Ollama] Request received. Body:`, req.body);
         try {
             const { ollamaUrl } = req.body;
-            const url = ollamaUrl || 'http://localhost:11434';
+            let url = ollamaUrl || 'http://127.0.0.1:11434';
+
+            // Fix: Node fetch prefers IPv6 ::1 for localhost, which Ollama rejects. Force IPv4.
+            if (url.includes('localhost')) {
+                url = url.replace('localhost', '127.0.0.1');
+            }
 
             const response = await fetch(`${url}/api/tags`, {
                 signal: AbortSignal.timeout(5000)
             });
 
             if (!response.ok) {
+                console.log(`[Test-Ollama] Ollama returned non-200: ${response.status}`);
                 return res.json({ online: false, error: 'Ollama não está respondendo' });
             }
 
             const data = await response.json();
             const models = data.models || [];
+            console.log(`[Test-Ollama] Success, models found: ${models.length}`);
 
             res.json({
                 online: true,
                 models: models.map(m => m.name)
             });
         } catch (error) {
+            console.error(`[Test-Ollama] Catch error:`, error.message);
             res.json({ online: false, error: error.message || 'Erro ao conectar' });
         }
     });

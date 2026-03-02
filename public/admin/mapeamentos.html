@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -428,24 +429,18 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let mappings = [];
         let products = [];
 
         async function init() {
+            initStoreInfo();
             await loadProducts();
             await loadMappings();
         }
 
         async function loadProducts() {
             try {
-                const res = await fetch('/api/products', { headers: API_HEADERS });
-                products = await res.json();
+                products = await apiFetch('/api/products');
 
                 const options = products.map(p =>
                     `<option value="${p.id}">${p.name} - R$ ${Number(p.price).toFixed(2)}</option>`
@@ -453,15 +448,18 @@
 
                 document.getElementById('newProduct').innerHTML = '<option value="">Selecione um produto...</option>' + options;
                 document.getElementById('autoGenProduct').innerHTML = '<option value="">Selecione um produto...</option>' + options;
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function loadMappings() {
             try {
-                const res = await fetch('/api/mappings', { headers: API_HEADERS });
-                mappings = await res.json();
+                mappings = await apiFetch('/api/mappings');
                 renderMappings();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function renderMappings(filter = '') {
@@ -526,26 +524,21 @@
             const productId = document.getElementById('newProduct').value;
 
             if (!keyword || !productId) {
-                alert('Preencha a palavra-chave e selecione um produto!');
+                showToast('Preencha a palavra-chave e selecione um produto!', 'error');
                 return;
             }
 
             try {
-                const res = await fetch('/api/mappings', {
+                await apiFetch('/api/mappings', {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ keyword, productId })
                 });
 
-                if (res.ok) {
-                    document.getElementById('newKeyword').value = '';
-                    await loadMappings();
-                } else {
-                    const data = await res.json();
-                    alert(data.error || 'Erro ao adicionar');
-                }
+                document.getElementById('newKeyword').value = '';
+                showToast('Mapeamento adicionado com sucesso!');
+                await loadMappings();
             } catch (e) {
-                alert('Erro ao adicionar');
+                showToast(e.message || 'Erro ao adicionar', 'error');
             }
         }
 
@@ -553,38 +546,36 @@
             if (!confirm(`Remover mapeamento "${keyword}"?`)) return;
 
             try {
-                await fetch(`/api/mappings/${encodeURIComponent(keyword)}`, {
-                    method: 'DELETE',
-                    headers: API_HEADERS
+                await apiFetch(`/api/mappings/${encodeURIComponent(keyword)}`, {
+                    method: 'DELETE'
                 });
+                showToast('Mapeamento removido!');
                 await loadMappings();
             } catch (e) {
-                alert('Erro ao remover');
+                showToast('Erro ao remover', 'error');
             }
         }
 
         async function autoGenerate() {
             const productId = document.getElementById('autoGenProduct').value;
             if (!productId) {
-                alert('Selecione um produto!');
+                showToast('Selecione um produto!', 'error');
                 return;
             }
 
             try {
-                const res = await fetch(`/api/mappings/auto-generate/${productId}`, {
-                    method: 'POST',
-                    headers: API_HEADERS
+                const data = await apiFetch(`/api/mappings/auto-generate/${productId}`, {
+                    method: 'POST'
                 });
 
-                const data = await res.json();
                 if (data.success) {
-                    alert(`Gerados ${data.added} mapeamentos:\n${data.mappings.join(', ')}`);
+                    showToast(`Gerados ${data.added} mapeamentos!`);
                     await loadMappings();
                 } else {
-                    alert(data.error || 'Erro');
+                    showToast(data.error || 'Erro ao gerar', 'error');
                 }
             } catch (e) {
-                alert('Erro ao gerar');
+                showToast('Erro ao gerar', 'error');
             }
         }
 

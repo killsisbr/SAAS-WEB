@@ -337,6 +337,95 @@
             border: 3px dashed var(--dark);
             border-radius: 20px;
         }
+
+        /* Tablet */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 16px;
+            }
+
+            .modal-content {
+                margin: 16px;
+                padding: 24px;
+                border-radius: 16px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .main {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .product-image {
+                height: 140px;
+            }
+
+            .product-info {
+                padding: 14px;
+            }
+
+            .product-actions {
+                flex-direction: column;
+            }
+
+            .product-actions button {
+                padding: 10px;
+                font-size: 0.75rem;
+            }
+
+            .modal-content {
+                margin: 8px;
+                padding: 16px;
+            }
+
+            .modal h2 {
+                font-size: 1.5rem;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 
@@ -473,43 +562,41 @@
         </div>
     </div>
 
+    <script src="js/shared.js"></script>
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let products = [];
         let categories = [];
+
+        async function init() {
+            initStoreInfo();
+            loadData();
+        }
 
         async function loadData() {
             try {
                 // Carregar categorias primeiro para o select
-                const catRes = await fetch('/api/categories', { headers: API_HEADERS });
-                if (catRes.ok) categories = await catRes.json();
+                categories = await apiFetch('/api/categories');
 
                 const catSelect = document.getElementById('productCategory');
-                if (categories.length > 0) {
+                if (categories && categories.length > 0) {
                     catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
                 } else {
                     catSelect.innerHTML = '<option value="">Crie uma categoria primeiro</option>';
+                    categories = [];
                 }
 
                 // Carregar produtos
-                const prodRes = await fetch('/api/products', { headers: API_HEADERS });
-                if (prodRes.ok) products = await prodRes.json();
+                products = await apiFetch('/api/products');
                 renderProducts();
             } catch (error) {
                 console.error(error);
-                alert('Erro ao carregar dados');
+                showToast('Erro ao carregar dados', 'error');
             }
         }
 
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
-            if (!products.length) {
+            if (!products || !products.length) {
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-hamburger fa-3x" style="color: var(--primary); margin-bottom: 16px;"></i>
@@ -527,7 +614,7 @@
                     <div class="product-info">
                         <div class="product-name">${p.name}</div>
                         <div class="product-category">${categories.find(c => c.id === p.category_id)?.name || 'Sem categoria'}</div>
-                        <div class="product-price">R$ ${parseFloat(p.price).toFixed(2).replace('.', ',')}</div>
+                        <div class="product-price">${formatCurrency(p.price)}</div>
                         <div class="product-actions">
                             <button class="btn btn-secondary" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i> EDITAR</button>
                             <button class="btn btn-delete" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
@@ -610,8 +697,8 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Imagem muito grande! Maximo 5MB.');
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Imagem muito grande! Maximo 2MB.', 'error');
                 return;
             }
 
@@ -625,22 +712,19 @@
             formData.append('image', file);
 
             try {
-                const res = await fetch('/api/upload/image', {
+                const result = await apiFetch('/api/upload/image', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG },
                     body: formData
                 });
 
-                if (res.ok) {
-                    const result = await res.json();
+                if (result && result.url) {
                     document.getElementById('productImageUrl').value = result.url;
                     showImagePreview(result.url);
-                } else {
-                    alert('Erro ao enviar imagem');
+                    showToast('Imagem enviada!', 'success');
                 }
             } catch (error) {
                 console.error('Upload error:', error);
-                alert('Erro ao enviar imagem');
+                showToast('Erro ao enviar imagem', 'error');
             }
         }
 
@@ -673,10 +757,11 @@
         async function deleteProduct(id) {
             if (!confirm('Tem certeza que deseja excluir este produto?')) return;
             try {
-                await fetch(`/api/products/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
+                showToast('Produto removido', 'success');
                 loadData();
             } catch (error) {
-                alert('Erro ao excluir');
+                showToast('Erro ao excluir', 'error');
             }
         }
 
@@ -701,24 +786,20 @@
             const method = id ? 'PUT' : 'POST';
 
             try {
-                const res = await fetch(url, {
+                await apiFetch(url, {
                     method,
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: data
                 });
-                if (res.ok) {
-                    closeModal();
-                    loadData();
-                } else {
-                    alert('Erro ao salvar produto');
-                }
+                showToast('Produto salvo!', 'success');
+                closeModal();
+                loadData();
             } catch (error) {
                 console.error(error);
-                alert('Erro de conexao');
+                showToast('Erro de conexao', 'error');
             }
         });
 
-        loadData();
+        init();
     </script>
 </body>
 

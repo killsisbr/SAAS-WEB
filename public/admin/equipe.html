@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -441,19 +442,12 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let teamData = { members: [], invites: [] };
 
         async function loadTeam() {
+            initStoreInfo();
             try {
-                const res = await fetch('/api/team', { headers: API_HEADERS });
-                teamData = await res.json();
+                teamData = await apiFetch('/api/team');
                 renderMembers();
                 renderInvites();
             } catch (e) {
@@ -530,17 +524,23 @@
         async function removeMember(id) {
             if (!confirm('Remover membro?')) return;
             try {
-                await fetch(`/api/team/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await apiFetch(`/api/team/${id}`, { method: 'DELETE' });
+                showToast('Membro removido');
                 loadTeam();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast('Erro ao remover membro', 'error');
+            }
         }
 
         async function cancelInvite(id) {
             if (!confirm('Cancelar convite?')) return;
             try {
-                await fetch(`/api/team/invite/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await apiFetch(`/api/team/invite/${id}`, { method: 'DELETE' });
+                showToast('Convite cancelado');
                 loadTeam();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast('Erro ao cancelar convite', 'error');
+            }
         }
 
         document.getElementById('inviteForm').addEventListener('submit', async (e) => {
@@ -549,27 +549,28 @@
             const role = document.getElementById('inviteRole').value;
 
             try {
-                const res = await fetch('/api/team/invite', {
+                const data = await apiFetch('/api/team/invite', {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, role })
                 });
-                const data = await res.json();
+
                 if (data.inviteLink) {
                     closeModal();
                     document.getElementById('inviteLinkDisplay').textContent = window.location.origin + data.inviteLink;
                     document.getElementById('linkModal').classList.add('active');
                     loadTeam();
                 } else {
-                    alert('Erro ao convidar');
+                    showToast('Erro ao convidar', 'error');
                 }
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast(e.message || 'Erro ao convidar', 'error');
+            }
         });
 
         function copyLink() {
             const text = document.getElementById('inviteLinkDisplay').textContent;
             navigator.clipboard.writeText(text);
-            alert('Copiado!');
+            showToast('Link copiado!');
         }
 
         loadTeam();

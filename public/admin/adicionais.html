@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -417,33 +418,7 @@
             margin-bottom: 16px;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            background: var(--dark);
-            color: white;
-            border-radius: 12px;
-            font-weight: 700;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
 
-        .toast.visible {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            background: var(--success);
-        }
-
-        .toast.error {
-            background: var(--danger);
-        }
 
         @media (max-width: 768px) {
             .sidebar {
@@ -528,31 +503,22 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let categories = [];
         let currentCategoryId = null;
         let currentGroups = [];
 
         async function init() {
+            initStoreInfo();
             await loadCategories();
         }
 
         async function loadCategories() {
             try {
-                const res = await fetch('/api/categories', { headers: API_HEADERS });
-                if (res.ok) {
-                    categories = await res.json();
-                    renderCategorySelector();
-                }
+                categories = await apiFetch('/api/categories');
+                renderCategorySelector();
             } catch (error) {
                 console.error('Erro ao carregar categorias:', error);
                 showToast('Erro ao carregar categorias', 'error');
@@ -599,20 +565,10 @@
                 const url = `/api/category-addons/category/${currentCategoryId}`;
                 console.log('Fazendo fetch para:', url);
 
-                const res = await fetch(url, { headers: API_HEADERS });
-                console.log('Response status:', res.status);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log('Dados recebidos:', data);
-                    currentGroups = data.groups || [];
-                    renderGroups();
-                } else {
-                    const errorText = await res.text();
-                    console.error('Erro na resposta:', res.status, errorText);
-                    showToast('Erro ao carregar: ' + res.status, 'error');
-                    document.getElementById('groupsContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Erro ao carregar</h3><p>Tente novamente</p></div>';
-                }
+                const data = await apiFetch(url);
+                console.log('Dados recebidos:', data);
+                currentGroups = data.groups || [];
+                renderGroups();
             } catch (error) {
                 console.error('Erro ao carregar grupos:', error);
                 showToast('Erro ao carregar adicionais: ' + error.message, 'error');
@@ -676,10 +632,7 @@
             }
 
             try {
-                const res = await fetch(`/api/category-addons/products/${currentCategoryId}`, { headers: API_HEADERS });
-                if (!res.ok) throw new Error('Erro ao buscar');
-
-                const data = await res.json();
+                const data = await apiFetch(`/api/category-addons/products/${currentCategoryId}`);
 
                 if (!data.products || data.products.length === 0) {
                     showToast('Nenhum adicional encontrado nos produtos desta categoria', 'info');
@@ -714,12 +667,9 @@
             if (!currentCategoryId) return;
 
             try {
-                const res = await fetch(`/api/category-addons/migrate/${currentCategoryId}`, {
-                    method: 'POST',
-                    headers: API_HEADERS
+                const data = await apiFetch(`/api/category-addons/migrate/${currentCategoryId}`, {
+                    method: 'POST'
                 });
-
-                const data = await res.json();
 
                 if (data.success) {
                     showToast(data.message || 'Adicionais importados!', 'success');
@@ -742,10 +692,7 @@
 
             try {
                 // Primeiro, verificar se ha itens de buffet
-                const resCheck = await fetch(`/api/category-addons/buffet`, { headers: API_HEADERS });
-                if (!resCheck.ok) throw new Error('Erro ao buscar');
-
-                const dataCheck = await resCheck.json();
+                const dataCheck = await apiFetch(`/api/category-addons/buffet`);
 
                 if (!dataCheck.items || dataCheck.items.length === 0) {
                     showToast('Nenhum item de buffet cadastrado. Cadastre itens em Produtos > Buffet do Dia', 'info');
@@ -756,12 +703,9 @@
                 const confirmMsg = `Itens de buffet encontrados:\n\n${itemsList}\n\nDeseja importar ${dataCheck.items.length} item(s) para esta categoria?`;
 
                 if (confirm(confirmMsg)) {
-                    const res = await fetch(`/api/category-addons/migrate-buffet/${currentCategoryId}`, {
-                        method: 'POST',
-                        headers: API_HEADERS
+                    const data = await apiFetch(`/api/category-addons/migrate-buffet/${currentCategoryId}`, {
+                        method: 'POST'
                     });
-
-                    const data = await res.json();
 
                     if (data.success) {
                         showToast(data.message || 'Itens de buffet importados!', 'success');
@@ -857,16 +801,14 @@
             try {
                 if (id) {
                     // Editar
-                    await fetch(`/api/category-addons/groups/${id}`, {
+                    await apiFetch(`/api/category-addons/groups/${id}`, {
                         method: 'PUT',
-                        headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, minSelection, maxSelection })
                     });
                 } else {
                     // Criar
-                    await fetch('/api/category-addons/groups', {
+                    await apiFetch('/api/category-addons/groups', {
                         method: 'POST',
-                        headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ categoryId: currentCategoryId, name, minSelection, maxSelection })
                     });
                 }
@@ -882,9 +824,8 @@
         async function deleteGroup(groupId) {
             if (!confirm('Remover este grupo e todos os seus itens?')) return;
             try {
-                await fetch(`/api/category-addons/groups/${groupId}`, {
-                    method: 'DELETE',
-                    headers: API_HEADERS
+                await apiFetch(`/api/category-addons/groups/${groupId}`, {
+                    method: 'DELETE'
                 });
                 await loadGroups();
                 showToast('Grupo removido!', 'success');
@@ -906,9 +847,8 @@
             }
 
             try {
-                await fetch(`/api/category-addons/groups/${groupId}/items`, {
+                await apiFetch(`/api/category-addons/groups/${groupId}/items`, {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, price })
                 });
                 nameInput.value = '';
@@ -926,9 +866,8 @@
             const newPrice = parseFloat(prompt('Preco:', currentPrice)) || 0;
 
             try {
-                await fetch(`/api/category-addons/items/${itemId}`, {
+                await apiFetch(`/api/category-addons/items/${itemId}`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: newName, price: newPrice, isAvailable: true })
                 });
                 await loadGroups();
@@ -941,9 +880,8 @@
         async function deleteItem(itemId) {
             if (!confirm('Remover este adicional?')) return;
             try {
-                await fetch(`/api/category-addons/items/${itemId}`, {
-                    method: 'DELETE',
-                    headers: API_HEADERS
+                await apiFetch(`/api/category-addons/items/${itemId}`, {
+                    method: 'DELETE'
                 });
                 await loadGroups();
                 showToast('Adicional removido!', 'success');
@@ -952,13 +890,7 @@
             }
         }
 
-        // ===== TOAST =====
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast visible ' + type;
-            setTimeout(() => toast.className = 'toast', 3000);
-        }
+
 
         init();
     </script>

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -448,9 +449,6 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
         const themes = [
             { id: 'retro', name: 'Retro Burga', p: '#d9432e', s: '#ffb800', b: '#fff9f0' },
             { id: 'dark', name: 'Dark Mode', p: '#6366f1', s: '#8b5cf6', b: '#0a0a0f' },
@@ -459,6 +457,7 @@
         ];
 
         function init() {
+            initStoreInfo();
             renderThemes();
             updatePreview();
         }
@@ -535,27 +534,14 @@
         }
 
         async function saveCustomization() {
-            alert('Salvo com sucesso! (Simulacao)');
+            showToast('Salvo com sucesso! (Simulação)');
             // Here you would PUT to /api/custom
         }
 
-        // ========================================
-        // Custom Domains Management
-        // ========================================
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = {
-            'Authorization': `Bearer ${token}`,
-            'X-Tenant-Slug': TENANT_SLUG,
-            'Content-Type': 'application/json'
-        };
-
         async function loadDomains() {
             try {
-                const res = await fetch('/api/domains', { headers: API_HEADERS });
-                if (res.ok) {
-                    const domains = await res.json();
-                    renderDomains(domains);
-                }
+                const domains = await apiFetch('/api/domains');
+                renderDomains(domains);
             } catch (e) {
                 console.error('Error loading domains:', e);
             }
@@ -594,67 +580,52 @@
             const domainInput = document.getElementById('newDomain');
             const domain = domainInput.value.trim();
             if (!domain) {
-                alert('Digite um dominio');
+                showToast('Digite um domínio', 'error');
                 return;
             }
 
             try {
-                const res = await fetch('/api/domains', {
+                await apiFetch('/api/domains', {
                     method: 'POST',
-                    headers: API_HEADERS,
                     body: JSON.stringify({ domain })
                 });
 
-                if (res.ok) {
-                    domainInput.value = '';
-                    loadDomains();
-                    alert('Dominio adicionado! Configure o CNAME no seu provedor DNS.');
-                } else {
-                    const err = await res.json();
-                    alert('Erro: ' + (err.error || 'Nao foi possivel adicionar'));
-                }
+                domainInput.value = '';
+                loadDomains();
+                showToast('Domínio adicionado! Configure o CNAME no seu provedor DNS.');
             } catch (e) {
-                console.error(e);
-                alert('Erro de conexao');
+                showToast(e.message || 'Erro ao adicionar domínio', 'error');
             }
         }
 
         async function verifyDomain(id) {
             try {
-                const res = await fetch(`/api/domains/${id}/verify`, {
-                    method: 'POST',
-                    headers: API_HEADERS
+                const data = await apiFetch(`/api/domains/${id}/verify`, {
+                    method: 'POST'
                 });
 
-                const data = await res.json();
                 if (data.verified) {
-                    alert('Dominio verificado com sucesso!');
+                    showToast('Domínio verificado com sucesso!');
                 } else {
-                    alert('Verificacao falhou: ' + (data.message || 'CNAME nao configurado'));
+                    showToast('Verificação falhou: ' + (data.message || 'CNAME não configurado'), 'error');
                 }
                 loadDomains();
             } catch (e) {
-                console.error(e);
-                alert('Erro ao verificar');
+                showToast('Erro ao verificar', 'error');
             }
         }
 
         async function removeDomain(id) {
-            if (!confirm('Remover este dominio?')) return;
+            if (!confirm('Remover este domínio?')) return;
 
             try {
-                const res = await fetch(`/api/domains/${id}`, {
-                    method: 'DELETE',
-                    headers: API_HEADERS
+                await apiFetch(`/api/domains/${id}`, {
+                    method: 'DELETE'
                 });
-
-                if (res.ok) {
-                    loadDomains();
-                } else {
-                    alert('Erro ao remover');
-                }
+                showToast('Domínio removido');
+                loadDomains();
             } catch (e) {
-                console.error(e);
+                showToast('Erro ao remover', 'error');
             }
         }
 

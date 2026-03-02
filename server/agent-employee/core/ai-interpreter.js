@@ -11,7 +11,7 @@ import OllamaClient from '../../services/ollama-client.js';
 export class AIInterpreter {
     constructor(config = {}) {
         this.ollamaUrl = config.ollamaUrl || 'http://localhost:11434';
-        this.model = config.model || 'gemma3:4b';
+        this.model = config.model || 'gemma:2b';
         this.ollama = new OllamaClient({
             url: this.ollamaUrl,
             model: this.model
@@ -99,7 +99,7 @@ export class AIInterpreter {
         }
 
         // "Só isso" / Finalizar
-        if (/so isso|só isso|somente isso|era isso|é isso|pronto|finalizar|fechar|acabou|so|só|ja deu|já deu/i.test(msg)) {
+        if (/so isso|só isso|somente isso|era isso|é isso|pronto|finalizar|fechar|acabou|so|só|ja deu|já deu|^isso$|^isso ai$|^beleza$|^pode fechar$|^certo$/i.test(msg)) {
             return { type: 'FINALIZE_CART' };
         }
 
@@ -114,30 +114,17 @@ export class AIInterpreter {
 
         const productList = products.map(p => `- ${p.name}: R$ ${p.price}`).join('\n');
 
-        const systemPrompt = `Você é um assistente de extração de dados de pedidos para um restaurante.
-Analise a mensagem do cliente e extraia o máximo de informações possível.
-
-REGRAS CRÍTICAS:
-1. Se o cliente mencinar o NOME DA LOJA (ex: "Brutus Burger", "Brutus"), NÃO mapeie isso como um produto.
-2. **Adicionais e Modificadores**: Se o cliente pedir "com bacon" ou "adicional de ovo", coloque esses itens no array "modifiers" DENTRO do item principal correspondente. 
-3. **Observações**: Instruções como "sem cebola", "bem passado", "sem maionese", coloque no campo "observation" do item correspondente.
-4. Se o cliente quer finalizar ou diz "só isso", use type: "FINALIZE_CART".
-5. Se mencionar itens do cardápio, liste-os no array "items" com "name", "quantity", "modifiers" (nomes dos adicionais) e "observation".
-6. Identifique o tipo de entrega (delivery ou pickup) no campo "deliveryType".
-7. Retorne APENAS o JSON.
+        const systemPrompt = `Extraia dados ESTRITAMENTE em formato JSON puro. NENHUM TEXTO ANTES OU DEPOIS.
 
 CARDÁPIO:
 ${productList}
 
-Formato da Resposta (JSON):
-{
-  "type": "ORDER" | "FINALIZE_CART" | "ADDRESS_INPUT" | "GREETING" | "UNKNOWN",
-  "items": [{"name": "string", "quantity": number, "modifiers": ["string"], "observation": "string"}],
-  "deliveryType": "delivery" | "pickup" | null,
-  "address": "string" | null,
-  "paymentMethod": "PIX" | "CARD" | "CASH" | null,
-  "understood": true
-}`;
+EXEMPLOS:
+"2 PRODUTO_A sem cebola" -> {"type":"ORDER","items":[{"name":"PRODUTO_A","quantity":2,"modifiers":[],"observation":"sem cebola"}],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
+"quero um PRODUTO_B" -> {"type":"ORDER","items":[{"name":"PRODUTO_B","quantity":1,"modifiers":[],"observation":null}],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
+"fechar pedido" -> {"type":"FINALIZE_CART","items":[],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
+
+Saída (SEMPRE JSON puro, sem crases de marcacao de codigo markdown):`;
 
         const response = await this.ollama.generateResponse(
             systemPrompt,
@@ -150,17 +137,22 @@ Formato da Resposta (JSON):
         const jsonMatch = response.content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             try {
-                const parsed = JSON.parse(jsonMatch[0]);
+                let jsonStr = jsonMatch[0].trim();
+                // Limpeza agressiva para gemma:2b que às vezes repete o texto antes do JSON
+                const parsed = JSON.parse(jsonStr);
                 return {
                     type: parsed.type || 'UNKNOWN',
                     items: parsed.items || [],
-                    deliveryType: parsed.deliveryType,
-                    address: parsed.address,
-                    paymentMethod: parsed.paymentMethod,
-                    understood: parsed.understood !== false
+                    deliveryType: parsed.deliveryType || null,
+                    address: parsed.address || null,
+                    paymentMethod: parsed.paymentMethod || null,
+                    understood: parsed.understood ?? true
                 };
-            } catch (e) { }
+            } catch (e) {
+                console.error('[AIInterpreter] Erro parse JSON:', e.message, 'Raw:', response.content);
+            }
         }
+
         return { type: 'UNKNOWN', raw: message, understood: false };
     }
 
@@ -205,43 +197,36 @@ Formato da Resposta (JSON):
             ? '1. **Resuma e Confirme**: Como há marmita no carrinho, cite brevemente os itens do buffet escolhidos nela.'
             : '1. **Resuma e Confirme**: Confirme brevemente os itens que o cliente adicionou ao carrinho.';
 
-        const systemPrompt = `Você é a ${employeeName}, atendente do ${storeName}. 🍔 ✨
-Seu estilo é: AMIGÁVEL, NATURAL e OBJETIVA.
+        const systemPrompt = `Você é a atendente virtual ${employeeName} do restaurante ${storeName}.
+MENSAGEM DO CLIENTE: "${message}"
 
-REGRAS CRÍTICAS:
-${marmitaRule}
-2. **PROIBIDO CITAR PREÇOS**: NÃO mencione valores, subtotais ou taxas. Um resumo com preços será exibido automaticamente.
-3. **FOCO NO CARRINHO**: Sua resposta deve se basear APENAS nos itens da seção "Carrinho" abaixo. Ignore o resto do catálogo na hora de confirmar.
-4. **Breve**: Use no máximo 2 frases curtas. Não faça listas.
-5. **${greetingRule}**
+DIRETRIZES DE RESPOSTA (OBRIGATÓRIO):
+1. NUNCA responda com mais de 10 palavras.
+2. Responda em UMA ÚNICA LINHA.
+3. Não repita o cliente.
+4. ${greetingRule}
 
-CONTEXTO:
-- Cliente: ${customerName || 'Amigo(a)'}
-- Estado Atual: ${state}
-- Carrinho Atual (CONFIRMAR ISSO):
-${cartItems}
+Sua missão agora: ${this.getStateObjective(state, lastIntent)}
 
-CATÁLOGO (APENAS PARA CONSULTA):
-${menuDisplay}
-${addonsDisplay}
-${buffetDisplay}
-
-MISSÃO AGORA:
-${this.getStateObjective(state, lastIntent)}
-
-Responda à mensagem: "${message}"`;
+Sua única frase de resposta:`;
 
         const response = await this.ollama.generateResponse(
             systemPrompt,
             [],
             {
-                temperature: 0.7,
-                maxTokens: 400,
+                temperature: 0.3,
+                maxTokens: 50,
                 model: this.model
             }
         );
 
-        return response.success ? response.content.trim() : null;
+        if (!response.success) return null;
+
+        const cleanLines = response.content.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        return cleanLines.length > 0 ? cleanLines[0].replace(/^["']|["']$/g, '') : null;
     }
 
     /**

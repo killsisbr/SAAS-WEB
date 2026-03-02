@@ -85,11 +85,10 @@ export function addItem(tenantId, customerId, itemData) {
     // Para itens com adicionais (marmitas, açai), sempre adicionamos como item único
     // Para produtos simples sem adicionais, tentamos agrupar se já existe
     if (addons.length === 0) {
-        const existingIndex = session.items.findIndex(i => i.productId === product.id && !i.addons?.length);
+        const existingIndex = session.items.findIndex(i => i.productId === product.id && !i.addons?.length && (i.observation || '') === (observation || ''));
         if (existingIndex >= 0) {
             session.items[existingIndex].quantity += quantity;
             session.items[existingIndex].total = session.items[existingIndex].quantity * (product.price || 0);
-            if (observation) session.items[existingIndex].observation = observation;
             session.subtotal = session.items.reduce((sum, item) => sum + item.total, 0);
             session.total = session.subtotal + session.deliveryFee;
             return session;

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -365,6 +366,171 @@
             .sidebar {
                 display: none;
             }
+
+            .main {
+                padding: 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+
+            .card-title {
+                font-size: 1.4rem;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .status-badge {
+                margin-left: 0;
+                font-size: 0.7rem;
+                padding: 6px 12px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.75rem;
+            }
+
+            /* Fix action buttons stacking */
+            .card>div:last-child {
+                flex-wrap: wrap;
+            }
+
+            .mode-card {
+                min-width: unset !important;
+            }
+
+            .info-box {
+                font-size: 0.8rem;
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .qr-placeholder {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 14px;
+            }
+
+            .card-title {
+                font-size: 1.2rem;
+                gap: 6px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-group label {
+                font-size: 0.7rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 10px;
+                font-size: 0.85rem;
+                border-width: 2px;
+            }
+
+            /* Stack input + button rows vertically */
+            .form-group>div[style*="display: flex"] {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .form-group>div[style*="display: flex"] .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Action buttons at bottom — stack and full width */
+            div[style*="text-align: right"] {
+                text-align: center !important;
+            }
+
+            div[style*="justify-content: flex-end"] {
+                justify-content: center !important;
+                flex-direction: column !important;
+            }
+
+            div[style*="justify-content: flex-end"] .btn,
+            div[style*="justify-content: center"] .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn {
+                padding: 10px 12px;
+                font-size: 0.7rem;
+                gap: 6px;
+            }
+
+            .toggle-switch {
+                width: 50px;
+                height: 28px;
+                margin-right: 8px;
+            }
+
+            .toggle-switch::after {
+                width: 20px;
+                height: 20px;
+            }
+
+            .toggle-switch.active::after {
+                left: 24px;
+            }
+
+            .qr-placeholder {
+                width: 180px;
+                height: 180px;
+            }
+
+            .mode-card {
+                min-width: unset !important;
+                padding: 12px !important;
+            }
+
+            .groups-list {
+                max-height: 150px;
+            }
+
+            /* Ensure bottom padding for scrolling */
+            .main {
+                padding-bottom: 24px;
+            }
         }
 
         .mode-card:hover {
@@ -695,15 +861,10 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
         let pollInterval = null;
         let isBotEnabled = false;
 
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
+
 
         async function init() {
             await loadStatus();
@@ -713,8 +874,7 @@
 
         async function loadStatus() {
             try {
-                const res = await fetch('/api/whatsapp/status', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/whatsapp/status');
                 updateStatusUI(data);
             } catch (error) { console.error(error); }
         }
@@ -728,7 +888,7 @@
             const btnConnect = document.getElementById('btnConnect');
             const btnReconnect = document.getElementById('btnReconnect');
             const btnDisconnect = document.getElementById('btnDisconnect');
-            const qrTimer = document.getElementById('qrTimer');
+            const btnReset = document.getElementById('btnReset'); // Ensure btnReset is defined
 
             if (data.connected) {
                 badge.textContent = 'CONECTADO';
@@ -813,8 +973,7 @@
 
         async function loadQRCode() {
             try {
-                const res = await fetch('/api/whatsapp/qr', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/whatsapp/qr');
                 const container = document.getElementById('qrContainer');
                 if (data.available && data.qrCode) {
                     container.innerHTML = `<img src="${data.qrCode}" alt="QR Code">`;
@@ -829,8 +988,7 @@
             const qrTimer = document.getElementById('qrTimer');
             if (qrTimer) { qrTimer.textContent = ''; qrTimer.className = 'qr-timer'; }
             try {
-                const res = await fetch('/api/whatsapp/initialize', { method: 'POST', headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/whatsapp/initialize', { method: 'POST' });
                 if (data.success) {
                     pollInterval = setInterval(loadStatus, 3000);
                     loadStatus();
@@ -843,7 +1001,7 @@
         async function reconnectWhatsApp() {
             if (!confirm('Tentar reconectar agora? Isso usará a sessão atual sem precisar de novo QR.')) return;
             try {
-                await fetch('/api/whatsapp/restart', { method: 'POST', headers: API_HEADERS });
+                await apiFetch('/api/whatsapp/restart', { method: 'POST' });
                 pollInterval = setInterval(loadStatus, 3000);
                 loadStatus();
             } catch (e) { alert('Erro ao tentar reconectar'); }
@@ -852,7 +1010,7 @@
         async function disconnectWhatsApp() {
             if (!confirm('Desconectar?')) return;
             try {
-                await fetch('/api/whatsapp/disconnect', { method: 'POST', headers: API_HEADERS });
+                await apiFetch('/api/whatsapp/disconnect', { method: 'POST' });
                 loadStatus();
             } catch (e) { alert('Erro'); }
         }
@@ -866,8 +1024,7 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch('/api/whatsapp/reset', { method: 'POST', headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/whatsapp/reset', { method: 'POST' });
 
                 if (data.success) {
                     alert('Conexão resetada! Aguarde o novo QR Code aparecer.');
@@ -888,8 +1045,7 @@
 
         async function loadSettings() {
             try {
-                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/tenants/me');
                 if (data.settings) {
                     isBotEnabled = data.settings.whatsappBotEnabled || false;
                     document.getElementById('botToggle').classList.toggle('active', isBotEnabled);
@@ -912,14 +1068,13 @@
 
         async function saveSettings() {
             try {
-                await fetch('/api/whatsapp/settings', {
+                await apiFetch('/api/whatsapp/settings', {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    body: {
                         whatsappBotEnabled: isBotEnabled,
                         whatsappGroupId: document.getElementById('groupId').value,
                         siteUrl: document.getElementById('siteUrl').value.trim()
-                    })
+                    }
                 });
                 alert('Configurações salvas!');
             } catch (e) { alert('Erro ao salvar'); }
@@ -929,8 +1084,7 @@
             const btn = document.getElementById('btnLoadGroups');
             btn.innerHTML = '<i class="fas fa-spinner spinner"></i>';
             try {
-                const res = await fetch('/api/whatsapp/groups', { headers: API_HEADERS });
-                const groups = await res.json();
+                const groups = await apiFetch('/api/whatsapp/groups');
                 const list = document.getElementById('groupsList');
                 list.style.display = 'block';
                 if (groups.length) {
@@ -954,9 +1108,8 @@
 
         async function loadStoreLink() {
             try {
-                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const data = await res.json();
-                document.getElementById('storeLink').value = `${window.location.origin}/loja/${data.slug}`;
+                const data = await apiFetch('/api/tenants/me');
+                document.getElementById('siteUrl').value = `${window.location.origin}/loja/${data.slug}`;
             } catch (e) { }
         }
 
@@ -1014,15 +1167,14 @@
                     model: document.getElementById('aiOllamaModel')?.value || 'llama3:8b'
                 };
 
-                await fetch('/api/whatsapp/settings', {
+                await apiFetch('/api/whatsapp/settings', {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    body: {
                         whatsappOrderMode: currentOrderMode,
-                        pixKey: document.getElementById('pixKeyDirect').value.trim(),
-                        deliveryFee: parseFloat(document.getElementById('deliveryFeeDirect').value) || 0,
+                        pixKey: document.getElementById('pixKeyDirect')?.value?.trim() || '',
+                        deliveryFee: parseFloat(document.getElementById('deliveryFeeDirect')?.value) || 0,
                         aiEmployee: aiEmployeeConfig
-                    })
+                    }
                 });
 
                 btn.innerHTML = '<i class="fas fa-check"></i> SALVO!';
@@ -1048,12 +1200,10 @@
             statusEl.style.color = '#92400e';
 
             try {
-                const res = await fetch('/api/whatsapp/test-ollama', {
+                const data = await apiFetch('/api/whatsapp/test-ollama', {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ollamaUrl: url })
+                    body: { ollamaUrl: url }
                 });
-                const data = await res.json();
 
                 if (data.online) {
                     statusEl.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Conectado!</strong><br>
@@ -1109,8 +1259,7 @@
 
         async function loadAISettings() {
             try {
-                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/tenants/me');
                 const aiBot = data.settings?.aiBot || {};
 
                 isAIEnabled = aiBot.enabled || false;
@@ -1153,23 +1302,18 @@
             }
 
             try {
-                const res = await fetch('/api/whatsapp/settings', {
+                await apiFetch('/api/whatsapp/settings', {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    body: {
                         aiBot: {
                             enabled: isAIEnabled,
                             apiKey: apiKey,
                             provider: provider
                         }
-                    })
+                    }
                 });
 
-                if (res.ok) {
-                    showAIStatus(true, `Configuracoes salvas! IA ${isAIEnabled ? 'ativada' : 'desativada'} (${provider.toUpperCase()})`);
-                } else {
-                    showAIStatus(false, 'Erro ao salvar configuracoes');
-                }
+                showAIStatus(true, `Configuracoes salvas! IA ${isAIEnabled ? 'ativada' : 'desativada'} (${provider.toUpperCase()})`);
                 return true;
             } catch (e) {
                 console.error('Erro ao salvar config IA:', e);
@@ -1245,6 +1389,7 @@
         };
 
         init();
+        initStoreInfo();
     </script>
 
     <!-- Modal de Configuracao de Mensagens (Redesenhado) -->
@@ -1628,8 +1773,7 @@ Voce faz falta aqui! Que tal relembrar nosso sabor?
 
         async function loadMessageConfig() {
             try {
-                const res = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/tenants/me');
                 messageConfig = data.settings?.botMessages || {};
                 triggers = data.settings?.triggers || [];
 
@@ -1707,15 +1851,14 @@ Voce faz falta aqui! Que tal relembrar nosso sabor?
             };
 
             try {
-                await fetch('/api/whatsapp/settings', {
+                await apiFetch('/api/whatsapp/settings', {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         botMessages: messages,
                         triggers: triggers
                     })
                 });
-                alert('Mensagens e gatilhos salvos com sucesso!');
+                showToast('Mensagens e gatilhos salvos com sucesso!');
                 closeMessageConfig();
             } catch (e) {
                 alert('Erro ao salvar mensagens');

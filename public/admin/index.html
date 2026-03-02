@@ -389,6 +389,101 @@
                 display: none;
             }
         }
+
+        @media (max-width: 768px) {
+            .main {
+                padding: 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                justify-content: center;
+                font-size: 0.75rem;
+                padding: 10px 12px;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .section {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+            }
+
+            .order-item {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 12px;
+            }
+
+            .order-info {
+                gap: 10px;
+            }
+
+            .order-number {
+                font-size: 1.2rem;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .quick-action {
+                padding: 16px 12px;
+                font-size: 0.85rem;
+            }
+
+            .quick-action i {
+                font-size: 1.5rem;
+                margin-bottom: 8px;
+            }
+        }
     </style>
 </head>
 
@@ -495,98 +590,41 @@
         </main>
     </div>
 
+    <script src="js/shared.js"></script>
     <script>
-        // Funcao de logout
-        function logout() {
-            if (confirm('Tem certeza que deseja sair?')) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('tenantId');
-                localStorage.removeItem('tenantSlug');
-                window.location.href = '/login';
-            }
-        }
-
-        // Verificacao imediata de autenticacao
-        (async function checkAuth() {
-            const token = localStorage.getItem('token');
-
-            // Se nao tem token, redirecionar para login
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-
-            // Extrair slug da URL para contexto do tenant
-            const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-
-            // Validar token com API
-            try {
-                const res = await fetch('/api/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'X-Tenant-Slug': TENANT_SLUG
-                    }
-                });
-
-                if (!res.ok) {
-                    console.error('Token invalido');
-                    localStorage.removeItem('token');
-                    window.location.href = '/login';
-                    return;
-                }
-
-                // Token valido, continuar carregando
-                window.AUTH_DATA = await res.json();
-                window.API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-                loadDashboard();
-            } catch (error) {
-                console.error('Erro de autenticacao:', error);
-                localStorage.removeItem('token');
-                window.location.href = '/login';
+        // Inicializacao
+        (async function init() {
+            const meData = await initStoreInfo();
+            if (meData) {
+                // Configurar titulo especifico desta pagina
+                document.getElementById('pageTitle').textContent = `Dashboard - ${meData.tenant.name}`;
+                loadDashboard(meData);
             }
         })();
 
-        const API_HEADERS = window.API_HEADERS || {};
-
-        async function loadDashboard() {
+        async function loadDashboard(meData) {
             try {
-                // Usar dados ja carregados pelo checkAuth
-                const meData = window.AUTH_DATA;
+                if (!meData || !meData.tenant) return;
 
-                if (!meData || !meData.tenant) {
-                    console.error('Dados do tenant nao disponiveis');
-                    return;
-                }
-
-                // Atualizar titulo da pagina e sidebar com nome da loja
-                document.getElementById('pageTitle').textContent = `Dashboard - ${meData.tenant.name}`;
-                document.getElementById('sidebarLogo').textContent = meData.tenant.name;
-
-                document.getElementById('storeName').textContent = meData.tenant.name;
-                document.getElementById('storePlan').textContent = meData.tenant.subscription?.plan || 'Trial';
-                document.getElementById('viewStoreLink').href = `/loja/${meData.tenant.slug}`;
-
-                const dashRes = await fetch(`/api/tenants/${meData.tenant.id}/dashboard`, { headers: window.API_HEADERS });
-                if (dashRes.ok) {
-                    const data = await dashRes.json();
-                    document.getElementById('revenueToday').textContent = 'R$ ' + (data.today?.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const data = await apiFetch(`/api/tenants/${meData.tenant.id}/dashboard`);
+                if (data) {
+                    document.getElementById('revenueToday').textContent = formatCurrency(data.today?.revenue || 0);
                     document.getElementById('ordersToday').textContent = data.today?.orders || 0;
                     document.getElementById('productsCount').textContent = data.counts?.products || 0;
                     document.getElementById('customersCount').textContent = data.counts?.customers || 0;
                 }
 
-                const ordersRes = await fetch('/api/orders?limit=5', { headers: window.API_HEADERS });
-                if (ordersRes.ok) renderOrders(await ordersRes.json());
+                const ordersData = await apiFetch('/api/orders?limit=5');
+                if (ordersData) renderOrders(ordersData);
 
             } catch (error) {
                 console.error('Erro ao carregar dashboard:', error);
-                // NAO redirecionar para login aqui - apenas log erro
             }
         }
 
         function renderOrders(orders) {
             const container = document.getElementById('ordersList');
-            if (!orders.length) {
+            if (!orders || !orders.length) {
                 container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhum pedido ainda</div>';
                 return;
             }
@@ -601,17 +639,10 @@
                         </div>
                     </div>
                     <span class="order-status status-${order.status.toLowerCase()}">${formatStatus(order.status)}</span>
-                    <span class="order-total">R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+                    <span class="order-total">${formatCurrency(order.total)}</span>
                 </div>
             `).join('');
         }
-
-        function formatStatus(status) {
-            const map = { 'PENDING': 'Pendente', 'CONFIRMED': 'Confirmado', 'PREPARING': 'Preparando', 'READY': 'Pronto', 'DELIVERED': 'Entregue' };
-            return map[status] || status;
-        }
-
-        // loadDashboard() agora e chamado apos validacao de token em checkAuth()
     </script>
 </body>
 

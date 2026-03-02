@@ -1,80 +1,77 @@
+import { processMessage } from './agent-employee/core/state-machine.js';
+import * as cartService from './agent-employee/services/cart-service.js';
 
-import { processMessage } from './direct-order/core/state-machine.js';
-import * as cartService from './direct-order/services/cart-service.js';
+async function testPickupLogic() {
+    const tenantId = 'test-tenant';
+    const customerId = 'test-customer';
 
-// Mock DB and other params
-const mockDb = {
-    get: async () => null, // No saved customer/tenant
-    all: async () => [],
-    run: async () => ({}),
-};
+    // Simular sessão em ORDERING
+    cartService.resetSession(tenantId, customerId);
+    cartService.setState(tenantId, customerId, 'ORDERING');
+    const session = cartService.getSession(tenantId, customerId);
+    session.items = [{ id: 1, name: 'Burger', price: 20, quantity: 1, total: 20 }];
+    session.subtotal = 20;
+    session.total = 20;
 
-const mockMenu = {
-    products: [{ id: 'p1', name: 'X-Burger', price: 20.00, available: true, is_available: 1 }],
-    categories: []
-};
+    console.log('--- TESTE 1: allow_pickup = true ---');
+    const params1 = {
+        message: 'fechar pedido',
+        customerId,
+        tenantId,
+        settings: { allow_pickup: true },
+        aiConfig: { model: 'gemma:2b' },
+        products: [{ id: 1, name: 'Burger', price: 20 }]
+    };
 
-const tenantId = 'tenant_test_pickup';
-const customerId = 'user_pickup_1';
+    // Precisamos de um mock do interpreter
+    const mockInterpreter = {
+        interpret: async () => ({ type: 'FINALIZE_CART' }),
+        generateResponse: async () => null
+    };
 
-async function runTest() {
-    console.log("--- TEST FLOW: ADD ITEM -> PICKUP -> NAME -> OBS -> (SKIP PAYMENT) -> FINISH ---");
+    const res1 = await processMessage({ ...params1, interpreter: mockInterpreter });
+    console.log('Resposta (Pickup Ativo):', res1.text);
+    console.log('Novo Estado:', cartService.getSession(tenantId, customerId).state);
 
-    // Clear previous sessions
-    cartService.resetCart(tenantId, customerId);
+    console.log('\n--- TESTE 2: allow_pickup = false ---');
+    cartService.resetSession(tenantId, customerId);
+    cartService.setState(tenantId, customerId, 'ORDERING');
+    const session2 = cartService.getSession(tenantId, customerId);
+    session2.items = [{ id: 1, name: 'Burger', price: 20, quantity: 1, total: 20 }];
 
-    // 1. Add Item
-    console.log("\n1. Customer says: '1 X-Burger'");
-    let result = await processMessage({
-        message: '1 X-Burger',
-        customerId, tenantId, customerName: 'User',
-        menu: mockMenu, settings: { whatsappOrderMode: 'direct' }, db: mockDb
-    });
-    console.log(`Bot: ${result.text}`);
+    const params2 = {
+        message: 'fechar pedido',
+        customerId,
+        tenantId,
+        settings: { allow_pickup: false },
+        aiConfig: { model: 'gemma:2b' },
+        products: [{ id: 1, name: 'Burger', price: 20 }]
+    };
 
-    // 2. Choose Pickup (Retirada)
-    console.log("\n2. Customer says: 'Retirada'");
-    result = await processMessage({
-        message: 'Retirada',
-        customerId, tenantId, customerName: 'User',
-        menu: mockMenu, settings: { whatsappOrderMode: 'direct' }, db: mockDb
-    });
-    console.log(`Bot: ${result.text}`);
+    const res2 = await processMessage({ ...params2, interpreter: mockInterpreter });
+    console.log('Resposta (Pickup Inativo):', res2.text);
+    console.log('Novo Estado:', cartService.getSession(tenantId, customerId).state);
 
-    // 3. Name (if asked)
-    if (result.text && result.text.includes('nome')) {
-        console.log("\n3. Customer says: 'João'");
-        result = await processMessage({
-            message: 'João',
-            customerId, tenantId, customerName: 'User',
-            menu: mockMenu, settings: { whatsappOrderMode: 'direct' }, db: mockDb
-        });
-        console.log(`Bot: ${result.text}`);
-    }
+    console.log('\n--- TESTE 3: Usuário insiste em PICKUP com allow_pickup = false ---');
+    cartService.resetSession(tenantId, customerId);
+    cartService.setState(tenantId, customerId, 'DELIVERY_TYPE');
+    const params3 = {
+        message: 'quero retirar no local',
+        customerId,
+        tenantId,
+        settings: { allow_pickup: false },
+        aiConfig: { model: 'gemma:2b' },
+        products: [{ id: 1, name: 'Burger', price: 20 }]
+    };
 
-    // 4. Observation
-    console.log("\n4. Customer says: 'Sem cebola'");
-    result = await processMessage({
-        message: 'Sem cebola',
-        customerId, tenantId, customerName: 'User',
-        menu: mockMenu, settings: { whatsappOrderMode: 'direct' }, db: mockDb
-    });
-    console.log(`Bot: ${result.text}`);
+    const mockInterpreter3 = {
+        interpret: async () => ({ type: 'PICKUP' }), // IA detectou tentativa de retirada
+        generateResponse: async () => null
+    };
 
-    // CHECK
-    if (result.orderCreated) {
-        console.log("\n✅ SUCCESS: Order created immediately!");
-        console.log(`Payment Method: ${result.orderCreated.paymentMethod}`);
-        if (result.orderCreated.paymentMethod === 'PAGAR_NA_RETIRADA') {
-            console.log("✅ Payment Method correctly set to PAGAR_NA_RETIRADA");
-        } else {
-            console.log("❌ Unexpected Payment Method");
-        }
-    } else if (result.text && result.text.includes('agamento')) {
-        console.log("\n❌ FAILURE: Bot is asking for payment method.");
-    } else {
-        console.log("\n❓ UNKNOWN STATE. Result:", result.text);
-    }
+    const res3 = await processMessage({ ...params3, interpreter: mockInterpreter3 });
+    console.log('Resposta (Insistência Bloqueada):', res3.text);
+    console.log('Estado Continua:', cartService.getSession(tenantId, customerId).state);
 }
 
-runTest().catch(console.error);
+testPickupLogic().catch(console.error);

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -374,21 +375,16 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let categories = [];
 
         async function loadCategories() {
+            initStoreInfo();
             try {
-                const res = await fetch('/api/categories', { headers: API_HEADERS });
-                if (res.ok) categories = await res.json();
+                categories = await apiFetch('/api/categories');
                 render();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function render() {
@@ -438,10 +434,12 @@
         async function deleteCategory(id) {
             if (!confirm('Deletar esta categoria?')) return;
             try {
-                const res = await fetch(`/api/categories/${id}`, { method: 'DELETE', headers: API_HEADERS });
-                if (!res.ok) { const d = await res.json(); alert(d.error || 'Erro ao deletar'); return; }
+                await apiFetch(`/api/categories/${id}`, { method: 'DELETE' });
+                showToast('Categoria deletada com sucesso!');
                 loadCategories();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast(e.message || 'Erro ao deletar', 'error');
+            }
         }
 
         document.getElementById('categoryForm').addEventListener('submit', async (e) => {
@@ -456,10 +454,16 @@
             const method = id ? 'PUT' : 'POST';
 
             try {
-                await fetch(url, { method, headers: { ...API_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                await apiFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+                showToast('Categoria salva com sucesso!');
                 closeModal();
                 loadCategories();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast(e.message || 'Erro ao salvar', 'error');
+            }
         });
 
         loadCategories();

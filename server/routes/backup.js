@@ -74,18 +74,35 @@ export default function (db) {
             const acaiAdicionais = await db.all('SELECT * FROM acai_adicionais WHERE tenant_id = ?', [tenantId]);
             const acaiConfig = await db.get('SELECT * FROM acai_config WHERE tenant_id = ?', [tenantId]);
 
-            // Coletar imagens locais como base64
+            // Novos dados adicionados para backup completo
+            const addonGroups = await db.all('SELECT * FROM addon_groups WHERE tenant_id = ?', [tenantId]);
+            const addonItems = await db.all('SELECT i.* FROM addon_items i JOIN addon_groups g ON i.group_id = g.id WHERE g.tenant_id = ?', [tenantId]);
+            const whatsappConfigs = await db.get('SELECT * FROM whatsapp_configs WHERE tenant_id = ?', [tenantId]);
+            const coupons = await db.all('SELECT * FROM coupons WHERE tenant_id = ?', [tenantId]);
+            const reviews = await db.all('SELECT * FROM reviews WHERE tenant_id = ?', [tenantId]);
+            const loyaltyConfig = await db.get('SELECT * FROM loyalty_config WHERE tenant_id = ?', [tenantId]);
+            const loyaltyRewards = await db.all('SELECT * FROM loyalty_rewards WHERE tenant_id = ?', [tenantId]);
+            const lidMappings = await db.all('SELECT * FROM lid_phone_mappings WHERE tenant_id = ?', [tenantId]);
+            const pidMappings = await db.all('SELECT * FROM pid_jid_mappings WHERE tenant_id = ?', [tenantId]);
+            const productMappings = await db.all('SELECT * FROM product_mappings WHERE tenant_id = ?', [tenantId]);
+            const ignoredWords = await db.all('SELECT * FROM ignored_words WHERE tenant_id = ?', [tenantId]);
+            const synonyms = await db.all('SELECT * FROM synonyms WHERE tenant_id = ?', [tenantId]);
+            const aiConversations = await db.all('SELECT * FROM ai_conversations WHERE tenant_id = ?', [tenantId]);
+
+            // Coletar imagens locais como base64 (inclui logo e imagens de produtos)
             const images = {};
             const uploadsDir = path.join(__dirname, '../../public/uploads', tenantId);
             if (fs.existsSync(uploadsDir)) {
                 const files = fs.readdirSync(uploadsDir);
                 for (const file of files) {
-                    if (/\.(jpg|jpeg|png|webp|gif)$/i.test(file)) {
+                    if (/\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(file)) {
                         try {
                             const filePath = path.join(uploadsDir, file);
                             const data = fs.readFileSync(filePath);
                             const ext = path.extname(file).slice(1).toLowerCase();
-                            const mimeType = ext === 'jpg' ? 'jpeg' : ext;
+                            let mimeType = ext === 'jpg' ? 'jpeg' : ext;
+                            if (ext === 'svg') mimeType = 'svg+xml';
+
                             images[file] = `data:image/${mimeType};base64,${data.toString('base64')}`;
                         } catch (e) {
                             console.log('Skip image:', file, e.message);
@@ -95,7 +112,7 @@ export default function (db) {
             }
 
             const backupData = {
-                version: '1.1', // Versao com suporte a imagens
+                version: '1.2', // Versao com backup total e suporte a icones/svg
                 exportedAt: new Date().toISOString(),
                 tenantId: tenantId,
                 tenantName: tenant?.name || 'Unknown',
@@ -107,9 +124,22 @@ export default function (db) {
                     customers,
                     buffetItems,
                     acaiAdicionais,
-                    acaiConfig
+                    acaiConfig,
+                    addonGroups,
+                    addonItems,
+                    whatsappConfigs,
+                    coupons,
+                    reviews,
+                    loyaltyConfig,
+                    loyaltyRewards,
+                    lidMappings,
+                    pidMappings,
+                    productMappings,
+                    ignoredWords,
+                    synonyms,
+                    aiConversations
                 },
-                images, // Imagens em base64
+                images,
                 stats: {
                     categories: categories.length,
                     products: products.length,
@@ -171,61 +201,166 @@ export default function (db) {
             }
 
             const data = backupData.data;
-            let restored = { categories: 0, products: 0, buffetItems: 0, acaiAdicionais: 0 };
+            let restored = { categories: 0, products: 0, buffetItems: 0, acaiAdicionais: 0, addons: 0, configs: 0, customers: 0, ai: 0 };
 
             // Se clearExisting, limpar dados existentes (exceto pedidos)
             if (clearExisting) {
-                await db.run('DELETE FROM products WHERE tenant_id = ?', [tenantId]);
-                await db.run('DELETE FROM categories WHERE tenant_id = ?', [tenantId]);
-                await db.run('DELETE FROM buffet_items WHERE tenant_id = ?', [tenantId]);
-                await db.run('DELETE FROM acai_adicionais WHERE tenant_id = ?', [tenantId]);
+                const tablesToClear = [
+                    'products', 'categories', 'buffet_items', 'acai_adicionais', 'acai_config',
+                    'addon_groups', 'whatsapp_configs', 'coupons', 'reviews', 'loyalty_config',
+                    'loyalty_rewards', 'lid_phone_mappings', 'pid_jid_mappings', 'product_mappings',
+                    'ignored_words', 'synonyms', 'ai_conversations'
+                ];
+                for (const table of tablesToClear) {
+                    try {
+                        await db.run(`DELETE FROM ${table} WHERE tenant_id = ?`, [tenantId]);
+                    } catch (e) {
+                        console.log(`Fallback: Failed to clear table ${table}:`, e.message);
+                    }
+                }
+                try {
+                    // addon_items nao tem tenant_id, sao deletados via cascata de addon_groups ou manualmente
+                    await db.run('DELETE FROM addon_items WHERE group_id NOT IN (SELECT id FROM addon_groups)');
+                } catch (e) {
+                    console.log(`Fallback: Failed to clear addon_items:`, e.message);
+                }
             }
 
-            // Restaurar categorias
+            // 1. Restaurar Tenant Settings (Branding, Cores, etc)
+            if (data.tenant) {
+                try {
+                    await db.run('UPDATE tenants SET business_type = ?, settings = ?, theme_id = ? WHERE id = ?',
+                        [data.tenant.business_type, data.tenant.settings, data.tenant.theme_id, tenantId]);
+                    restored.configs++;
+                } catch (e) { console.log('Skip tenant update:', e.message); }
+            }
+
+            // 2. Restaurar Categorias
             for (const cat of (data.categories || [])) {
                 try {
                     await db.run(`
-                        INSERT OR REPLACE INTO categories (id, tenant_id, name, order_index, is_active)
-                        VALUES (?, ?, ?, ?, ?)
-                    `, [cat.id, tenantId, cat.name, cat.order_index, cat.is_active]);
+                        INSERT OR REPLACE INTO categories (id, tenant_id, name, description, icon, order_index, is_active)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `, [cat.id, tenantId, cat.name, cat.description, cat.icon, cat.order_index, cat.is_active]);
                     restored.categories++;
                 } catch (e) { console.log('Skip category:', e.message); }
             }
 
-            // Restaurar produtos
+            // 3. Restaurar Produtos
             for (const prod of (data.products || [])) {
                 try {
                     await db.run(`
                         INSERT OR REPLACE INTO products 
-                        (id, tenant_id, category_id, name, description, price, images, is_available, order_index, has_addons, addons)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    `, [prod.id, tenantId, prod.category_id, prod.name, prod.description,
-                    prod.price, prod.images, prod.is_available, prod.order_index,
-                    prod.has_addons, prod.addons]);
+                        (id, tenant_id, category_id, name, description, price, images, is_available, is_featured, order_index, has_addons, addons, image_settings, nutrition_info, has_sizes, sizes, size_prices)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, [prod.id, tenantId, prod.category_id, prod.name, prod.description, prod.price,
+                    prod.images, prod.is_available, prod.is_featured, prod.order_index,
+                    prod.has_addons, prod.addons, prod.image_settings, prod.nutrition_info,
+                    prod.has_sizes, prod.sizes, prod.size_prices]);
                     restored.products++;
                 } catch (e) { console.log('Skip product:', e.message); }
             }
 
-            // Restaurar buffet items
-            for (const item of (data.buffetItems || [])) {
+            // 4. Restaurar Adicionais (Grupos e Itens)
+            for (const group of (data.addonGroups || [])) {
                 try {
-                    await db.run(`
-                        INSERT OR REPLACE INTO buffet_items (id, tenant_id, nome, ativo, order_index)
-                        VALUES (?, ?, ?, ?, ?)
-                    `, [item.id, tenantId, item.nome, item.ativo, item.order_index]);
-                    restored.buffetItems++;
-                } catch (e) { console.log('Skip buffet item:', e.message); }
+                    await db.run(`INSERT OR REPLACE INTO addon_groups (id, tenant_id, product_id, category_id, name, min_selection, max_selection, order_index)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [group.id, tenantId, group.product_id, group.category_id, group.name, group.min_selection, group.max_selection, group.order_index]);
+                    restored.addons++;
+                } catch (e) { }
+            }
+            for (const item of (data.addonItems || [])) {
+                try {
+                    await db.run(`INSERT OR REPLACE INTO addon_items (id, group_id, name, price, is_available, order_index)
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+                        [item.id, item.group_id, item.name, item.price, item.is_available, item.order_index]);
+                } catch (e) { }
             }
 
-            // Restaurar adicionais acai
+            // 5. Restaurar Buffet e Acai
+            for (const item of (data.buffetItems || [])) {
+                try {
+                    await db.run(`INSERT OR REPLACE INTO buffet_items (id, tenant_id, nome, ativo, order_index)
+                        VALUES (?, ?, ?, ?, ?)`, [item.id, tenantId, item.nome, item.ativo, item.order_index]);
+                    restored.buffetItems++;
+                } catch (e) { }
+            }
             for (const item of (data.acaiAdicionais || [])) {
                 try {
-                    await db.run(`
-                        INSERT OR REPLACE INTO acai_adicionais (id, tenant_id, nome, preco, categoria, ativo, order_index)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    `, [item.id, tenantId, item.nome, item.preco, item.categoria, item.ativo, item.order_index]);
+                    await db.run(`INSERT OR REPLACE INTO acai_adicionais (id, tenant_id, nome, preco, categoria, ativo, order_index)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)`, [item.id, tenantId, item.nome, item.preco, item.categoria, item.ativo, item.order_index]);
                     restored.acaiAdicionais++;
-                } catch (e) { console.log('Skip acai adicional:', e.message); }
+                } catch (e) { }
+            }
+            if (data.acaiConfig) {
+                try {
+                    await db.run(`INSERT OR REPLACE INTO acai_config (id, tenant_id, habilitado, categoria_nome)
+                        VALUES (?, ?, ?, ?)`, [data.acaiConfig.id, tenantId, data.acaiConfig.habilitado, data.acaiConfig.categoria_nome]);
+                } catch (e) { }
+            }
+
+            // 6. Configuracoes de WhatsApp
+            if (data.whatsappConfigs) {
+                try {
+                    const wc = data.whatsappConfigs;
+                    await db.run(`INSERT OR REPLACE INTO whatsapp_configs (id, tenant_id, welcome_message, confirmation_message, status_update_message, auto_reply_enabled)
+                        VALUES (?, ?, ?, ?, ?, ?)`, [wc.id, tenantId, wc.welcome_message, wc.confirmation_message, wc.status_update_message, wc.auto_reply_enabled]);
+                    restored.configs++;
+                } catch (e) { }
+            }
+
+            // 7. Cupons, Fidelidade e Reviews
+            for (const item of (data.coupons || [])) {
+                try {
+                    await db.run(`INSERT OR REPLACE INTO coupons (id, tenant_id, code, description, discount_type, discount_value, min_order_value, max_uses, uses_count, valid_from, valid_until, is_active)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [item.id, tenantId, item.code, item.description, item.discount_type, item.discount_value, item.min_order_value, item.max_uses, item.uses_count, item.valid_from, item.valid_until, item.is_active]);
+                } catch (e) { }
+            }
+            if (data.loyaltyConfig) {
+                const lc = data.loyaltyConfig;
+                await db.run(`INSERT OR REPLACE INTO loyalty_config (id, tenant_id, is_enabled, points_per_real, min_points_redeem) VALUES (?, ?, ?, ?, ?)`,
+                    [lc.id, tenantId, lc.is_enabled, lc.points_per_real, lc.min_points_redeem]).catch(e => { });
+            }
+            for (const r of (data.loyaltyRewards || [])) {
+                await db.run(`INSERT OR REPLACE INTO loyalty_rewards (id, tenant_id, name, description, points_required, reward_type, reward_value, product_id, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [r.id, tenantId, r.name, r.description, r.points_required, r.reward_type, r.reward_value, r.product_id, r.is_active]).catch(e => { });
+            }
+            for (const r of (data.reviews || [])) {
+                await db.run(`INSERT OR REPLACE INTO reviews (id, tenant_id, product_id, customer_id, customer_name, customer_phone, rating, comment, reply, reply_at, is_approved, order_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [r.id, tenantId, r.product_id, r.customer_id, r.customer_name, r.customer_phone, r.rating, r.comment, r.reply, r.reply_at, r.is_approved, r.order_id]).catch(e => { });
+            }
+
+            // 8. Mapeamentos e IA
+            for (const m of (data.lidMappings || [])) {
+                await db.run(`INSERT OR REPLACE INTO lid_phone_mappings (id, lid, phone, tenant_id) VALUES (?, ?, ?, ?)`, [m.id, m.lid, m.phone, tenantId]).catch(e => { });
+            }
+            for (const m of (data.pidMappings || [])) {
+                await db.run(`INSERT OR REPLACE INTO pid_jid_mappings (id, tenant_id, pid, jid) VALUES (?, ?, ?, ?)`, [m.id, tenantId, m.pid, m.jid]).catch(e => { });
+            }
+            for (const m of (data.productMappings || [])) {
+                await db.run(`INSERT OR REPLACE INTO product_mappings (id, tenant_id, keyword, product_id) VALUES (?, ?, ?, ?)`, [m.id, tenantId, m.keyword, m.product_id]).catch(e => { });
+            }
+            for (const w of (data.ignoredWords || [])) {
+                await db.run(`INSERT OR REPLACE INTO ignored_words (id, tenant_id, word, reason) VALUES (?, ?, ?, ?)`, [w.id, tenantId, w.word, w.reason]).catch(e => { });
+            }
+            for (const s of (data.synonyms || [])) {
+                await db.run(`INSERT OR REPLACE INTO synonyms (id, tenant_id, word, synonym) VALUES (?, ?, ?, ?)`, [s.id, tenantId, s.word, s.synonym]).catch(e => { });
+            }
+            for (const c of (data.aiConversations || [])) {
+                await db.run(`INSERT OR REPLACE INTO ai_conversations (id, tenant_id, customer_phone, customer_name, messages, status, order_data) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    [c.id, tenantId, c.customer_phone, c.customer_name, c.messages, c.status, c.order_data]).catch(e => { });
+                restored.ai++;
+            }
+
+            // 9. Clientes e Histórico (opcional restaurar se houver dados)
+            for (const c of (data.customers || [])) {
+                try {
+                    await db.run(`INSERT OR REPLACE INTO customers (id, tenant_id, name, phone, email, address, notes, total_orders, total_spent, last_order_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [c.id, tenantId, c.name, c.phone, c.email, c.address, c.notes, c.total_orders, c.total_spent, c.last_order_at]);
+                    restored.customers++;
+                } catch (e) { }
             }
 
             // Restaurar imagens

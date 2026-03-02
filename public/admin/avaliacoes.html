@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -360,30 +361,22 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        const tenantId = localStorage.getItem('tenantId');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let reviews = [];
         let currentFilter = 'all';
 
         async function loadReviews() {
+            initStoreInfo();
             try {
-                const res = await fetch('/api/reviews', { headers: API_HEADERS });
-                reviews = await res.json();
+                reviews = await apiFetch('/api/reviews');
                 loadStats();
                 renderReviews();
             } catch (e) { console.error(e); }
         }
 
         async function loadStats() {
+            const tenantId = localStorage.getItem('tenantId');
             try {
-                const res = await fetch(`/api/reviews/tenant/${tenantId}`);
-                const data = await res.json();
+                const data = await apiFetch(`/api/reviews/tenant/${tenantId}`);
                 if (data.stats) {
                     const avg = (data.stats.average || 0).toFixed(1);
                     document.getElementById('avgRating').textContent = avg;
@@ -469,30 +462,32 @@
 
         async function approveReview(id) {
             try {
-                await fetch(`/api/reviews/${id}/approve`, { method: 'PUT', headers: API_HEADERS });
+                await apiFetch(`/api/reviews/${id}/approve`, { method: 'PUT' });
+                showToast('Avaliação aprovada!');
                 loadReviews();
-            } catch (e) { alert('Erro'); }
+            } catch (e) { showToast('Erro ao aprovar', 'error'); }
         }
 
         async function sendReply(id) {
             const txt = document.getElementById(`replyText-${id}`).value;
             if (!txt.trim()) return;
             try {
-                await fetch(`/api/reviews/${id}/reply`, {
+                await apiFetch(`/api/reviews/${id}/reply`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reply: txt })
                 });
+                showToast('Resposta enviada!');
                 loadReviews();
-            } catch (e) { alert('Erro'); }
+            } catch (e) { showToast('Erro ao enviar resposta', 'error'); }
         }
 
         async function deleteReview(id) {
             if (!confirm('Excluir?')) return;
             try {
-                await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await apiFetch(`/api/reviews/${id}`, { method: 'DELETE' });
+                showToast('Avaliação excluída');
                 loadReviews();
-            } catch (e) { alert('Erro'); }
+            } catch (e) { showToast('Erro ao excluir', 'error'); }
         }
 
         loadReviews();

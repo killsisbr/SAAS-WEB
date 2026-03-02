@@ -227,7 +227,7 @@ async function handleOrdering(params, session, intent, interpreter, context) {
 
     // 1. Processar itens encontrados pela Regex e tentar enriquecer com dados da IA
     for (const regexItem of foundProducts) {
-        let observation = '';
+        let observation = regexItem.observation || '';
         let aiAddons = [];
 
         if (intent.type === 'ORDER' && intent.items?.length > 0) {
@@ -238,7 +238,18 @@ async function handleOrdering(params, session, intent, interpreter, context) {
             );
 
             if (aiItem) {
-                observation = aiItem.observation || '';
+                // Se a IA extraiu observação, validar se ela existe no texto (evitar alucinação)
+                if (aiItem.observation) {
+                    const obsNormalized = aiItem.observation.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const msgNormalized = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    if (!msgNormalized.includes(obsNormalized)) {
+                        console.log(`[AgentEmployee] Alucinação detectada e removida: "${aiItem.observation}"`);
+                        aiItem.observation = null;
+                    }
+                }
+                // Priorizar observação da IA se validada, senão manter a da regex
+                observation = aiItem.observation || observation;
+
                 // Mapear adicionais da IA para este item
                 if (aiItem.modifiers && Array.isArray(aiItem.modifiers)) {
                     for (const modName of aiItem.modifiers) {
@@ -266,12 +277,31 @@ async function handleOrdering(params, session, intent, interpreter, context) {
     if (intent.type === 'ORDER' && intent.items?.length > 0) {
         for (const item of intent.items) {
             const product = productMatcher.findProduct(item.name, allKnownItems);
-            // Só adiciona se não foi pego pela Regex (comparando pelo ID do produto)
-            if (product && product._type === 'product' && !finalFound.some(f => f.product.id === product.id)) {
-                console.log(`[AgentEmployee] AI found item Regex missed: ${product.name}`);
+
+            // [SEGURANÇA] Validar se o produto realmente é mencionado na mensagem (Anti-Alucinação)
+            let isPresent = false;
+            if (product) {
+                const productNameNorm = productMatcher.normalizeText(product.name);
+                const messageNorm = productMatcher.normalizeText(message);
+                // Verifica se o nome do produto ou as palavras do nome estão na mensagem
+                isPresent = messageNorm.includes(productNameNorm) ||
+                    productNameNorm.split(' ').some(word => word.length > 3 && messageNorm.includes(word));
+            }
+
+            // Só adiciona se não foi pego pela Regex E se foi validado como presente na mensagem
+            if (product && isPresent && product._type === 'product' && !finalFound.some(f => f.product.id === product.id)) {
+                console.log(`[AgentEmployee] AI found valid item Regex missed: ${product.name}`);
 
                 const itemAddons = [];
                 let aiObservation = item.observation || '';
+                if (aiObservation) {
+                    const obsNormalized = aiObservation.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const msgNormalized = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    if (!msgNormalized.includes(obsNormalized)) {
+                        console.log(`[AgentEmployee] Alucinação detectada e removida (Solo AI): "${aiObservation}"`);
+                        aiObservation = '';
+                    }
+                }
 
                 if (item.modifiers && Array.isArray(item.modifiers)) {
                     for (const modName of item.modifiers) {
@@ -326,13 +356,19 @@ async function handleOrdering(params, session, intent, interpreter, context) {
                     });
                 }
 
-                console.log(`[AgentEmployee] Adding main item ${product.name} q:${quantity}, size: ${detectedSize || 'N/A'}, addons: ${finalAddons.length}, obs: ${observation || 'none'}`);
+                let appliedSize = null;
+                const pNameLow = product.name.toLowerCase();
+                if (detectedSize && (pNameLow.includes('açai') || pNameLow.includes('acai') || pNameLow.includes('marmita') || pNameLow.includes('pizza'))) {
+                    appliedSize = detectedSize;
+                }
+
+                console.log(`[AgentEmployee] Adding main item ${product.name} q:${quantity}, size: ${appliedSize || 'N/A'}, addons: ${finalAddons.length}, obs: ${observation || 'none'}`);
 
                 cartService.addItem(tenantId, customerId, {
                     product,
                     quantity,
                     addons: finalAddons,
-                    size: detectedSize,
+                    size: appliedSize,
                     observation: observation || ''
                 });
                 anyAdded = true;
@@ -373,17 +409,10 @@ async function handleOrdering(params, session, intent, interpreter, context) {
     if (anyAdded) {
         const updatedSession = cartService.getSession(tenantId, customerId);
         context.cart = updatedSession;
-        const aiResponse = await interpreter.generateResponse(AGENT_STATES.ORDERING, context);
-        if (aiResponse) {
-            const cartView = cartService.formatCart(tenantId, customerId);
-            return { text: `${aiResponse}\n\n${cartView}` };
-        }
 
         const cartView = cartService.formatCart(tenantId, customerId);
         return {
-            text: DEFAULT_MESSAGES.itemAdded
-                .replace('{cartItems}', cartView)
-                .replace('{subtotal}', updatedSession.subtotal.toFixed(2).replace('.', ','))
+            text: `Ótimo, adicionei à sacola! 🍔\n\n${cartView}\n\nDeseja algo mais ou podemos fechar o pedido?`
         };
     }
 
@@ -418,20 +447,25 @@ async function handleOrdering(params, session, intent, interpreter, context) {
  * Transição para DELIVERY_TYPE
  */
 async function moveToDeliveryType(params, session, interpreter, context) {
-    const { tenantId, customerId } = params;
-    cartService.setState(tenantId, customerId, AGENT_STATES.DELIVERY_TYPE);
+    const { tenantId, customerId, settings } = params;
 
-    const aiResponse = await interpreter.generateResponse(AGENT_STATES.DELIVERY_TYPE, context);
-    if (aiResponse) {
+    console.log('[DEBUG] moveToDeliveryType -> settings.allow_pickup =', settings?.allow_pickup, typeof settings?.allow_pickup);
+
+    // [NOVO] Se retirada NÃO estiver permitida, pular direto para coleta de endereço
+    if (settings && settings.allow_pickup === false) {
+        console.log(`[AgentEmployee] Retirada desabilitada para o tenant ${tenantId}. Pulando para ADDRESS.`);
+        cartService.setState(tenantId, customerId, AGENT_STATES.ADDRESS);
         const cartView = cartService.formatCart(tenantId, customerId);
-        return { text: `${aiResponse}\n\n${cartView}` };
+        return {
+            text: `Ótimo! Tudo anotado. 🍔\n\n${cartView}\n\nPara o envio, qual seria o seu *endereço*?`
+        };
     }
+
+    cartService.setState(tenantId, customerId, AGENT_STATES.DELIVERY_TYPE);
 
     const cartView = cartService.formatCart(tenantId, customerId);
     return {
-        text: DEFAULT_MESSAGES.confirmCart
-            .replace('{cartItems}', cartView)
-            .replace('{subtotal}', session.subtotal.toFixed(2).replace('.', ','))
+        text: `Ótimo! Tudo anotado. 🍔\n\n${cartView}\n\nPara o envio, você vai querer *Entrega* ou virá fazer a *Retirada*?`
     };
 }
 
@@ -439,7 +473,7 @@ async function moveToDeliveryType(params, session, interpreter, context) {
  * Estado: DELIVERY_TYPE - Entrega ou Retirada
  */
 async function handleDeliveryType(params, session, intent, interpreter, context) {
-    const { tenantId, customerId, message, db } = params;
+    const { tenantId, customerId, message, db, settings } = params;
     const msgLower = message.toLowerCase().trim();
 
     // [NOVO] Detecção inteligente de endereço implícito
@@ -458,6 +492,12 @@ async function handleDeliveryType(params, session, intent, interpreter, context)
             session.deliveryType = intent.type === 'DELIVERY' ? 'delivery' : 'pickup';
         }
 
+        // [NOVO] Validar se o tipo escolhido é permitido
+        if (session.deliveryType === 'pickup' && settings && settings.allow_pickup === false) {
+            session.deliveryType = null;
+            return { text: 'Desculpe, mas no momento não estamos aceitando retiradas no local. 😔\n\nPodemos fazer a entrega do seu pedido?' };
+        }
+
         if (session.deliveryType === 'delivery') {
             // Sempre ir para o estado ADDRESS para confirmar ou pedir endereço
             cartService.setState(tenantId, customerId, AGENT_STATES.ADDRESS);
@@ -468,12 +508,11 @@ async function handleDeliveryType(params, session, intent, interpreter, context)
         } else {
             session.deliveryFee = 0;
             cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-            return await handleName(params, session, intent, interpreter, context);
+            return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
         }
     }
 
-    const aiResponse = await interpreter.generateResponse(AGENT_STATES.DELIVERY_TYPE, context);
-    return { text: aiResponse || 'Vai ser *entrega* ou você prefere vir *retirar*? 🏠📦' };
+    return { text: 'Vai ser *entrega* ou você prefere vir *retirar*? 🏠📦' };
 }
 
 /**
@@ -533,7 +572,7 @@ async function handleAddress(params, session, intent, interpreter, context) {
         cartService.setDeliveryFee(tenantId, customerId, fee);
 
         cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-        return await handleName(params, session, intent, interpreter, context);
+        return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
     }
 
     // 5. Se cliente tem último endereço e ainda não definiu o atual, oferecer
@@ -550,7 +589,7 @@ async function handleAddress(params, session, intent, interpreter, context) {
             const fee = parseFloat(settings?.deliveryFee) || 5;
             cartService.setDeliveryFee(tenantId, customerId, fee);
             cartService.setState(tenantId, customerId, AGENT_STATES.NAME);
-            return await handleName(params, session, intent, interpreter, context);
+            return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
         }
 
         // Se não for confirmação nem endereço novo, oferece o antigo
@@ -583,18 +622,17 @@ async function handleName(params, session, intent, interpreter, context) {
     if (!isGeneric) {
         session.customerName = customer.name;
         cartService.setState(tenantId, customerId, AGENT_STATES.OBSERVATION);
-        return await handleObservation(params, session, intent, interpreter, context);
+        return { text: 'Deseja adicionar alguma observação geral (Ex: troco, sem campainha)?' };
     }
 
     if (message.trim().length >= 2 && intent.type !== 'CONFIRM') {
         session.customerName = message.trim();
         await updateCustomerName(db, tenantId, customerId, session.customerName);
         cartService.setState(tenantId, customerId, AGENT_STATES.OBSERVATION);
-        return await handleObservation(params, session, intent, interpreter, context);
+        return { text: 'Deseja adicionar alguma observação geral (Ex: troco, sem campainha)?' };
     }
 
-    const aiResponse = await interpreter.generateResponse(AGENT_STATES.NAME, context);
-    return { text: aiResponse || DEFAULT_MESSAGES.askName };
+    return { text: 'Ótimo! Para quem é o pedido? Como posso te chamar? 🗣️' };
 }
 
 /**
@@ -615,7 +653,10 @@ async function handleObservation(params, session, intent, interpreter, context) 
     }
 
     cartService.setState(tenantId, customerId, AGENT_STATES.PAYMENT);
-    return await handlePayment(params, session, intent, interpreter, context);
+
+    const updatedSession = cartService.getSession(tenantId, customerId);
+    const cartView = cartService.formatCart(tenantId, customerId);
+    return { text: `Tudo certo!\n\n${cartView}\n\nO total é de R$ ${updatedSession.total.toFixed(2).replace('.', ',')}.\nQual a forma de pagamento (Pix, Cartão ou Dinheiro)? 💸` };
 }
 
 /**
@@ -640,18 +681,9 @@ async function handlePayment(params, session, intent, interpreter, context) {
 
     const updatedSession = cartService.getSession(tenantId, customerId);
     context.cart = updatedSession;
-    const aiResponse = await interpreter.generateResponse(AGENT_STATES.PAYMENT, context);
-
-    if (aiResponse) {
-        const cartView = cartService.formatCart(tenantId, customerId);
-        return { text: `${aiResponse}\n\n${cartView}` };
-    }
-
     const cartView = cartService.formatCart(tenantId, customerId);
     return {
-        text: DEFAULT_MESSAGES.askPayment
-            .replace('{total}', updatedSession.total.toFixed(2).replace('.', ','))
-            .replace('{cartItems}', cartView)
+        text: `Qual a forma de pagamento (Pix, Cartão ou Dinheiro)? 💸\nO total é de R$ ${updatedSession.total.toFixed(2).replace('.', ',')}`
     };
 }
 

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -484,13 +485,6 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let salesChart, paymentChart, hoursChart, deliveryChart;
 
         // Defaults
@@ -512,14 +506,14 @@
         }
 
         async function loadReports() {
+            initStoreInfo();
             await loadSummary();
             await loadSalesReport();
         }
 
         async function loadSummary() {
             try {
-                const res = await fetch('/api/reports/summary', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/reports/summary');
 
                 document.getElementById('revenueToday').textContent = 'R$ ' + (data.today.revenue || 0).toFixed(2);
                 document.getElementById('ordersToday').textContent = data.today.orders || 0;
@@ -553,8 +547,7 @@
             try {
                 const start = document.getElementById('startDate').value;
                 const end = document.getElementById('endDate').value;
-                const res = await fetch(`/api/reports/sales?startDate=${start}&endDate=${end}`, { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch(`/api/reports/sales?startDate=${start}&endDate=${end}`);
 
                 // Sales
                 if (salesChart) salesChart.destroy();
@@ -635,8 +628,7 @@
 
         async function loadProductsReport() {
             try {
-                const res = await fetch('/api/reports/products', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/reports/products');
                 document.getElementById('bestSellersTable').innerHTML = data.bestSellers.map((p, i) => `
                     <tr>
                         <td>${i + 1}</td>
@@ -650,8 +642,7 @@
 
         async function loadCustomersReport() {
             try {
-                const res = await fetch('/api/reports/customers', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/reports/customers');
 
                 document.getElementById('totalCustomers').textContent = data.totals.total_customers || 0;
                 document.getElementById('recurringCustomers').textContent = data.recurringCustomers || 0;

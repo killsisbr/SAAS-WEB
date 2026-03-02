@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="/admin/js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -244,6 +245,59 @@
 
         .status-switch.active::after {
             left: 22px;
+        }
+
+        .popup-divider {
+            height: 1px;
+            background: #eee;
+            margin: 0 16px;
+        }
+
+        .quick-schedule-container {
+            padding: 12px 16px;
+            background: #fdfdfd;
+        }
+
+        .quick-schedule-label {
+            font-size: 0.65rem;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .quick-schedule-time {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .btn-manage-schedule {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-top: 1px solid #eee;
+            color: #3b82f6;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-manage-schedule:hover {
+            background: #eff6ff;
+        }
+
+        .status-switch.off-day {
+            background: #f87171 !important;
         }
 
         @keyframes pulse {
@@ -517,6 +571,139 @@
 
             .page-title {
                 display: none;
+            }
+
+            .header {
+                padding: 12px 16px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .header-left {
+                gap: 8px;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .btn-header {
+                padding: 6px 10px !important;
+                font-size: 0.7rem !important;
+            }
+
+            .btn-back {
+                display: none;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-number {
+                font-size: 1.8rem;
+            }
+
+            .order-card {
+                padding: 12px;
+            }
+
+            .modal-premium-content {
+                margin: 8px;
+                max-width: 100%;
+                border-radius: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .header {
+                padding: 8px 12px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-left {
+                justify-content: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .btn-header {
+                padding: 5px 8px !important;
+                font-size: 0.65rem !important;
+                flex: 1;
+                justify-content: center;
+            }
+
+            .header-status-container {
+                gap: 6px;
+            }
+
+            .btn-header-wa {
+                width: 34px;
+                height: 34px;
+                font-size: 1rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .column-header {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            .order-card {
+                padding: 10px;
+                border-radius: 10px;
+            }
+
+            .order-items {
+                font-size: 0.8rem;
+            }
+
+            .order-total {
+                font-size: 1rem;
+            }
+
+            .btn-action {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+
+            .modal-premium-content {
+                margin: 4px;
+                border-radius: 12px;
+                max-height: 95vh;
             }
         }
 
@@ -854,6 +1041,29 @@
                         </div>
                         <div class="status-switch" id="storeStatusSwitch"></div>
                     </div>
+
+                    <div class="popup-divider"></div>
+
+                    <div class="quick-schedule-container">
+                        <div class="quick-schedule-label">
+                            <i class="fas fa-calendar-day"></i> Horário de Hoje
+                        </div>
+                        <div class="quick-schedule-time" id="todayScheduleTime">Carregando...</div>
+                    </div>
+
+                    <div class="popup-divider"></div>
+
+                    <div class="popup-item" onclick="toggleDayOff(event)">
+                        <div class="store-status-info">
+                            <span>Folga Hoje</span>
+                            <small>Fechar loja por folga</small>
+                        </div>
+                        <div class="status-switch" id="dayOffSwitch"></div>
+                    </div>
+
+                    <button class="btn-manage-schedule" onclick="openProfileModal(); toggleStatusPopup(event)">
+                        <i class="fas fa-cog"></i> GERENCIAR HORÁRIOS
+                    </button>
                 </div>
             </div>
             <a href="./" class="btn-back">
@@ -936,17 +1146,7 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <div id="toastIconContainer"
-            style="background: var(--success); color: white; width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--dark); display: flex; align-items: center; justify-content: center;">
-            <i id="toastIcon" class="fas fa-bell"></i>
-        </div>
-        <div>
-            <div id="toastTitle" style="font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;">Novo Pedido!</div>
-            <div id="toastMessage" style="font-size: 0.9rem; color: var(--text-muted);">Pedido recebido</div>
-        </div>
-    </div>
+    <!-- Toast is now handled dynamically by shared.js -->
 
     <!-- Audio -->
     <audio id="notificationSound" preload="auto">
@@ -1168,7 +1368,6 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
         let tenantId = null;
         let tenantName = 'Restaurante'; // Nome do restaurante para impressoes
         let orders = [];
@@ -1257,62 +1456,40 @@
             showOrderDetails(currentOrderId);
         }
 
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
-        if (!token) window.location.href = '/login';
-
         async function init() {
             try {
-                const meRes = await fetch('/api/auth/me', { headers: API_HEADERS });
-                if (!meRes.ok) { window.location.href = '/login'; return; }
-                const meData = await meRes.json();
-                if (meData.tenant) {
-                    tenantId = meData.tenant.id;
-                    currentSettings = meData.tenant.settings || {};
-                    const isOpen = currentSettings.isOpen !== false;
-                    updateStatusUI(isOpen);
+                const meData = await initStoreInfo();
+                if (!meData) return;
 
-                    // Atualizar titulo e logo com nome da loja
-                    if (meData.tenant.name) {
-                        tenantName = meData.tenant.name;
-                        document.getElementById('pageTitle').textContent = `Quadro - ${meData.tenant.name}`;
-                        document.getElementById('storeLogo').textContent = meData.tenant.name;
-                        document.getElementById('profileStoreName').value = meData.tenant.name;
-                    }
+                tenantId = meData.tenant.id;
+                currentSettings = meData.tenant.settings || {};
+                const isOpen = currentSettings.isOpen !== false;
+                updateStatusUI(isOpen);
 
-                    // Preencher horarios no modal
-                    const schedule = currentSettings.schedule || {};
-                    const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
-                    days.forEach(day => {
-                        const daySchedule = schedule[day] || {};
-                        if (document.getElementById(`${day}-open`)) {
-                            document.getElementById(`${day}-open`).value = daySchedule.open || '';
-                            document.getElementById(`${day}-close`).value = daySchedule.close || '';
-                        }
-                    });
+                if (meData.tenant.name) {
+                    tenantName = meData.tenant.name;
+                    document.getElementById('pageTitle').textContent = `Quadro - ${meData.tenant.name}`;
+                    document.getElementById('storeLogo').textContent = meData.tenant.name;
+                    document.getElementById('profileStoreName').value = meData.tenant.name;
                 }
 
-                // Se nao tem tenantId mas tem slug na URL, buscar tenant pelo slug
-                if (!tenantId && TENANT_SLUG) {
-                    const tenantRes = await fetch(`/api/tenants/slug/${TENANT_SLUG}`, { headers: API_HEADERS });
-                    if (tenantRes.ok) {
-                        const tenantData = await tenantRes.json();
-                        tenantId = tenantData.id;
-                        // Atualizar titulo e logo com nome do tenant buscado
-                        if (tenantData.name) {
-                            tenantName = tenantData.name;
-                            document.getElementById('pageTitle').textContent = `Quadro - ${tenantData.name}`;
-                            document.getElementById('storeLogo').textContent = tenantData.name;
-                        }
+                // Preencher horarios no modal
+                const schedule = currentSettings.schedule || {};
+                const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                days.forEach(day => {
+                    const daySchedule = schedule[day] || {};
+                    if (document.getElementById(`${day}-open`)) {
+                        document.getElementById(`${day}-open`).value = daySchedule.open || '';
+                        document.getElementById(`${day}-close`).value = daySchedule.close || '';
                     }
-                }
-
-                if (!tenantId) { window.location.href = '/onboarding'; return; }
+                });
 
                 await loadOrders();
                 connectSSE();
+
+                // [NEW] Atualizar UI rápida de horários
+                updateQuickStatusUI();
+
             } catch (error) { console.error(error); }
         }
 
@@ -1438,6 +1615,27 @@
             const sw = document.getElementById('storeStatusSwitch');
             const pulse = document.querySelector('.pulse-dot');
             const sseStatus = document.getElementById('sseStatus');
+            const dayOffSw = document.getElementById('dayOffSwitch');
+
+            const daysMap = { 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab', 0: 'dom' };
+            const todayKey = daysMap[new Date().getDay()];
+            const schedule = currentSettings.schedule || {};
+            const isDayOff = schedule[todayKey]?.closed === true;
+
+            if (isDayOff) {
+                label.textContent = 'Loja em Folga';
+                label.style.color = '#ef4444';
+                desc.textContent = 'Hoje está marcado como folga 😴';
+                sw.classList.remove('active');
+                sw.classList.add('off-day');
+                dayOffSw?.classList.add('active');
+                pulse.style.background = '#ef4444';
+                sseStatus.textContent = 'Em Folga';
+                return;
+            }
+
+            dayOffSw?.classList.remove('active');
+            sw.classList.remove('off-day');
 
             if (isOpen) {
                 label.textContent = 'Loja Aberta';
@@ -1456,6 +1654,82 @@
             }
         }
 
+        /**
+         * [FIXED] Atualiza as informações rápidas de horário e folga no popup
+         */
+        function updateQuickStatusUI() {
+            if (!currentSettings) return;
+
+            // 1. Horário de Hoje
+            const daysMap = { 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab', 0: 'dom' };
+            const todayIdx = new Date().getDay();
+            const todayKey = daysMap[todayIdx];
+            const schedule = currentSettings.schedule || {};
+            const todaySch = schedule[todayKey];
+
+            const timeDisplay = document.getElementById('todayScheduleTime');
+            if (timeDisplay) {
+                if (todaySch && todaySch.open && todaySch.close && !todaySch.closed) {
+                    timeDisplay.textContent = `${todaySch.open} às ${todaySch.close}`;
+                    timeDisplay.style.color = 'var(--dark)';
+                } else {
+                    timeDisplay.textContent = 'Fechado hoje';
+                    timeDisplay.style.color = '#ef4444';
+                }
+            }
+
+            // 2. Status de Folga
+            const isDayOff = schedule[todayKey]?.closed === true;
+            document.getElementById('dayOffSwitch')?.classList.toggle('active', isDayOff);
+
+            updateStatusUI(currentSettings.isOpen !== false);
+        }
+
+        /**
+         * [FIXED] Alterna o status de folga do dia (sincronizado com schedule)
+         */
+        async function toggleDayOff(e) {
+            e.stopPropagation();
+            if (!tenantId) return;
+
+            try {
+                // PRIMEIRO: Buscar settings mais recentes para evitar perda de dados
+                const dataMe = await apiFetch('/api/auth/me');
+                if (!dataMe) return;
+
+                const settings = dataMe.tenant.settings || {};
+                const daysMap = { 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab', 0: 'dom' };
+                const todayKey = daysMap[new Date().getDay()];
+
+                if (!settings.schedule) settings.schedule = {};
+                if (!settings.schedule[todayKey]) settings.schedule[todayKey] = { open: "08:00", close: "23:00" };
+
+                // Inverter status de folga
+                const newOffStatus = !settings.schedule[todayKey].closed;
+                settings.schedule[todayKey].closed = newOffStatus;
+
+                // Mostrar carregando no switch
+                const sw = document.getElementById('dayOffSwitch');
+                if (sw) sw.style.opacity = '0.5';
+
+                await apiFetch(`/api/tenants/${tenantId}`, {
+                    method: 'PUT',
+                    body: { settings }
+                });
+
+                // Atualizar cache local e UI
+                currentSettings = settings;
+                updateQuickStatusUI();
+                showToast(newOffStatus ? 'Folga ativada para hoje!' : 'Folga desativada.', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao salvar folga', 'error');
+            } finally {
+                const sw = document.getElementById('dayOffSwitch');
+                if (sw) sw.style.opacity = '1';
+            }
+        }
+
         async function toggleStoreOpen(e) {
             e.stopPropagation();
             const sw = document.getElementById('storeStatusSwitch');
@@ -1463,24 +1737,22 @@
 
             try {
                 // Primeiro buscar settings atuais
-                const resMe = await fetch('/api/tenants/me', { headers: API_HEADERS });
-                const dataMe = await resMe.json();
-                const settings = dataMe.settings || {};
+                const dataMe = await apiFetch('/api/auth/me');
+                if (!dataMe) return;
+
+                const settings = dataMe.tenant.settings || {};
                 settings.isOpen = newStatus;
 
-                const res = await fetch(`/api/tenants/${tenantId}`, {
+                await apiFetch(`/api/tenants/${tenantId}`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ settings })
+                    body: { settings }
                 });
 
-                if (res.ok) {
-                    updateStatusUI(newStatus);
-                    showToast(newStatus ? 'Loja aberta!' : 'Loja fechada!', 'success');
-                } else {
-                    const err = await res.json();
-                    throw new Error(err.error || 'Erro ao atualizar status');
-                }
+                // [FIXED] Atualizar cache local
+                currentSettings = settings;
+
+                updateStatusUI(newStatus);
+                showToast(newStatus ? 'Loja aberta!' : 'Loja fechada!', 'success');
             } catch (e) {
                 console.error(e);
                 showToast(e.message, 'error');
@@ -1519,15 +1791,12 @@
             if (!nextStatus) return;
 
             try {
-                const res = await fetch(`/api/orders/${orderId}/status`, {
+                await apiFetch(`/api/orders/${orderId}/status`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: nextStatus })
+                    body: { status: nextStatus }
                 });
-                if (res.ok) {
-                    const order = orders.find(o => o.id === orderId);
-                    if (order) { order.status = nextStatus; renderOrders(); }
-                }
+                const order = orders.find(o => o.id === orderId);
+                if (order) { order.status = nextStatus; renderOrders(); }
             } catch (e) { console.error(e); }
         }
 
@@ -1575,7 +1844,11 @@
                                 <strong>ITENS:</strong>
                             </div>
                             ${order.items.map(i => {
-                const iAddons = i.addons || i.extras || [];
+                let iAddons = i.addons || i.extras || [];
+                if (typeof iAddons === 'string') {
+                    try { iAddons = JSON.parse(iAddons); } catch (e) { iAddons = []; }
+                }
+                if (!Array.isArray(iAddons)) iAddons = [];
                 return `
                                 <div style="display: flex; justify-content: space-between; margin: 4px 0;">
                                     <span>${i.quantity}x ${i.name}</span>
@@ -1663,7 +1936,11 @@
                     <div class="line"></div>
                     <div style="font-weight:bold;font-size:20px;">ITENS:</div>
                     ${order.items.map(i => {
-                const iAddons = i.addons || i.extras || [];
+                let iAddons = i.addons || i.extras || [];
+                if (typeof iAddons === 'string') {
+                    try { iAddons = JSON.parse(iAddons); } catch (e) { iAddons = []; }
+                }
+                if (!Array.isArray(iAddons)) iAddons = [];
                 return `
                         <div class="item"><span>${i.quantity || i.qty || 1}x ${i.name || i.title}</span><span>R$ ${((i.price || 0) * (i.quantity || i.qty || 1)).toFixed(2)}</span></div>
                         ${iAddons.length > 0 ? iAddons.map(e => `<div style="font-size:14px;padding-left:8px">+ ${e.name || e}</div>`).join('') : ''}
@@ -2052,23 +2329,17 @@
             };
 
             try {
-                const res = await fetch(`/api/orders/${order.id}`, {
+                await apiFetch(`/api/orders/${order.id}`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
+                    body: updatedData
                 });
 
-                if (res.ok) {
-                    showToast('Pedido atualizado com sucesso!');
-                    isEditing = false;
-                    const btn = document.getElementById('btnEditOrderTrigger');
-                    if (btn) btn.style.background = 'rgba(255,255,255,0.1)';
-                    await loadOrders();
-                    showOrderDetails(order.id);
-                } else {
-                    const err = await res.json();
-                    showToast('Erro: ' + (err.error || 'Nao foi possivel salvar'));
-                }
+                showToast('Pedido atualizado com sucesso!');
+                isEditing = false;
+                const btn = document.getElementById('btnEditOrderTrigger');
+                if (btn) btn.style.background = 'rgba(255,255,255,0.1)';
+                await loadOrders();
+                showOrderDetails(order.id);
             } catch (e) {
                 console.error(e);
                 showToast('Erro de conexao ao salvar');
@@ -2129,21 +2400,15 @@
             const reason = document.getElementById('blacklistReason')?.value || '';
 
             try {
-                const res = await fetch('/api/blacklist', {
+                await apiFetch('/api/blacklist', {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, reason })
+                    body: { phone, reason }
                 });
 
-                if (res.ok) {
-                    showToast('Telefone adicionado a blacklist!');
-                    closeBlacklistModal();
-                    closeOrderModal();
-                    await loadOrders();
-                } else {
-                    const err = await res.json();
-                    showToast('Erro: ' + (err.error || 'Nao foi possivel bloquear'));
-                }
+                showToast('Telefone adicionado a blacklist!');
+                closeBlacklistModal();
+                closeOrderModal();
+                await loadOrders();
             } catch (e) {
                 console.error(e);
                 showToast('Erro de conexao');
@@ -2187,20 +2452,14 @@
 
         async function deleteOrder(orderId) {
             try {
-                const res = await fetch(`/api/orders/${orderId}`, {
-                    method: 'DELETE',
-                    headers: API_HEADERS
+                await apiFetch(`/api/orders/${orderId}`, {
+                    method: 'DELETE'
                 });
 
-                if (res.ok) {
-                    showToast('Pedido apagado com sucesso!');
-                    closeDeleteOrderModal();
-                    closeOrderModal();
-                    await loadOrders();
-                } else {
-                    const err = await res.json();
-                    showToast('Erro: ' + (err.error || 'Nao foi possivel apagar'));
-                }
+                showToast('Pedido apagado com sucesso!');
+                closeDeleteOrderModal();
+                closeOrderModal();
+                await loadOrders();
             } catch (e) {
                 console.error(e);
                 showToast('Erro de conexao ao apagar');
@@ -2210,13 +2469,8 @@
         // Check if customer is blacklisted when rendering order card
         async function checkBlacklist(phone) {
             try {
-                const res = await fetch(`/api/blacklist/check/${encodeURIComponent(phone)}`, {
-                    headers: API_HEADERS
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    return data.isBlacklisted;
-                }
+                const data = await apiFetch(`/api/blacklist/check/${encodeURIComponent(phone)}`);
+                return data.isBlacklisted;
             } catch (e) {
                 console.error('Blacklist check failed:', e);
             }
@@ -2238,21 +2492,8 @@
                 const startStr = startDate.toISOString().split('T')[0];
                 const endStr = endDate.toISOString().split('T')[0];
 
-                const res = await fetch(`/api/reports/sales?startDate=${startStr}&endDate=${endStr}`, {
-                    headers: API_HEADERS
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    renderRevenuePopup(data, startDate, endDate);
-                } else {
-                    document.getElementById('revenuePopupContent').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #ef4444;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
-                            <p>Erro ao carregar dados</p>
-                        </div>
-                    `;
-                }
+                const data = await apiFetch(`/api/reports/sales?startDate=${startStr}&endDate=${endStr}`);
+                renderRevenuePopup(data, startDate, endDate);
             } catch (e) {
                 console.error('Revenue popup error:', e);
                 document.getElementById('revenuePopupContent').innerHTML = `
@@ -2383,236 +2624,10 @@
             document.getElementById('revenuePopupModal').classList.remove('active');
         }
 
-        // ========================================
-        // BUFFET DO DIA - Gerenciamento
-        // ========================================
-        let buffetItems = [];
 
-        function openBuffetModal() {
-            document.getElementById('buffetModal').classList.add('active');
-            loadBuffetItems();
-        }
 
-        function closeBuffetModal() {
-            document.getElementById('buffetModal').classList.remove('active');
-        }
 
-        async function loadBuffetItems() {
-            try {
-                const res = await fetch(`/api/buffet/tenant/${tenantId}/todos`, { headers: API_HEADERS });
-                if (res.ok) {
-                    const data = await res.json();
-                    buffetItems = data.itens || data || [];
-                    renderBuffetItems();
-                }
-            } catch (e) {
-                console.error('Erro ao carregar buffet:', e);
-            }
-        }
-
-        function renderBuffetItems() {
-            const container = document.getElementById('buffetItemsList');
-            if (buffetItems.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <i class="fas fa-utensils" style="font-size: 2rem; opacity: 0.3;"></i>
-                        <p>Nenhum item cadastrado</p>
-                        <p style="font-size: 0.85rem;">Adicione itens do buffet acima</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = '<div class="buffet-grid">' + buffetItems.map(item => `
-                <div class="buffet-card ${item.ativo ? 'active' : 'inactive'}" onclick="toggleBuffetItem('${item.id}')" title="${item.ativo ? 'Clique para Esgotar' : 'Clique para Ativar'}">
-                    <div class="buffet-card-delete" onclick="event.stopPropagation(); deleteBuffetItem('${item.id}')" title="Apagar Item">
-                        <i class="fas fa-times"></i>
-                    </div>
-                    <i class="fas ${item.ativo ? 'fa-check-circle' : 'fa-ban'} status-icon"></i>
-                    <div class="buffet-card-name">${item.nome}</div>
-                    ${item.ativo ?
-                    '<div style="font-size:0.75rem; color:#4ade80; margin-top:8px; font-weight:700;">ATIVO</div>' :
-                    '<div style="font-size:0.75rem; color:#f87171; margin-top:8px; font-weight:700;">ESGOTADO</div>'}
-                </div>
-            `).join('') + '</div>';
-        }
-
-        async function addBuffetItem() {
-            const input = document.getElementById('newBuffetItem');
-            const nome = input.value.trim();
-            if (!nome) return;
-
-            try {
-                const res = await fetch('/api/buffet', {
-                    method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tenantId, nome })
-                });
-                if (res.ok) {
-                    input.value = '';
-                    loadBuffetItems();
-                    showToast('Item adicionado ao buffet!');
-                }
-            } catch (e) {
-                console.error('Erro ao adicionar item:', e);
-            }
-        }
-
-        async function toggleBuffetItem(id) {
-            try {
-                await fetch(`/api/buffet/${id}/toggle`, { method: 'PATCH', headers: API_HEADERS });
-                loadBuffetItems();
-            } catch (e) {
-                console.error('Erro ao toggle item:', e);
-            }
-        }
-
-        async function deleteBuffetItem(id) {
-            if (!confirm('Remover este item do buffet?')) return;
-            try {
-                await fetch(`/api/buffet/${id}`, { method: 'DELETE', headers: API_HEADERS });
-                loadBuffetItems();
-                showToast('Item removido!');
-            } catch (e) {
-                console.error('Erro ao remover item:', e);
-            }
-        }
-
-        // ========================================
-        // ADICIONAIS DE ACAI - Gerenciamento
-        // ========================================
-        let acaiItems = [];
-
-        function openAcaiModal() {
-            document.getElementById('acaiModal').classList.add('active');
-            loadAcaiItems();
-        }
-
-        function closeAcaiModal() {
-            document.getElementById('acaiModal').classList.remove('active');
-        }
-
-        async function loadAcaiItems() {
-            try {
-                const res = await fetch(`/api/acai/adicionais/tenant/${tenantId}/todos`, { headers: API_HEADERS });
-                if (res.ok) {
-                    const data = await res.json();
-                    acaiItems = data.adicionais || data || [];
-                    renderAcaiItems();
-                }
-            } catch (e) {
-                console.error('Erro ao carregar acai:', e);
-            }
-        }
-
-        function renderAcaiItems() {
-            const container = document.getElementById('acaiItemsList');
-            if (acaiItems.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <i class="fas fa-leaf" style="font-size: 2rem; opacity: 0.3;"></i>
-                        <p>Nenhum adicional cadastrado</p>
-                        <p style="font-size: 0.85rem;">Adicione adicionais de acai acima</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = acaiItems.map(item => `
-                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: ${item.ativo ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border: 2px solid ${item.ativo ? '#8b5cf6' : '#ef4444'}; border-radius: 10px;">
-                    <div style="flex: 1; font-weight: 600;">${item.nome}</div>
-                    <div style="font-weight: 700; color: #22c55e;">R$ ${(item.preco || 0).toFixed(2).replace('.', ',')}</div>
-                    <button onclick="toggleAcaiItem('${item.id}')" style="background: ${item.ativo ? '#8b5cf6' : '#666'}; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 0.8rem;">
-                        ${item.ativo ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
-                    </button>
-                    <button onclick="deleteAcaiItem('${item.id}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        async function addAcaiItem() {
-            const nameInput = document.getElementById('newAcaiName');
-            const priceInput = document.getElementById('newAcaiPrice');
-            const nome = nameInput.value.trim();
-            const preco = parseFloat(priceInput.value) || 0;
-            if (!nome) return;
-
-            try {
-                const res = await fetch('/api/acai/adicionais', {
-                    method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tenantId, nome, preco })
-                });
-                if (res.ok) {
-                    nameInput.value = '';
-                    priceInput.value = '';
-                    loadAcaiItems();
-                    showToast('Adicional cadastrado!');
-                }
-            } catch (e) {
-                console.error('Erro ao adicionar adicional:', e);
-            }
-        }
-
-        async function toggleAcaiItem(id) {
-            try {
-                await fetch(`/api/acai/adicionais/${id}/toggle`, { method: 'PATCH', headers: API_HEADERS });
-                loadAcaiItems();
-            } catch (e) {
-                console.error('Erro ao toggle adicional:', e);
-            }
-        }
-
-        async function deleteAcaiItem(id) {
-            if (!confirm('Remover este adicional?')) return;
-            try {
-                await fetch(`/api/acai/adicionais/${id}`, { method: 'DELETE', headers: API_HEADERS });
-                loadAcaiItems();
-                showToast('Adicional removido!');
-            } catch (e) {
-                console.error('Erro ao remover adicional:', e);
-            }
-        }
-
-        function showToast(msg, type = 'success', title = null) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMessage');
-            const toastTitle = document.getElementById('toastTitle');
-            const toastIcon = document.getElementById('toastIcon');
-            const toastIconContainer = document.getElementById('toastIconContainer');
-
-            if (!toast || !toastMsg) return;
-
-            // Definir título padrão se não fornecido
-            if (!title) {
-                if (type === 'success') title = 'Sucesso!';
-                else if (type === 'error') title = 'Erro!';
-                else if (type === 'warning') title = 'Atenção!';
-                else title = 'Notificação';
-            }
-
-            // Configurar ícones e cores baseados no tipo
-            if (type === 'error') {
-                toastIcon.className = 'fas fa-exclamation-circle';
-                toastIconContainer.style.background = '#ef4444';
-            } else if (type === 'warning') {
-                toastIcon.className = 'fas fa-exclamation-triangle';
-                toastIconContainer.style.background = '#f59e0b';
-            } else {
-                toastIcon.className = 'fas fa-check-circle';
-                toastIconContainer.style.background = 'var(--success)';
-            }
-
-            toastTitle.textContent = title;
-            toastMsg.textContent = msg;
-            toast.className = 'toast visible ' + type;
-
-            setTimeout(() => {
-                toast.classList.remove('visible');
-            }, 3000);
-        }
+        // showToast is now handled by shared.js
 
         function openProfileModal() {
             document.getElementById('profileModal').classList.add('active');
@@ -2658,23 +2673,17 @@
             };
 
             try {
-                const res = await fetch(`/api/tenants/${tenantId}`, {
+                await apiFetch(`/api/tenants/${tenantId}`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, settings: newSettings })
+                    body: { name, settings: newSettings }
                 });
 
-                if (res.ok) {
-                    currentSettings = newSettings;
-                    tenantName = name;
-                    document.getElementById('storeLogo').textContent = name;
-                    document.getElementById('pageTitle').textContent = `Quadro - ${name}`;
-                    showToast('Perfil atualizado!');
-                    closeProfileModal();
-                } else {
-                    const err = await res.json();
-                    alert(err.error || 'Erro ao salvar perfil');
-                }
+                currentSettings = newSettings;
+                tenantName = name;
+                document.getElementById('storeLogo').textContent = name;
+                document.getElementById('pageTitle').textContent = `Quadro - ${name}`;
+                showToast('Perfil atualizado!');
+                closeProfileModal();
             } catch (e) {
                 console.error(e);
                 alert('Erro ao salvar perfil');
@@ -2704,8 +2713,7 @@
 
             try {
                 // Buscar todas categorias com seus addon groups
-                const res = await fetch('/api/category-addons/tenant', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/category-addons/tenant');
                 const categories = data.categories || [];
                 allCategories = categories;
 
@@ -2781,13 +2789,9 @@
         async function deleteBuffetItem(id) {
             if (!confirm('Remover este item do buffet?')) return;
             try {
-                const res = await fetch(`/api/category-addons/items/${id}`, { method: 'DELETE', headers: API_HEADERS });
-                if (res.ok) {
-                    showToast('Item removido!');
-                    loadBuffetItems();
-                } else {
-                    showToast('Erro ao remover', 'error');
-                }
+                await apiFetch(`/api/category-addons/items/${id}`, { method: 'DELETE' });
+                showToast('Item removido!');
+                loadBuffetItems();
             } catch (e) {
                 console.error(e);
             }
@@ -2795,21 +2799,16 @@
 
         async function toggleItemAvailability(itemId, newStatus, type) {
             try {
-                const res = await fetch(`/api/category-addons/items/${itemId}/toggle`, {
+                await apiFetch(`/api/category-addons/items/${itemId}/toggle`, {
                     method: 'PATCH',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_available: newStatus })
+                    body: { is_available: newStatus }
                 });
 
-                if (res.ok) {
-                    showToast(newStatus ? 'Item ativado!' : 'Item marcado como esgotado!');
-                    if (type === 'buffet') {
-                        await loadBuffetItems();
-                    } else {
-                        await loadAcaiItems();
-                    }
+                showToast(newStatus ? 'Item ativado!' : 'Item marcado como esgotado!');
+                if (type === 'buffet') {
+                    await loadBuffetItems();
                 } else {
-                    alert('Erro ao atualizar item');
+                    await loadAcaiItems();
                 }
             } catch (e) {
                 console.error('Erro:', e);
@@ -2849,20 +2848,14 @@
             const targetGroup = buffetGroupsList[0];
 
             try {
-                const res = await fetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
+                await apiFetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, price: 0 })
+                    body: { name, price: 0 }
                 });
 
-                if (res.ok) {
-                    input.value = '';
-                    showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
-                    await loadBuffetItems(); // Recarregar lista
-                } else {
-                    const err = await res.json();
-                    showToast('Erro: ' + (err.error || 'Falha ao adicionar'), 'error');
-                }
+                input.value = '';
+                showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
+                await loadBuffetItems(); // Recarregar lista
             } catch (e) {
                 console.error('Erro ao adicionar item:', e);
                 showToast('Erro de conexao', 'error');
@@ -2871,26 +2864,20 @@
 
         async function createBuffetGroup(categoryId) {
             try {
-                const res = await fetch('/api/category-addons/groups', {
+                await apiFetch('/api/category-addons/groups', {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    body: {
                         categoryId,
                         name: 'Itens do Buffet',
                         minSelection: 0,
                         maxSelection: 20
-                    })
+                    }
                 });
-                if (res.ok) {
-                    showToast('Grupo criado! Tentando adicionar item...');
-                    await loadBuffetItems();
-                } else {
-                    const err = await res.json();
-                    showToast('Erro ao criar grupo automatico: ' + err.error, 'error');
-                }
+                showToast('Grupo criado! Tentando adicionar item...');
+                await loadBuffetItems();
             } catch (e) {
                 console.error(e);
-                showToast('Erro de conexao', 'error');
+                showToast('Erro ao criar grupo automatico: ' + (e.message || 'Erro de conexão'), 'error');
             }
         }
 
@@ -2914,8 +2901,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Carregando...</p></div>';
 
             try {
-                const res = await fetch('/api/category-addons/tenant', { headers: API_HEADERS });
-                const data = await res.json();
+                const data = await apiFetch('/api/category-addons/tenant');
                 const categories = data.categories || [];
 
                 // Coletar todos os grupos que contem "acai" ou "topping"
@@ -2976,20 +2962,14 @@
             const targetGroup = acaiGroupsList[0];
 
             try {
-                const res = await fetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
+                await apiFetch(`/api/category-addons/groups/${targetGroup.id}/items`, {
                     method: 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, price: 0 })
+                    body: { name, price: 0 }
                 });
 
-                if (res.ok) {
-                    input.value = '';
-                    showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
-                    await loadAcaiItems(); // Recarregar lista
-                } else {
-                    const err = await res.json();
-                    showToast('Erro: ' + (err.error || 'Falha ao adicionar'), 'error');
-                }
+                input.value = '';
+                showToast(`"${name}" adicionado ao ${targetGroup.name}!`, 'success');
+                await loadAcaiItems(); // Recarregar lista
             } catch (e) {
                 console.error('Erro ao adicionar item:', e);
                 showToast('Erro de conexao', 'error');

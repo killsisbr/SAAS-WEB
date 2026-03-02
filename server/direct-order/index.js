@@ -178,13 +178,23 @@ async function loadMenu(db, tenantId) {
     }
 
     try {
-        products = await db.all(`
+        const rawProducts = await db.all(`
                 SELECT p.*, c.name as category_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE p.tenant_id = ? AND p.is_available = 1
                 ORDER BY c.order_index, p.name
             `, [tenantId]);
+
+        // Parse JSON fields safely
+        products = rawProducts.map(p => ({
+            ...p,
+            addons: typeof p.addons === 'string' ? JSON.parse(p.addons || '[]') : (p.addons || []),
+            images: typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []),
+            sizes: typeof p.sizes === 'string' ? JSON.parse(p.sizes || '[]') : (p.sizes || []),
+            size_prices: typeof p.size_prices === 'string' ? JSON.parse(p.size_prices || '{}') : (p.size_prices || {}),
+            image_settings: typeof p.image_settings === 'string' ? JSON.parse(p.image_settings || '{}') : (p.image_settings || {})
+        }));
     } catch (err) {
         console.error('[DirectOrder] Erro ao carregar produtos:', err.message);
     }

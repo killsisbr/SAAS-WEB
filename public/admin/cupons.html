@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -415,21 +416,16 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
-
-        // Extrair slug da URL para contexto do tenant
-        const TENANT_SLUG = window.location.pathname.split('/loja/')[1]?.split('/')[0] || '';
-        const API_HEADERS = { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': TENANT_SLUG };
-
         let coupons = [];
 
         async function loadCoupons() {
+            initStoreInfo();
             try {
-                const res = await fetch('/api/coupons', { headers: API_HEADERS });
-                coupons = await res.json();
+                coupons = await apiFetch('/api/coupons');
                 renderCoupons();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function renderCoupons() {
@@ -489,21 +485,26 @@
 
         async function toggleCoupon(id, isActive) {
             try {
-                await fetch(`/api/coupons/${id}`, {
+                await apiFetch(`/api/coupons/${id}`, {
                     method: 'PUT',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ isActive: !isActive })
                 });
+                showToast('Status do cupom atualizado');
                 loadCoupons();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast('Erro ao atualizar cupom', 'error');
+            }
         }
 
         async function deleteCoupon(id) {
             if (!confirm('Excluir?')) return;
             try {
-                await fetch(`/api/coupons/${id}`, { method: 'DELETE', headers: API_HEADERS });
+                await apiFetch(`/api/coupons/${id}`, { method: 'DELETE' });
+                showToast('Cupom excluído');
                 loadCoupons();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast('Erro ao excluir cupom', 'error');
+            }
         }
 
         document.getElementById('couponForm').addEventListener('submit', async (e) => {
@@ -521,14 +522,16 @@
             };
 
             try {
-                await fetch(`/api/coupons${id ? '/' + id : ''}`, {
+                await apiFetch(`/api/coupons${id ? '/' + id : ''}`, {
                     method: id ? 'PUT' : 'POST',
-                    headers: { ...API_HEADERS, 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
+                showToast('Cupom salvo com sucesso!');
                 closeModal();
                 loadCoupons();
-            } catch (e) { alert('Erro'); }
+            } catch (e) {
+                showToast('Erro ao salvar cupom', 'error');
+            }
         });
 
         loadCoupons();

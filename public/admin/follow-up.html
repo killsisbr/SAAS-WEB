@@ -9,6 +9,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/shared.js"></script>
     <style>
         * {
             margin: 0;
@@ -154,6 +155,58 @@
             box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--dark);
             margin-bottom: 32px;
         }
+
+        /* Tablet */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .chart-container {
+                padding: 16px;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .main {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
     </style>
 </head>
 
@@ -206,23 +259,15 @@
 
     <script>
         (async function init() {
-            const token = localStorage.getItem('token');
-            if (!token) { window.location.href = '/login'; return; }
-
+            initStoreInfo();
             try {
-                const res = await fetch('/api/reports/follow-up', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('statSent').textContent = data.summary.totalSent;
-                    document.getElementById('statInactive').textContent = data.summary.inactiveCount;
-                    document.getElementById('statAbandoned').textContent = data.summary.abandonedCount;
-
-                    renderChart(data.history);
-                }
+                const data = await apiFetch('/api/reports/follow-up');
+                document.getElementById('statSent').textContent = data.summary.totalSent;
+                document.getElementById('statInactive').textContent = data.summary.inactiveCount;
+                document.getElementById('statAbandoned').textContent = data.summary.abandonedCount;
+                renderChart(data.history);
             } catch (error) {
-                console.error('Erro ao carregar estatisticas:', error);
+                console.error('Erro ao carregar estatísticas:', error);
             }
         })();
 
