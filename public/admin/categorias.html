@@ -293,6 +293,63 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        /* Icon Picker Styles */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: var(--bg);
+            border: 2px solid var(--dark);
+            border-radius: 12px;
+        }
+
+        .icon-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid var(--dark);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .icon-item:hover {
+            background: var(--secondary);
+            transform: scale(1.1);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .icon-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .icon-tab {
+            padding: 6px 12px;
+            background: white;
+            border: 2px solid var(--dark);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .icon-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 display: none;
@@ -352,9 +409,21 @@
                     <input type="text" id="categoryName" required placeholder="Ex: Bebidas">
                 </div>
                 <div class="form-group">
-                    <label>Icone (FontAwesome)</label>
-                    <input type="text" id="categoryIcon" placeholder="fas fa-beer">
-                    <small style="color: var(--text-muted);">Use classes do FontAwesome 6</small>
+                    <label>Icone da Categoria</label>
+                    <div style="display: flex; gap: 10px;">
+                        <div id="iconPreview" class="category-icon" style="width: 50px; height: 50px; flex-shrink: 0;">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <input type="text" id="categoryIcon" placeholder="fas fa-folder"
+                                oninput="updateIconPreview()">
+                        </div>
+                        <button type="button" class="btn btn-secondary" style="padding: 10px;"
+                            onclick="openIconPicker()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <small style="color: var(--text-muted);">Clique na lupa para escolher um ícone</small>
                 </div>
                 <div class="form-group">
                     <label>Modo de Exibicao</label>
@@ -371,6 +440,26 @@
                     <button type="submit" class="btn btn-primary">SALVAR</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Icon Picker Modal -->
+    <div class="modal" id="iconPickerModal" style="z-index: 110;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2>Escolher Ícone</h2>
+            <div class="icon-tabs" id="iconTabs">
+                <div class="icon-tab active" onclick="filterIcons('all', this)">TUDO</div>
+                <div class="icon-tab" onclick="filterIcons('food', this)">COMIDA</div>
+                <div class="icon-tab" onclick="filterIcons('drink', this)">BEBIDA</div>
+                <div class="icon-tab" onclick="filterIcons('sweet', this)">DOCE</div>
+                <div class="icon-tab" onclick="filterIcons('other', this)">OUTROS</div>
+            </div>
+            <div class="icon-grid" id="iconGrid">
+                <!-- Icons loaded via JS -->
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeIconPicker()">FECHAR</button>
+            </div>
         </div>
     </div>
 
@@ -426,9 +515,91 @@
             document.getElementById('modalTitle').textContent = 'Editar Categoria';
             document.getElementById('categoryId').value = c.id;
             document.getElementById('categoryName').value = c.name;
-            document.getElementById('categoryIcon').value = c.icon || '';
+            document.getElementById('categoryIcon').value = c.icon || 'fas fa-folder';
+            updateIconPreview();
             document.getElementById('categoryDisplayMode').value = c.display_mode || 'default';
             document.getElementById('categoryModal').classList.add('active');
+        }
+
+        // Icon Picker Logic
+        const ICON_LIST = [
+            // FOOD
+            { class: 'fas fa-burger', tags: ['food', 'burger'] },
+            { class: 'fas fa-pizza-slice', tags: ['food', 'pizza'] },
+            { class: 'fas fa-hotdog', tags: ['food', 'hotdog'] },
+            { class: 'fas fa-taco', tags: ['food', 'taco'] },
+            { class: 'fas fa-sandwich', tags: ['food', 'sandwich'] },
+            { class: 'fas fa-egg', tags: ['food', 'egg'] },
+            { class: 'fas fa-cheese', tags: ['food', 'cheese'] },
+            { class: 'fas fa-bacon', tags: ['food', 'bacon'] },
+            { class: 'fas fa-drumstick-bite', tags: ['food', 'chicken'] },
+            { class: 'fas fa-fish', tags: ['food', 'fish'] },
+            { class: 'fas fa-shrimp', tags: ['food', 'shrimp'] },
+            { class: 'fas fa-bowl-rice', tags: ['food', 'rice'] },
+            { class: 'fas fa-bowl-food', tags: ['food', 'poke'] },
+            { class: 'fas fa-noodles', tags: ['food', 'pasta'] },
+            { class: 'fas fa-wheat-awn', tags: ['food', 'wheat'] },
+            { class: 'fas fa-seedling', tags: ['food', 'vegan'] },
+            { class: 'fas fa-leaf', tags: ['food', 'light'] },
+            // DRINK
+            { class: 'fas fa-beer-mug-empty', tags: ['drink', 'beer'] },
+            { class: 'fas fa-wine-glass', tags: ['drink', 'wine'] },
+            { class: 'fas fa-cocktail', tags: ['drink', 'cocktail'] },
+            { class: 'fas fa-glass-water', tags: ['drink', 'water'] },
+            { class: 'fas fa-bottle-water', tags: ['drink', 'bottle'] },
+            { class: 'fas fa-cup-togo', tags: ['drink', 'coffee', 'juice'] },
+            { class: 'fas fa-mug-hot', tags: ['drink', 'coffee', 'tea'] },
+            { class: 'fas fa-wine-bottle', tags: ['drink', 'bottle'] },
+            // SWEET
+            { class: 'fas fa-ice-cream', tags: ['sweet', 'icecream'] },
+            { class: 'fas fa-cookie', tags: ['sweet', 'cookie'] },
+            { class: 'fas fa-cake-candles', tags: ['sweet', 'cake'] },
+            { class: 'fas fa-candy-cane', tags: ['sweet', 'candy'] },
+            { class: 'fas fa-apple-whole', tags: ['sweet', 'fruit'] },
+            { class: 'fas fa-lemon', tags: ['sweet', 'fruit'] },
+            // OTHER
+            { class: 'fas fa-star', tags: ['other', 'promo'] },
+            { class: 'fas fa-fire', tags: ['other', 'hot'] },
+            { class: 'fas fa-heart', tags: ['other', 'love'] },
+            { class: 'fas fa-folder', tags: ['other', 'default'] },
+            { class: 'fas fa-utensils', tags: ['other', 'general'] },
+            { class: 'fas fa-tags', tags: ['other', 'promo'] }
+        ];
+
+        function openIconPicker() {
+            document.getElementById('iconPickerModal').classList.add('active');
+            filterIcons('all');
+        }
+
+        function closeIconPicker() {
+            document.getElementById('iconPickerModal').classList.remove('active');
+        }
+
+        function filterIcons(tag, el = null) {
+            const grid = document.getElementById('iconGrid');
+            const filtered = tag === 'all' ? ICON_LIST : ICON_LIST.filter(i => i.tags.includes(tag));
+
+            if (el) {
+                document.querySelectorAll('.icon-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+            }
+
+            grid.innerHTML = filtered.map(i => `
+                <div class="icon-item" onclick="selectIcon('${i.class}')">
+                    <i class="${i.class}"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectIcon(iconClass) {
+            document.getElementById('categoryIcon').value = iconClass;
+            updateIconPreview();
+            closeIconPicker();
+        }
+
+        function updateIconPreview() {
+            const val = document.getElementById('categoryIcon').value || 'fas fa-folder';
+            document.getElementById('iconPreview').innerHTML = `<i class="${val}"></i>`;
         }
 
         async function deleteCategory(id) {
@@ -456,7 +627,7 @@
             try {
                 await apiFetch(url, {
                     method,
-                    body: JSON.stringify(data)
+                    body: data
                 });
                 showToast('Categoria salva com sucesso!');
                 closeModal();

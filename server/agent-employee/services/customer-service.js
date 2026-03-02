@@ -28,7 +28,7 @@ export async function getOrCreateCustomer(db, tenantId, phone, name = null) {
             const isGenericName = !customer.name || ['Cliente', 'Cliente WhatsApp', 'Usuário'].includes(customer.name);
             if (name && !['Cliente', 'Cliente WhatsApp', 'Usuário'].includes(name) && isGenericName) {
                 await db.run(
-                    'UPDATE customers SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    'UPDATE customers SET name = ? WHERE id = ?',
                     [name, customer.id]
                 );
                 customer.name = name;
@@ -75,7 +75,7 @@ export async function updateCustomerAddress(db, customerId, address) {
         const addressJson = typeof address === 'string' ? address : JSON.stringify(address);
 
         await db.run(
-            'UPDATE customers SET address = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE customers SET address = ? WHERE id = ?',
             [addressJson, customerId]
         );
 
@@ -92,7 +92,7 @@ export async function updateCustomerAddress(db, customerId, address) {
 export async function updateCustomerName(db, customerId, name) {
     try {
         await db.run(
-            'UPDATE customers SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE customers SET name = ? WHERE id = ?',
             [name, customerId]
         );
 
@@ -141,8 +141,7 @@ export async function incrementOrderStats(db, customerId, orderTotal) {
             `UPDATE customers SET 
                 total_orders = total_orders + 1,
                 total_spent = total_spent + ?,
-                last_order_at = CURRENT_TIMESTAMP,
-                updated_at = CURRENT_TIMESTAMP
+                last_order_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
             [orderTotal, customerId]
         );

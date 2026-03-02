@@ -810,12 +810,16 @@ class WhatsAppService {
                     if (!aiConfig.enabled) {
                         console.log(`[AgentEmployee] Módulo desativado, usando modo link`);
                     } else {
+                        // Preparar link da loja unificado para o robô usar
+                        const orderLink = await this.buildOrderLink(tenantId, tenant, sanitizedNumber, null, realPhoneJid);
+
                         // Criar instância do AgentEmployee (novo agente estruturado)
                         const agent = new AgentEmployee(this.db, tenantId, {
                             employeeName: aiConfig.employeeName || 'Ana',
                             storeName: tenant?.name || 'Restaurante',
                             ollamaUrl: aiConfig.ollamaUrl || 'http://localhost:11434',
-                            model: aiConfig.model || 'gemma3:4b'
+                            model: aiConfig.model || 'gemma3:4b',
+                            catalogUrl: orderLink // Passar link unificado
                         });
 
                         // Simular digitação

@@ -178,8 +178,10 @@ async function handleGreeting(params, session, intent, interpreter, context) {
         return processOrderIntent(params, session, intent, interpreter, context);
     }
 
-    // [NOVO] Adicionar link web logo na saudação
-    const domain = settings?.domain || `${process.env.APP_DOMAIN || 'localhost:5000'}/loja/${tenantId}`;
+    // [NOVO] Adicionar link web logo na saudação com slug dinâmico
+    const tenantSlug = settings?.slug || tenantId;
+    const catalogUrl = settings?.aiEmployee?.catalogUrl;
+    const domain = catalogUrl || `${process.env.APP_DOMAIN || 'localhost:3000'}/loja/${tenantSlug}`;
     const linkMsg = `\n\nSe preferir pedir mais rápido, acesse nosso cardápio digital: *${domain}* 📲`;
 
     const aiResponse = await interpreter.generateResponse(AGENT_STATES.GREETING, context);

@@ -54,13 +54,14 @@ export class AgentEmployee {
 
             // Carregar configurações do tenant
             const tenant = await this.db.get(
-                'SELECT settings, name FROM tenants WHERE id = ?',
+                'SELECT slug, settings, name FROM tenants WHERE id = ?',
                 [this.tenantId]
             );
 
             if (tenant) {
                 this.settings = JSON.parse(tenant.settings || '{}');
                 this.settings.storeName = tenant.name;
+                this.settings.slug = tenant.slug;
             }
 
             console.log(`[AgentEmployee] Inicializado para ${this.tenantId}: ${this.products.length} produtos, ${this.addons.length} adicionais, ${this.buffet.length} buffet`);
