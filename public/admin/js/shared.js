@@ -8,7 +8,7 @@ const token = localStorage.getItem('token');
 
 // Redirect to login if no token and not already on login page
 if (!token && !window.location.pathname.includes('/login')) {
-    window.location.href = 'login';
+    window.location.href = '/login';
 }
 
 // Global context constants
@@ -24,7 +24,7 @@ function logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('tenantId');
         localStorage.removeItem('tenantSlug');
-        window.location.href = 'login';
+        window.location.href = '/login';
     }
 }
 
@@ -111,7 +111,7 @@ async function initStoreInfo() {
         if (!res.ok) {
             if (res.status === 401) {
                 localStorage.removeItem('token');
-                window.location.href = 'login';
+                window.location.href = '/login';
             }
             return null;
         }
@@ -153,7 +153,7 @@ async function apiFetch(url, options = {}) {
 
         if (response.status === 401) {
             localStorage.removeItem('token');
-            window.location.href = 'login';
+            window.location.href = '/login';
             return null;
         }
 
