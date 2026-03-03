@@ -232,6 +232,11 @@
             box-shadow: 2px 2px 0 var(--dark);
         }
 
+        .btn-reorder {
+            background: var(--bg);
+            color: var(--text);
+        }
+
         .btn-delete {
             background: var(--danger);
             color: white;
@@ -497,7 +502,7 @@
                 list.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600;">Nenhuma categoria encontrada.</div>';
                 return;
             }
-            list.innerHTML = categories.map(c => `
+            list.innerHTML = categories.map((c, index) => `
                 <div class="category-card">
                     <div class="category-icon"><i class="${c.icon || 'fas fa-folder'}"></i></div>
                     <div class="category-info">
@@ -505,8 +510,18 @@
                         <div class="category-count">${c.product_count || 0} produtos</div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <button class="btn-icon" onclick="editCategory('${c.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon btn-delete" onclick="deleteCategory('${c.id}')"><i class="fas fa-trash"></i></button>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn-icon btn-reorder" onclick="reorderCategory('${c.id}', -1)" title="Subir" ${index === 0 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <button class="btn-icon btn-reorder" onclick="reorderCategory('${c.id}', 1)" title="Descer" ${index === categories.length - 1 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn-icon" onclick="editCategory('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon btn-delete" onclick="deleteCategory('${c.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -640,6 +655,35 @@
                 showToast(e.message || 'Erro ao deletar', 'error');
             }
         });
+
+        async function reorderCategory(id, direction) {
+            const index = categories.findIndex(c => c.id === id);
+            if (index === -1) return;
+
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= categories.length) return;
+
+            // Swap
+            const temp = categories[index];
+            categories[index] = categories[newIndex];
+            categories[newIndex] = temp;
+
+            // Render localmente para feedback imediato
+            render();
+
+            // Salvar no servidor
+            try {
+                const orderData = categories.map((c, i) => ({ id: c.id, index: i }));
+                await apiFetch('/api/categories/reorder', {
+                    method: 'PUT',
+                    body: { order: orderData }
+                });
+                showToast('Ordem atualizada!');
+            } catch (e) {
+                showToast('Erro ao salvar ordem', 'error');
+                loadCategories(); // Rollback
+            }
+        }
 
         document.getElementById('categoryForm').addEventListener('submit', async (e) => {
             e.preventDefault();

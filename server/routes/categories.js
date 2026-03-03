@@ -116,13 +116,13 @@ export default function (db) {
                 LEFT JOIN products p ON p.category_id = c.id
                 WHERE c.tenant_id = ?
                 GROUP BY c.id
-                ORDER BY c.order_index ASC
+                ORDER BY c.order_index ASC, c.name ASC
             `, [req.tenantId]);
 
             res.json(categories);
         } catch (error) {
-            console.error('Get categories error:', error);
-            res.status(500).json({ error: 'Erro ao buscar categorias' });
+            console.error('Get categories error:', error.message, error.stack);
+            res.status(500).json({ error: 'Erro ao buscar categorias', desc: String(error) });
         }
     });
 
@@ -167,6 +167,31 @@ export default function (db) {
         } catch (error) {
             console.error('Create category error:', error);
             res.status(500).json({ error: 'Erro ao criar categoria' });
+        }
+    });
+
+    // ========================================
+    // PUT /api/categories/reorder - Reordenar
+    // ========================================
+    router.put('/reorder', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
+        try {
+            const { order } = req.body; // [{ id: '...', index: 0 }, ...]
+
+            if (!Array.isArray(order)) {
+                return res.status(400).json({ error: 'Ordem invalida' });
+            }
+
+            for (const item of order) {
+                await db.run(
+                    'UPDATE categories SET order_index = ? WHERE id = ? AND tenant_id = ?',
+                    [item.index, item.id, req.tenantId]
+                );
+            }
+
+            res.json({ success: true, message: 'Ordem atualizada' });
+        } catch (error) {
+            console.error('Reorder categories error:', error);
+            res.status(500).json({ error: 'Erro ao reordenar' });
         }
     });
 
@@ -245,30 +270,7 @@ export default function (db) {
         }
     });
 
-    // ========================================
-    // PUT /api/categories/reorder - Reordenar
-    // ========================================
-    router.put('/reorder', authMiddleware(db), tenantMiddleware(db), async (req, res) => {
-        try {
-            const { order } = req.body; // [{ id: '...', index: 0 }, ...]
 
-            if (!Array.isArray(order)) {
-                return res.status(400).json({ error: 'Ordem invalida' });
-            }
-
-            for (const item of order) {
-                await db.run(
-                    'UPDATE categories SET order_index = ? WHERE id = ? AND tenant_id = ?',
-                    [item.index, item.id, req.tenantId]
-                );
-            }
-
-            res.json({ success: true, message: 'Ordem atualizada' });
-        } catch (error) {
-            console.error('Reorder categories error:', error);
-            res.status(500).json({ error: 'Erro ao reordenar' });
-        }
-    });
 
     return router;
 }

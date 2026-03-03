@@ -2900,10 +2900,12 @@
                 for (const cat of categories) {
                     if (cat.addonGroups) {
                         for (const group of cat.addonGroups) {
-                            if (group.name.toLowerCase().includes('acai') ||
-                                group.name.toLowerCase().includes('topping') ||
-                                group.name.toLowerCase().includes('complemento') ||
-                                cat.name.toLowerCase().includes('acai')) {
+                            const gName = group.name.toLowerCase();
+                            const cName = cat.name.toLowerCase();
+                            if (gName.includes('acai') || gName.includes('açai') || gName.includes('açaí') ||
+                                gName.includes('topping') ||
+                                gName.includes('complemento') ||
+                                cName.includes('acai') || cName.includes('açai') || cName.includes('açaí')) {
                                 acaiGroupsList.push({ ...group, categoryName: cat.name });
                             }
                         }

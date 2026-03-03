@@ -73,7 +73,7 @@ export class AIInterpreter {
         }
 
         // Entrega
-        if (/entrega|entregar|delivery|manda|trazer/i.test(msg)) {
+        if (/\b(entrega|entregar|delivery|trazer)\b/i.test(msg)) {
             return { type: 'DELIVERY' };
         }
 
@@ -112,19 +112,25 @@ export class AIInterpreter {
     async interpretWithAI(message, currentState, context) {
         const { products = [] } = context;
 
-        const productList = products.map(p => `- ${p.name}: R$ ${p.price}`).join('\n');
+        // Separar produtos principais de adicionais
+        const mainProducts = products.filter(p => p._type === 'product');
+        const addonItems = products.filter(p => p._type === 'addon');
+        const productList = mainProducts.map(p => `- ${p.name}: R$ ${p.price}`).join('\n');
+        const addonList = addonItems.map(a => `- ${a.name}: R$ ${a.price}`).join('\n');
 
-        const systemPrompt = `Extraia dados ESTRITAMENTE em formato JSON puro. NENHUM TEXTO ANTES OU DEPOIS.
+        const systemPrompt = `Aja como um extrator de JSON.
+Responda APENAS o JSON.
 
-CARDÁPIO:
+CATALOGO:
 ${productList}
 
-EXEMPLOS:
-"2 PRODUTO_A sem cebola" -> {"type":"ORDER","items":[{"name":"PRODUTO_A","quantity":2,"modifiers":[],"observation":"sem cebola"}],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
-"quero um PRODUTO_B" -> {"type":"ORDER","items":[{"name":"PRODUTO_B","quantity":1,"modifiers":[],"observation":null}],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
-"fechar pedido" -> {"type":"FINALIZE_CART","items":[],"deliveryType":null,"address":null,"paymentMethod":null,"understood":true}
+ADICIONAIS:
+${addonList || 'Nenhum'}
 
-Saída (SEMPRE JSON puro, sem crases de marcacao de codigo markdown):`;
+FORMATO:
+{"type":"ORDER","items":[{"name":"NOME_EXATO","quantity":1,"modifiers":["ADICIONAL_EXATO"],"observation":null}],"understood":true}
+
+MENSAGEM: "${message}"`;
 
         const response = await this.ollama.generateResponse(
             systemPrompt,
@@ -187,9 +193,9 @@ Saída (SEMPRE JSON puro, sem crases de marcacao de codigo markdown):`;
         const isInitialState = state === 'GREETING' || (cart?.items?.length === 0 && (state === 'ORDERING' || state === 'START'));
         const greetingRule = isInitialState
             ? (customerContext.isReturningCustomer
-                ? `CLIENTE RECORRENTE! Já fez ${customerContext.totalOrders} pedido(s). ${customerContext.isVIP ? '⭐ CLIENTE VIP!' : ''} Use uma saudação calorosa tipo "Que bom te ver de novo!" ou "Já conheço você!"`
-                : 'Cliente novo, seja acolhedor(a).')
-            : 'CONVERSA EM ANDAMENTO: Seja direto e objetivo. NÃO repita saudações iniciais (já nos cumprimentamos). Vá direto ao assunto.';
+                ? `CLIENTE RECORRENTE. Seja direto: "Olá ${customerName || 'Cliente'}, o que deseja hoje?". NÃO se apresente nem diga quem você é.`
+                : `Cliente novo. Diga apenas: "Olá${customerName && customerName !== 'Cliente' ? ' ' + customerName : ''}, o que deseja hoje?". NÃO se apresente nem explique quem você é.`)
+            : 'CONVERSA EM ANDAMENTO: Seja direto e objetivo. NÃO repita saudações iniciais. Vá direto ao assunto.';
 
         // Regras dinâmicas baseadas no carrinho
         const hasMarmita = cart?.items?.some(i => i.name.toLowerCase().includes('marmita'));
@@ -234,7 +240,7 @@ Sua única frase de resposta:`;
      */
     getStateObjective(state, intent) {
         switch (state) {
-            case 'GREETING': return 'Dê boas-vindas e pergunte o que o cliente deseja pedir hoje.';
+            case 'GREETING': return 'Pergunte de forma DIRETA o que o cliente deseja pedir. NÃO se apresente.';
             case 'ORDERING':
                 if (intent?.type === 'FINALIZE_CART') return 'Confirme o carrinho e pergunte se será para entrega ou retirada.';
                 if (intent?.type === 'ORDER') return 'Confirme os itens adicionados e pergunte se ele deseja algo mais ou se podemos finalizar.';

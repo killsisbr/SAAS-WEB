@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Imagens - DeliveryHub</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/admin/css/style.css" rel="stylesheet">
+    <style>
+        .image-hunt-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .hunt-item {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            gap: 16px;
+            box-shadow: 4px 4px 0 var(--border);
+            transition: transform 0.2s;
+        }
+
+        .hunt-item:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--border);
+        }
+
+        .hunt-item-img {
+            width: 80px;
+            height: 80px;
+            background: var(--bg);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--text-muted);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .hunt-item-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hunt-item-info {
+            flex: 1;
+        }
+
+        .hunt-item-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .hunt-item-cat {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .hunt-item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .hunt-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .btn-google {
+            background: #ffffff;
+            color: #4285f4;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .hunt-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hunt-item-actions {
+                flex-direction: column;
+            }
+
+            .hunt-item-img {
+                width: 100%;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Nav (Mesma de Produtos) -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2
+                style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; letter-spacing: -1px; margin: 0; color: var(--primary);">
+                Delivery<span style="color: var(--text);">Hub</span></h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="quadro"><i class="fas fa-border-all"></i> Quadro de Pedidos</a></li>
+            <li><a href="produtos"><i class="fas fa-box"></i> Produtos</a></li>
+            <li><a href="categorias"><i class="fas fa-tags"></i> Categorias</a></li>
+            <li>
+                <div
+                    style="padding: 10px 15px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 1px; margin-top: 10px;">
+                    Ferramentas</div>
+            </li>
+            <li class="active"><a href="imagens"><i class="fas fa-images"></i> Busca de Imagens</a></li>
+            <li><a href="config"><i class="fas fa-cog"></i> Configuracoes</a></li>
+        </ul>
+        <div style="position: absolute; bottom: 20px; width: 100%; padding: 0 20px;">
+            <button onclick="logout()" class="btn btn-secondary"
+                style="width: calc(100% - 40px); justify-content: center;"><i class="fas fa-sign-out-alt"></i>
+                Sair</button>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main-content" id="main-content">
+        <div class="header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <div class="page-title"><i class="fas fa-images"></i> Caça de Imagens Google</div>
+            </div>
+            <div>
+                <a href="produtos" class="btn btn-secondary hide-on-desktop"><i class="fas fa-arrow-left"></i>
+                    Voltar</a>
+            </div>
+        </div>
+
+        <div class="content" style="max-width: 1000px; margin: 0 auto;">
+            <div class="card" style="border-color: var(--primary);">
+                <div class="card-title"><i class="fas fa-search" style="color: var(--primary);"></i> Encontrar Fotos dos
+                    Produtos</div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Pesquise as marcas e sabores oficiais no
+                    Google Imagens. Ao encontrar a foto ideal, clique com o direito na imagem, copie o "Endereco da
+                    Imagem" (Link) e cole no campo abaixo para salva-la instantaneamente no cardapio.</p>
+
+                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="brandFilter" placeholder="Sufixo (ex: Kibon, Nestle, Jundia)"
+                        class="hunt-input" style="max-width: 250px;">
+                    <button class="btn btn-secondary" onclick="renderHuntList()"><i class="fas fa-filter"></i> Adicionar
+                        Marca a Busca</button>
+                </div>
+
+                <div id="loading" style="text-align: center; padding: 40px; color: var(--primary);">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p style="margin-top: 15px; font-weight: 700;">Carregando catalogo...</p>
+                </div>
+
+                <div class="image-hunt-grid" id="huntGrid" style="display: none;">
+                    <!-- Itens renderizados aqui -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <script src="/admin/js/api.js"></script>
+    <script src="/admin/js/auth.js"></script>
+    <script>
+        let allProducts = [];
+        let categoriesMap = {};
+
+        async function loadData() {
+            try {
+                // Fetch Categories
+                const catRes = await apiFetch('/api/categories');
+                catRes.forEach(c => categoriesMap[c.id] = c.name);
+
+                // Fetch Products
+                allProducts = await apiFetch('/api/products');
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('huntGrid').style.display = 'flex';
+
+                renderHuntList();
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao carregar produtos");
+            }
+        }
+
+        function renderHuntList() {
+            const grid = document.getElementById('huntGrid');
+            const brandSufix = document.getElementById('brandFilter').value.trim();
+
+            grid.innerHTML = allProducts.map(p => {
+                let firstImage = '';
+                if (p.images && p.images.length > 0) {
+                    try {
+                        let imgs = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+                        if (imgs.length > 0) firstImage = imgs[0];
+                    } catch (e) { }
+                }
+
+                const catName = categoriesMap[p.category_id] || 'Sem Categoria';
+                const searchQuery = encodeURIComponent(p.name + (brandSufix ? ' ' + brandSufix : ''));
+
+                return `
+                    <div class="hunt-item">
+                        <div class="hunt-item-img">
+                            ${firstImage ? `<img src="${firstImage}" alt="${p.name}">` : '<i class="fas fa-camera"></i>'}
+                        </div>
+                        <div class="hunt-item-info">
+                            <div class="hunt-item-title">${p.name}</div>
+                            <div class="hunt-item-cat"><i class="fas fa-tag"></i> ${catName}</div>
+                            <div class="hunt-item-actions">
+                                <a href="https://www.google.com/search?tbm=isch&q=${searchQuery}" target="_blank" class="btn btn-google">
+                                    <i class="fab fa-google"></i> Procurar no Google
+                                </a>
+                                <input type="text" class="hunt-input" id="img_${p.id}" placeholder="Cole a URL da Imagem aqui..." value="${firstImage}">
+                                <button class="btn btn-primary" onclick="saveImage('${p.id}')">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function saveImage(productId) {
+            const url = document.getElementById(`img_${productId}`).value.trim();
+            if (!url) {
+                alert("Cole um link valido primeiro!");
+                return;
+            }
+
+            try {
+                // Buscar dados atuais do produto para nao sobreescrever
+                const prod = allProducts.find(p => p.id === productId);
+                const updateData = {
+                    name: prod.name,
+                    category_id: prod.category_id,
+                    price: prod.price,
+                    description: prod.description || '',
+                    images: [url], // Substituindo com a nova imagem URL
+                    is_available: prod.is_available,
+                    is_featured: prod.is_featured,
+                    has_addons: prod.has_addons
+                };
+
+                await apiFetch(`/api/products/${productId}`, {
+                    method: 'PUT',
+                    body: updateData
+                });
+
+                // Update local array
+                prod.images = [url];
+                renderHuntList();
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao salvar imagem.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+    </script>
+</body>
+
+</html>

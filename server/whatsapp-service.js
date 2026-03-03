@@ -1129,11 +1129,10 @@ class WhatsAppService {
                     .replace(/\{link\}/gi, orderLink)
                     .replace(/\{nome\}/gi, customerName || 'Cliente');
             } else {
-                // Mensagem padrao
-                welcomeMessage = `Ol\u00E1! Bem-vindo ao ${restaurantName}!\n\n` +
-                    `Eu sou o rob\u00F4 de atendimento. Posso te ajudar a fazer pedidos rapidamente!\n\n` +
-                    `Para come\u00E7ar seu pedido agora, clique no link abaixo:\n${orderLink}\n\n` +
-                    `Dica: Seu pedido j\u00E1 estar\u00E1 vinculado ao seu WhatsApp!`;
+                // Mensagem padrao - direta e objetiva
+                const nameGreeting = customerName && customerName !== 'Cliente' ? ` ${customerName}` : '';
+                welcomeMessage = `Olá${nameGreeting}! O que deseja pedir hoje?\n\n` +
+                    `Acesse nosso cardápio: ${orderLink}`;
             }
 
             return await this.safeSendMessage(tenantId, jid, welcomeMessage, sock);

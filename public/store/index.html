@@ -244,108 +244,9 @@
             margin-bottom: 20px;
         }
 
-        /* === TEMA ELEGANT (LISTA PREMIUM) === */
-        [data-theme="elegant"] {
-            --primary-red: #D4AF37;
-            /* Dourado */
-            --bg-color: #121212;
-            /* Preto Fosco */
-            --dark: #D4AF37;
-            --yellow: #F4E0AO;
-            --card-bg: #1E1E1E;
-            --text-color: #E0E0E0;
-            --accent-blue: #D4AF37;
-            --pattern-opacity: 0.05;
-            --radius: 4px;
-            --border-width: 1px;
-            --border-style: solid;
-            --shadow-offset: 0px;
-            --modal-rotate: 0deg;
-            --font-main: 'Lato', sans-serif;
-            --font-display: 'Playfair Display', serif;
-        }
+        /* ELEGANT: CSS definido mais abaixo (unica definicao) */
 
-        [data-theme="elegant"] .bebas {
-            font-family: var(--font-display) !important;
-            letter-spacing: 0;
-            font-weight: 700;
-            font-style: italic;
-            text-transform: none;
-        }
-
-        .product-elegant-item {
-            display: flex;
-            align-items: center;
-            background: transparent;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 24px 0;
-            gap: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .product-elegant-item:hover {
-            padding-left: 10px;
-            background: linear-gradient(90deg, rgba(212, 175, 55, 0.05), transparent);
-        }
-
-        .product-elegant-image {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--primary-red);
-            padding: 2px;
-        }
-
-        /* === TEMA GLASS (GRID MODERNO) === */
-        [data-theme="glass"] {
-            --primary-red: #ffffff;
-            --bg-color: #2c0e52;
-            /* Sera substituido por gradient */
-            --dark: rgba(255, 255, 255, 0.2);
-            --yellow: #00d4ff;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --text-color: #ffffff;
-            --accent-blue: #bd00ff;
-            --pattern-opacity: 0;
-            --radius: 24px;
-            --border-width: 1px;
-            --border-style: solid;
-            --shadow-offset: 0px;
-            --modal-rotate: 0deg;
-            --font-main: 'Outfit', sans-serif;
-        }
-
-        [data-theme="glass"] body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #2c0e52);
-            background-attachment: fixed;
-        }
-
-        [data-theme="glass"] .logo-section {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0 0 30px 30px;
-            margin-bottom: 30px;
-        }
-
-        [data-theme="glass"] .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        [data-theme="glass"] .glass-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
+        /* GLASS: CSS definido mais abaixo (unica definicao) */
 
         /* === TEMA SOCIAL (RODOZIO/FEED) === */
         [data-theme="social"] {
@@ -1073,7 +974,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow-x: hidden;
-            transition: all 0.4s ease;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
         [data-theme="doodle"] body {
@@ -1115,14 +1016,16 @@
 
         .modal-overlay {
             background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s ease;
+            transition: opacity 0.25s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 200;
+            will-change: opacity;
         }
 
         .modal-active.modal-overlay {
@@ -1540,9 +1443,10 @@
                             class="w-full bg-zinc-500/5 border-2 border-dark p-3 rounded-xl font-bold focus:outline-none min-h-[40px] text-sm resize-none"></textarea>
                     </div>
 
-                    <!-- ADICIONAIS / BORDAS -->
+                    <!-- ADICIONAIS E COMPLEMENTOS -->
                     <div id="extras-section">
-                        <label class="bebas text-xl block mb-3 uppercase tracking-tight">Bordas e Adicionais</label>
+                        <label class="bebas text-xl block mb-3 uppercase tracking-tight">Adicionais e
+                            Complementos</label>
                         <div class="space-y-3" id="extras-container"></div>
                     </div>
                 </div>
@@ -2000,7 +1904,6 @@
         const themes = [
             'retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy', 'modern', 'compact',
             'elegant', 'glass', 'social', 'arcade', 'organic', 'neon', 'sketch',
-            'fashion', 'petshop', 'pharmacy',
             'retro-list', 'midnight-list', 'vibe-list', 'doodle-list', 'luxury-list', 'matrix-list', 'candy-list'
         ];
         let currentThemeIdx = 0;
@@ -2978,27 +2881,63 @@
                                 ${cat.name}
                             </h2>
                         </div>
-                        <div class="${gridClass}">
-                            ${cat.products.map(prod => {
-                    if (isCompact) return renderProductCompact(prod);
-                    if (isElegant) return renderProductElegant(prod);
-                    if (isSocial) return renderProductSocial(prod);
-                    if (isArcade) return renderProductArcade(prod);
-                    if (isOrganic) return renderProductOrganic(prod);
-                    if (isNeon) return renderProductNeon(prod);
-                    if (isSketch) return renderProductSketch(prod);
-                    if (isGlass) return renderProductCard(prod); // Glass usa card padrao com CSS alterado
+                        <div class="${gridClass}" id="grid-${cat.id}">
+                            ${cat.products.map((prod, index) => {
+                    let htmlComponent = '';
+                    if (isCompact) htmlComponent = renderProductCompact(prod);
+                    else if (isElegant) htmlComponent = renderProductElegant(prod);
+                    else if (isSocial) htmlComponent = renderProductSocial(prod);
+                    else if (isArcade) htmlComponent = renderProductArcade(prod);
+                    else if (isOrganic) htmlComponent = renderProductOrganic(prod);
+                    else if (isNeon) htmlComponent = renderProductNeon(prod);
+                    else if (isSketch) htmlComponent = renderProductSketch(prod);
+                    else if (isGlass) htmlComponent = renderProductCard(prod);
+                    else if (isLayoutList) htmlComponent = renderProductList(prod);
+                    else htmlComponent = isCircular ? renderProductCardCircular(prod) : renderProductCard(prod);
 
-                    // Se for o modo lista forcada para temas padrao, usar renderProductList
-                    if (isLayoutList) return renderProductList(prod);
-
-                    // Modern usa o card padrao agora (com CSS flat)
-                    return isCircular ? renderProductCardCircular(prod) : renderProductCard(prod);
+                    const hiddenStyle = index >= 5 ? 'style="display: none;" class="hidden-prod"' : '';
+                    return `<div ${hiddenStyle}>${htmlComponent}</div>`;
                 }).join('')}
                         </div>
+                        ${cat.products.length > 5 ? `
+                        <div class="flex justify-center w-full mt-4 mb-2">
+                            <button onclick="toggleMoreProducts('${cat.id}', this)" 
+                                    class="px-5 py-2 rounded-full border-2 border-dark/30 text-sm font-bold tracking-wide flex items-center gap-2 hover:bg-brand/10 active:scale-95 transition-all opacity-60 hover:opacity-100 bg-card">
+                                <span>Mostrar mais ${cat.products.length - 5}</span>
+                                <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>` : ''}
                     </div>
                 `;
             }).join('');
+        }
+
+        function toggleMoreProducts(catId, btn) {
+            const grid = document.getElementById(`grid-${catId}`);
+            const hiddenProds = grid.querySelectorAll('.hidden-prod');
+            const isExpanding = btn.innerText.includes('Mostrar');
+
+            hiddenProds.forEach(div => {
+                div.style.display = isExpanding ? 'block' : 'none';
+            });
+
+            if (isExpanding) {
+                btn.innerHTML = `
+                    <span>Ver menos</span>
+                    <svg class="w-4 h-4 rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                `;
+            } else {
+                btn.innerHTML = `
+                    <span>Mostrar mais ${hiddenProds.length}</span>
+                    <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                `;
+            }
         }
 
         // === RENDERERS DE TEMAS ===
@@ -3012,8 +2951,8 @@
             return `
                 <div class="product-organic-item" onclick="openProductById('${product.id}')">
                     <img src="${imgUrl}" alt="${product.name}" class="product-organic-img"
-                         onerror="this.src='https://placehold.co/100x100/f1f8e9/2d6a4f?text=IMG'">
-                    
+                        onerror="this.src='https://placehold.co/100x100/f1f8e9/2d6a4f?text=IMG'">
+
                     <div style="flex: 1;">
                         <h3 style="font-size: 1.1rem; margin-bottom: 2px;">${product.name}</h3>
                         ${desc ? `<p style="font-size: 0.85rem; opacity: 0.7; margin: 0;">${desc}</p>` : ''}
@@ -3036,8 +2975,8 @@
             return `
                 <div class="product-neon-item" onclick="openProductById('${product.id}')">
                     <img src="${imgUrl}" alt="${product.name}" class="product-neon-img"
-                         onerror="this.src='https://placehold.co/100x100/050505/ff0055?text=IMG'">
-                    
+                        onerror="this.src='https://placehold.co/100x100/050505/ff0055?text=IMG'">
+
                     <div style="flex: 1;">
                         <h3 style="color: #fff; font-size: 1rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">${product.name}</h3>
                         ${desc ? `<p style="font-size: 0.8rem; color: #888; margin: 0;">${desc}</p>` : ''}
@@ -3060,8 +2999,8 @@
             return `
                 <div class="product-sketch-item" onclick="openProductById('${product.id}')">
                     <img src="${imgUrl}" alt="${product.name}" class="product-sketch-img"
-                         onerror="this.src='https://placehold.co/100x100/fdf6e3/333333?text=IMG'">
-                    
+                        onerror="this.src='https://placehold.co/100x100/fdf6e3/333333?text=IMG'">
+
                     <div style="flex: 1;">
                         <div class="product-sketch-name">${product.name}</div>
                         ${desc ? `<p style="font-size: 0.9rem; margin: 4px 0 0; line-height: 1.2;">- ${desc}</p>` : ''}
@@ -3093,8 +3032,8 @@
             return `
                 <div class="product-compact-item" onclick="openProductById('${product.id}')">
                     <img src="${imgUrl}" alt="${product.name}" class="product-compact-img"
-                         onerror="this.src='https://placehold.co/100x100?text=IMG'">
-                    
+                        onerror="this.src='https://placehold.co/100x100?text=IMG'">
+
                     <div class="product-compact-info">
                         <h3 class="font-bold text-base text-textMain mb-0">${product.name}</h3>
                         ${desc ? `<p class="text-xs opacity-60 line-clamp-1 mt-0.5">${desc}</p>` : ''}
@@ -3104,7 +3043,7 @@
                         <span class="font-bold text-sm text-brand whitespace-nowrap">R$ ${priceStr}</span>
                         <div class="w-6 h-6 rounded-full bg-brand/10 text-brand flex items-center justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                         </div>
                     </div>
@@ -3131,8 +3070,8 @@
             return `
                 <div class="product-list-item group" onclick="openProductById('${product.id}')">
                     <img src="${imgUrl}" alt="${product.name}" class="product-list-img"
-                         onerror="this.src='https://placehold.co/400x300?text=Sem+Imagem'">
-                    
+                        onerror="this.src='https://placehold.co/400x300?text=Sem+Imagem'">
+
                     <div class="product-list-info">
                         <h3 class="font-bold text-lg leading-tight mb-1 text-textMain">${product.name}</h3>
                         ${desc ? `<p class="text-xs opacity-60 line-clamp-2 leading-relaxed">${desc}</p>` : ''}
@@ -3142,7 +3081,7 @@
                         <span class="font-bold text-lg text-brand whitespace-nowrap">R$ ${priceStr}</span>
                         <button class="bg-brand/10 text-brand rounded-full p-2 hover:bg-brand hover:text-white transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                         </button>
                     </div>
@@ -3168,10 +3107,8 @@
 
 
             return `
-                <div class="neo-card rounded-custom overflow-hidden product-item group" 
-                     data-title="${product.name}" data-id="${product.id}">
-                    <div class="h-60 relative cursor-pointer overflow-hidden"
-                         onclick="openProductById('${product.id}')">
+                <div class="neo-card rounded-custom overflow-hidden product-item group" data-title="${product.name}" data-id="${product.id}">
+                    <div class="h-60 relative cursor-pointer overflow-hidden" onclick="openProductById('${product.id}')">
                         <img src="${imgUrl}" alt="${product.name}"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                              style="${product.image_settings ? `transform: scale(${(product.image_settings.zoom || 1.0) * 1.05}); object-position: ${product.image_settings.posX || 50}% ${product.image_settings.posY || 50}%;` : ''}"
@@ -3304,7 +3241,7 @@
 
 
             // Verificar se e acai - PRIMEIRO buscar adicionais da CATEGORIA
-            const isAcai = catName.includes('acai') || catName.includes('bowl');
+            const isAcai = catName.includes('acai') || catName.includes('açai') || catName.includes('açaí') || catName.includes('bowl');
 
             if (isAcai && product.category_id) {
                 try {
@@ -3522,7 +3459,7 @@
                             const sizePrice = sizePrices[size] || sizePrices[size.toLowerCase()] || price;
                             const isFirst = idx === 0;
                             return `
-                                <button type="button" 
+                                <button type="button"
                                     onclick="selectSize('${size}', ${sizePrice})"
                                     id="size-btn-${size}"
                                     class="flex-1 py-4 px-6 rounded-2xl border-2 border-dark bebas text-2xl transition-all ${isFirst ? 'bg-brand text-white' : 'bg-card'}"
@@ -3558,7 +3495,7 @@
                         const sizePrice = productSizePrices[size];
                         const isFirst = idx === 1; // M como padrao
                         return `
-                            <button type="button" 
+                            <button type="button"
                                 onclick="selectSize('${size}', ${sizePrice})"
                                 id="size-btn-${size}"
                                 class="flex-1 py-3 px-4 rounded-2xl border-2 border-dark bebas text-xl transition-all ${isFirst ? 'bg-brand text-white' : 'bg-card'}"
@@ -3630,7 +3567,7 @@
 
                 if (productAddons.length > 0) {
                     container.innerHTML = productAddons.map(addon => `
-                        <div class="flex items-center justify-between group cursor-pointer" 
+                        <div class="flex items-center justify-between group cursor-pointer"
                              onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}')">
                             <div class="flex items-center gap-3">
                                 <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
@@ -3775,11 +3712,11 @@
 
             // === ATUALIZAR TITULO ===
             const originalTitle = currentItem.title;
-            document.getElementById('modal-title').innerText = `${originalTitle} + ${productName}`;
+            document.getElementById('modal-title').innerText = `${originalTitle} + ${productName} `;
 
             // === ATUALIZAR DESCRICAO (combinar ingredientes) ===
             const firstDesc = currentItem.desc || '';
-            const combinedDesc = `1/2 ${firstDesc} | 1/2 ${secondDesc}`;
+            const combinedDesc = `1 / 2 ${firstDesc} | 1 / 2 ${secondDesc} `;
             document.getElementById('modal-desc').innerText = combinedDesc;
 
             // Atualizar UI
@@ -3819,14 +3756,17 @@
         }
 
         function openModal(id) {
-            document.getElementById(id).classList.add('modal-active');
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            document.body.style.paddingRight = scrollbarWidth + 'px';
             document.body.style.overflow = 'hidden';
+            document.getElementById(id).classList.add('modal-active');
             if (id === 'checkout-modal' && checkoutType === 'entrega') setTimeout(initMap, 300);
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('modal-active');
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
 
         // ===== MAPA FULLSCREEN =====
@@ -3942,7 +3882,7 @@
                     const accuracy = position.coords.accuracy;
 
                     // Debug: mostrar coordenadas no console
-                    console.log(`[GPS] Lat: ${lat}, Lng: ${lng}, Precisao: ${accuracy}m`);
+                    console.log(`[GPS] Lat: ${lat}, Lng: ${lng}, Precisao: ${accuracy} m`);
 
                     // Salvar coordenadas
                     document.getElementById('cust-coordinates').value = JSON.stringify({ lat, lng });
@@ -3981,7 +3921,7 @@
                         // Tem endereco salvo - perguntar se quer usar
                         showPopup(
                             'LOCALIZAÇÃO NEGADA',
-                            `Encontramos seu último endereço:\n${cached.address}\n\nDeseja usar este endereço?`,
+                            `Encontramos seu último endereço: \n${cached.address} \n\nDeseja usar este endereço ? `,
                             'warning'
                         );
                         // Usar o endereco anterior automaticamente
@@ -4093,7 +4033,7 @@
             }
 
             // Preencher campos reais do checkout
-            const fullAddress = number ? `${street}, ${number}` : street;
+            const fullAddress = number ? `${street}, ${number} ` : street;
             document.getElementById('cust-address').value = fullAddress;
             document.getElementById('cust-neighbor').value = neighbor;
             document.getElementById('cust-obs-address').value = obs;
@@ -4172,8 +4112,40 @@
         function toggleExtra(id, price, name) {
             const idx = selectedExtras.findIndex(e => e.id === id);
             const safePrice = parseFloat(price) || 0;
-            if (idx > -1) selectedExtras.splice(idx, 1);
-            else selectedExtras.push({ id, price: safePrice, name });
+            const isFree = safePrice === 0;
+
+            // Lógica de limites para Açaí
+            const isAcai = currentItem?.category_name?.toLowerCase().includes('açaí') ||
+                currentItem?.title?.toLowerCase().includes('açaí') ||
+                currentItem?.title?.toLowerCase().includes('barca') ||
+                currentItem?.title?.toLowerCase().includes('roleta');
+
+            if (idx > -1) {
+                selectedExtras.splice(idx, 1);
+            } else {
+                if (isAcai && isFree) {
+                    // Definir limites baseados no tamanho/produto
+                    let limit = 0;
+                    const title = (selectedSize || currentItem.title || '').toLowerCase();
+
+                    if (title.includes('200ml')) limit = 2;
+                    else if (title.includes('300ml')) limit = 3;
+                    else if (title.includes('400ml')) limit = 4;
+                    else if (title.includes('500ml')) limit = 5;
+                    else if (title.includes('700ml')) limit = 6;
+                    else if (title.includes('mega barca')) limit = 9;
+                    else if (title.includes('barca')) limit = 7;
+                    else if (title.includes('roleta')) limit = 7;
+                    else limit = 5; // Fallback
+
+                    const currentFreeCount = selectedExtras.filter(e => e.price === 0).length;
+                    if (currentFreeCount >= limit) {
+                        showToast(`LIMITE DE ${limit} ADICIONAIS GRÁTIS ATINGIDO!`);
+                        return;
+                    }
+                }
+                selectedExtras.push({ id, price: safePrice, name });
+            }
             updateModalPrice();
         }
 
@@ -4251,8 +4223,8 @@
 
             // Se for meio a meio, ajustar o titulo
             if (isHalfHalf && secondFlavor) {
-                cartItem.title = `${currentItem.title} + ${secondFlavor.name}`;
-                cartItem.displayTitle = `1/2 ${currentItem.title} + 1/2 ${secondFlavor.name}`;
+                cartItem.title = `${currentItem.title} + ${secondFlavor.name} `;
+                cartItem.displayTitle = `1 / 2 ${currentItem.title} + 1 / 2 ${secondFlavor.name} `;
             }
 
             cart.push(cartItem);
@@ -4302,7 +4274,7 @@
                 if (item.isHalfHalf && item.secondFlavor) {
                     // Imagem dividida para meio a meio
                     imgHtml = `
-                        <div class="w-24 h-24 rounded-custom border-2 border-dark overflow-hidden relative flex-shrink-0">
+                <div class="w-24 h-24 rounded-custom border-2 border-dark overflow-hidden relative flex-shrink-0">
                             <div class="absolute inset-0 flex">
                                 <div class="w-1/2 h-full overflow-hidden">
                                     <img src="${item.img}" class="w-full h-full object-cover object-right" onerror="this.src='https://via.placeholder.com/100'">
@@ -4315,14 +4287,14 @@
                                 <span class="bg-brand text-white text-[8px] font-black px-1 rounded">1/2+1/2</span>
                             </div>
                         </div>
-                    `;
+                `;
                 } else {
                     imgHtml = `<img src="${displayImg}" class="${imgClass}" onerror="this.src='https://via.placeholder.com/100'">`;
                 }
 
                 return `
-                    <div class="flex items-center gap-6 bg-zinc-500/5 p-6 rounded-custom border-2 border-dark">
-                        ${imgHtml}
+                <div class="flex items-center gap-6 bg-zinc-500/5 p-6 rounded-custom border-2 border-dark">
+                    ${imgHtml}
                         <div class="flex-1 leading-none">
                             <h4 class="bebas text-3xl uppercase tracking-tighter">${displayTitle}</h4>
                             <p class="text-xs font-bold opacity-50 mb-2">${item.qty}X - R$ ${(item.totalPrice / item.qty).toFixed(2)}</p>
@@ -4332,7 +4304,7 @@
                             <p class="bebas text-3xl">R$ ${item.totalPrice.toFixed(2)}</p>
                             <button onclick="removeItem(${index})" class="text-xs font-black text-brand uppercase underline">Remover</button>
                         </div>
-                    </div>`;
+                    </div> `;
             }).join('');
             totalEl.innerText = `R$ ${total.toFixed(2)}`;
         }
@@ -4368,15 +4340,15 @@
                 // Esconder campo de telefone e mostrar badge
                 if (phoneContainer) {
                     phoneContainer.innerHTML = `
-                        <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu Telemovel</label>
-                        <div class="flex items-center gap-2 bg-emerald-500/20 border-2 border-emerald-500 p-4 rounded-2xl">
-                            <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                            </svg>
-                            <span class="font-bold text-emerald-700">${formatPhone(phoneFromWhatsApp)}</span>
-                            <input type="hidden" id="cust-phone" value="${phoneFromWhatsApp}">
-                        </div>
-                    `;
+                <label class="bebas text-xl block mb-2 opacity-50 uppercase tracking-widest">Teu Telemovel</label>
+                    <div class="flex items-center gap-2 bg-emerald-500/20 border-2 border-emerald-500 p-4 rounded-2xl">
+                        <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                        </svg>
+                        <span class="font-bold text-emerald-700">${formatPhone(phoneFromWhatsApp)}</span>
+                        <input type="hidden" id="cust-phone" value="${phoneFromWhatsApp}">
+                    </div>
+            `;
                 }
             }
 
@@ -4472,22 +4444,22 @@
                         <span class="text-emerald-300 font-bold"><i class="fas fa-truck mr-1"></i>${feeText}</span>
                     </div>
                     ${obsText ? `<p class="text-sm text-gray-400 mt-2">Obs: ${obsText}</p>` : ''}
-                    
-                    <div class="flex gap-2 mt-4">
-                        <button onclick="togglePreviousAddress(true)" 
-                            class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            USAR ESTE
-                        </button>
-                        <button onclick="togglePreviousAddress(false)" 
-                            class="flex-1 py-3 bg-transparent border border-white/20 hover:bg-white/5 text-white font-bold rounded-xl transition-colors">
-                            NOVO ENDEREÇO
-                        </button>
-                    </div>
+
+            <div class="flex gap-2 mt-4">
+                <button onclick="togglePreviousAddress(true)"
+                    class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    USAR ESTE
+                </button>
+                <button onclick="togglePreviousAddress(false)"
+                    class="flex-1 py-3 bg-transparent border border-white/20 hover:bg-white/5 text-white font-bold rounded-xl transition-colors">
+                    NOVO ENDEREÇO
+                </button>
+            </div>
                 </div>
-            `;
+                `;
         }
 
 
@@ -4583,7 +4555,7 @@
 
             let displayReason = 'Voltamos em breve!';
             if (nextOpen) {
-                displayReason = `Abriremos novamente <b>${nextOpen}</b>.`;
+                displayReason = `Abriremos novamente <b> ${nextOpen}</b>.`;
             } else if (storeClosedReason) {
                 displayReason = storeClosedReason;
             }
@@ -4605,7 +4577,7 @@
                         OK, ENTENDI
                     </button>
                 </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -4672,7 +4644,7 @@
                 subtotal += item.totalPrice;
                 const extrasSummary = item.extras.map(e => e.name).join(', ');
                 return `
-                    <div class="flex justify-between items-center py-2 border-b border-dark/20">
+                <div class="flex justify-between items-center py-2 border-b border-dark/20">
                         <div>
                             <span class="font-bold">${item.qty}x ${item.title}</span>
                             ${extrasSummary ? `<span class="text-xs opacity-50 block">+ ${extrasSummary}</span>` : ''}
@@ -4696,42 +4668,42 @@
 
                 if ((!customerLat || !customerLng) && !hasManualAddress) {
                     deliveryHtml = `
-                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
+                <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
                             <span class="font-bold">Taxa de Entrega</span>
                             <span class="font-bold text-xs uppercase animate-pulse">Selecionar Localizacao</span>
                         </div>
-                    `;
+                `;
                 } else if (deliveryOutOfRange) {
                     deliveryHtml = `
-                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-red-500">
+                <div class="flex justify-between items-center py-2 border-b border-dark/20 text-red-500">
                             <div>
                                 <span class="font-bold">Taxa de Entrega</span>
                                 ${lastCalculatedDistance !== null ? `<span class="text-[10px] block opacity-50">${lastCalculatedDistance.toFixed(1)} km</span>` : ''}
                             </div>
                             <span class="font-bold">FORA DA AREA</span>
                         </div>
-                    `;
+                `;
                 } else {
                     grandTotal += deliveryFee;
                     deliveryHtml = `
-                        <div class="flex justify-between items-center py-2 border-b border-dark/20">
+                <div class="flex justify-between items-center py-2 border-b border-dark/20">
                             <span>Subtotal</span>
                             <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
-                            <div>
-                                <span class="font-bold">Taxa de Entrega</span>
-                                ${isUsingFixedFeeFallback ? '<span class="text-[10px] block opacity-50">TAXA FIXA</span>' : ''}
-                                ${lastCalculatedDistance !== null ? `<span class="text-[10px] block opacity-50">${lastCalculatedDistance.toFixed(1)} km</span>` : ''}
-                            </div>
-                            <span class="font-bold">R$ ${deliveryFee.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                    `;
+                <div class="flex justify-between items-center py-2 border-b border-dark/20 text-brand">
+                    <div>
+                        <span class="font-bold">Taxa de Entrega</span>
+                        ${isUsingFixedFeeFallback ? '<span class="text-[10px] block opacity-50">TAXA FIXA</span>' : ''}
+                        ${lastCalculatedDistance !== null ? `<span class="text-[10px] block opacity-50">${lastCalculatedDistance.toFixed(1)} km</span>` : ''}
+                    </div>
+                    <span class="font-bold">R$ ${deliveryFee.toFixed(2).replace('.', ',')}</span>
+                </div>
+            `;
                 }
             }
 
             summaryEl.innerHTML = itemsHtml + deliveryHtml;
-            totalEl.innerText = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
+            totalEl.innerText = `R$ ${grandTotal.toFixed(2).replace('.', ',')} `;
         }
 
         // ===== MODAL DE CONFIRMACAO =====
@@ -4783,7 +4755,7 @@
                 const totalWithDelivery = checkoutType === 'entrega' ? (subtotal + deliveryFee) : subtotal;
 
                 if (changeFor > 0 && changeFor < totalWithDelivery) {
-                    showPopup('TROCO INSUFICIENTE', `O valor para troco (R$ ${changeFor.toFixed(2)}) é menor que o total do pedido (R$ ${totalWithDelivery.toFixed(2)}).`, 'warning');
+                    showPopup('TROCO INSUFICIENTE', `O valor para troco(R$ ${changeFor.toFixed(2)}) é menor que o total do pedido(R$ ${totalWithDelivery.toFixed(2)}).`, 'warning');
                     document.getElementById('cust-change').focus();
                     return;
                 }
@@ -4796,10 +4768,10 @@
 
             const paymentLabels = { pix: 'PIX (Transferência)', cartao: 'Cartão (Maquininha)', dinheiro: 'Dinheiro (Espécie)', local: 'Pagar no Local' };
             const paymentIcons = {
-                pix: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.32 21.97a6.92 6.92 0 01-4.71-1.89l-.11-.1-1.77 1.77a.5.5 0 01-.71 0 .5.5 0 010-.71l1.77-1.77-.1-.11a6.92 6.92 0 01-1.89-4.71c0-1.83.72-3.54 2.02-4.84l5.73-5.73a3.03 3.03 0 014.28 0l4.56 4.56a3.03 3.03 0 010 4.28l-5.73 5.73a6.82 6.82 0 01-4.84 2.02zm6.97-18.13a2.02 2.02 0 00-1.43.59l-5.73 5.73a5.9 5.9 0 00-1.73 4.54c.06 1.68.76 3.26 1.97 4.47s2.79 1.91 4.47 1.97a5.9 5.9 0 004.54-1.73l5.73-5.73a2.03 2.03 0 000-2.87l-4.56-4.56a2.02 2.02 0 00-1.43-.59l-.83.18z"/></svg>`,
-                cartao: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`,
-                dinheiro: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
-                local: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>`
+                pix: `<svg class= "w-5 h-5" fill = "currentColor" viewBox="0 0 24 24"> <path d="M8.32 21.97a6.92 6.92 0 01-4.71-1.89l-.11-.1-1.77 1.77a.5.5 0 01-.71 0 .5.5 0 010-.71l1.77-1.77-.1-.11a6.92 6.92 0 01-1.89-4.71c0-1.83.72-3.54 2.02-4.84l5.73-5.73a3.03 3.03 0 014.28 0l4.56 4.56a3.03 3.03 0 010 4.28l-5.73 5.73a6.82 6.82 0 01-4.84 2.02zm6.97-18.13a2.02 2.02 0 00-1.43.59l-5.73 5.73a5.9 5.9 0 00-1.73 4.54c.06 1.68.76 3.26 1.97 4.47s2.79 1.91 4.47 1.97a5.9 5.9 0 004.54-1.73l5.73-5.73a2.03 2.03 0 000-2.87l-4.56-4.56a2.02 2.02 0 00-1.43-.59l-.83.18z" /></svg> `,
+                cartao: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> `,
+                dinheiro: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> `,
+                local: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> `
             };
 
             let html = `
@@ -4816,7 +4788,7 @@
                         </div>
                     </div>
 
-                    <!-- Tipo de Pedido -->
+                    <!--Tipo de Pedido-- >
                     <div class="flex items-start gap-4 p-3 bg-white/5 rounded-2xl border border-dark/10">
                         <div class="w-10 h-10 rounded-xl bg-highlight/20 flex items-center justify-center text-dark flex-shrink-0">
                             ${checkoutType === 'entrega' ?
@@ -4836,7 +4808,7 @@
                         </div>
                     </div>
 
-                    <!-- Pagamento -->
+                    <!--Pagamento -->
                     <div class="flex items-start gap-4 p-3 bg-white/5 rounded-2xl border border-dark/10">
                         <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand flex-shrink-0">
                             ${paymentIcons[paymentMethod]}
@@ -4850,7 +4822,7 @@
                         </div>
                     </div>
 
-                    <!-- NOVO: Itens do Carrinho -->
+                    <!--NOVO: Itens do Carrinho-- >
                     <div class="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl p-4 border border-white/5">
                         <div class="flex items-center gap-2 mb-3">
                             <svg class="w-5 h-5 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4886,31 +4858,31 @@
                         </div>
                     </div>
 
-                    <!-- Resumo Financeiro -->
-                    <div class="bg-dark text-white rounded-[2rem] p-6 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand/20 blur-3xl -mr-16 -mt-16"></div>
-                        <div class="relative">
-                            <p class="bebas text-2xl text-highlight mb-4">Resumo Financeiro</p>
-                            <div class="space-y-2 mb-4 opacity-80 text-sm">
-                                <div class="flex justify-between">
-                                    <span>Subtotal (${cart.reduce((acc, i) => acc + i.qty, 0)} itens)</span>
-                                    <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
-                                </div>
-                                ${checkoutType === 'entrega' ? `
+                    <!--Resumo Financeiro-- >
+                <div class="bg-dark text-white rounded-[2rem] p-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-brand/20 blur-3xl -mr-16 -mt-16"></div>
+                    <div class="relative">
+                        <p class="bebas text-2xl text-highlight mb-4">Resumo Financeiro</p>
+                        <div class="space-y-2 mb-4 opacity-80 text-sm">
+                            <div class="flex justify-between">
+                                <span>Subtotal (${cart.reduce((acc, i) => acc + i.qty, 0)} itens)</span>
+                                <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+                            </div>
+                            ${checkoutType === 'entrega' ? `
                                     <div class="flex justify-between ${deliveryOutOfRange ? 'text-red-400' : 'text-emerald-400'}">
                                         <span>Taxa de Entrega</span>
                                         <span>${deliveryOutOfRange ? 'FORA DA ÁREA' : `R$ ${deliveryFee.toFixed(2).replace('.', ',')}`}</span>
                                     </div>
                                 ` : ''}
-                            </div>
-                            <div class="flex justify-between items-baseline pt-4 border-t border-white/10 text-highlight">
-                                <span class="bebas text-3xl">TOTAL:</span>
-                                <span class="bebas text-5xl">R$ ${finalTotal.toFixed(2).replace('.', ',')}</span>
-                            </div>
+                        </div>
+                        <div class="flex justify-between items-baseline pt-4 border-t border-white/10 text-highlight">
+                            <span class="bebas text-3xl">TOTAL:</span>
+                            <span class="bebas text-5xl">R$ ${finalTotal.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                 </div>
-            `;
+                </div>
+                `;
 
             document.getElementById('confirm-summary').innerHTML = html;
             // Estilizar container do resumo para nao ter bordas internas feias
@@ -5156,22 +5128,22 @@
                 warning: {
                     bg: 'bg-amber-100',
                     color: 'text-amber-600',
-                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> `
                 },
                 error: {
                     bg: 'bg-red-100',
                     color: 'text-red-600',
-                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> `
                 },
                 success: {
                     bg: 'bg-green-100',
                     color: 'text-green-600',
-                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`
+                    svg: `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> `
                 }
             };
 
             const config = icons[type] || icons.warning;
-            iconEl.className = `w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center border-4 border-dark shadow-[4px_4px_0_var(--dark)] ${config.bg} ${config.color}`;
+            iconEl.className = `w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center border-4 border-dark shadow-[4px_4px_0_var(--dark)] ${config.bg} ${config.color} `;
             iconEl.innerHTML = config.svg;
 
             openModal('popup-modal');
@@ -5237,7 +5209,7 @@
                     const st = statusMap[order.status] || statusMap['pending'];
 
                     return `
-                        <div class="order-card">
+                <div class="order-card">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <p class="bebas text-2xl">Pedido #${String(order.id).slice(-4)}</p>

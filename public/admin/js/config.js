@@ -599,12 +599,25 @@ async function exportBackup() {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
+        a.style.display = 'none';
         a.href = url;
-        a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'backup.dhub';
+
+        // Tentar ler do Header, senao usar default
+        let filename = 'backup.dhub';
+        const disp = response.headers.get('Content-Disposition');
+        if (disp && disp.includes('filename=')) {
+            filename = disp.split('filename=')[1]?.replace(/"/g, '');
+        }
+
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+
+        // Delay para garantir que o navegador capture antes de revogar da RAM (previne extensao corrompida)
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        }, 1000);
         showToast('Backup exportado com sucesso!', 'success');
     } catch (e) {
         console.error(e);

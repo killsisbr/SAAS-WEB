@@ -155,6 +155,7 @@ export default function (db) {
             // Enviar como arquivo para download
             const filename = `backup_${tenant?.slug || 'loja'}_${new Date().toISOString().split('T')[0]}.dhub`;
             res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
             res.send(encrypted);
 
