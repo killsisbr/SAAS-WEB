@@ -476,12 +476,13 @@ class WhatsAppService {
 
             const tenant = await this.db.get('SELECT * FROM tenants WHERE id = ?', [tenantId]);
             if (!tenant) {
+                this.pendingInitializations.delete(tenantId);
                 throw new Error(`Tenant ${tenantId} nao encontrado`);
             }
 
             const settings = JSON.parse(tenant.settings || '{}');
 
-            console.log(`Inicializando WhatsApp (Baileys) para tenant ${tenantId}`);
+            console.log(`[WhatsApp] 🚀 Iniciando conexão (Baileys) para tenant: ${tenantId} (${tenant.name})`);
             this.statuses.set(tenantId, 'INITIALIZING');
 
             // Diretorio de autenticacao para este tenant
@@ -948,6 +949,32 @@ class WhatsAppService {
                 }
             }
 
+            // ============ GATILHOS DE SAUDAÇÕES PADRÃO ============
+            const defaultGreetings = ['oi', 'ola', 'olá', 'opa', 'noite', 'bom dia', 'boa tarde', 'boa noite', 'ajuda'];
+            const msgLowerGreeting = messageBody.toLowerCase().trim();
+
+            if (!triggerMatched && defaultGreetings.includes(msgLowerGreeting)) {
+                console.log(`[Greeting] Saudação padrão "${msgLowerGreeting}" detectada para ${jid}`);
+
+                // ANTI-DUPLICAÇÃO (5 minutos)
+                if (this.hasRecentlySentMessage(tenantId, jid, 'link') ||
+                    this.hasRecentlySentMessage(tenantId, jid, 'welcome')) {
+                    console.log(`[Greeting] Resposta já enviada recentemente para ${jid}, ignorando`);
+                    return;
+                }
+
+                console.log(`[Greeting] Enviando welcome para ${jid}`);
+                const success = await this.sendWelcomeMessage(tenantId, realPhoneJid, sanitizedNumber, currentSettings, pushName, sock);
+
+                if (success) {
+                    this.markWelcomeSent(tenantId, jid);
+                    this.markMessageSent(tenantId, jid, 'welcome');
+                    this.markMessageSent(tenantId, jid, 'link');
+                    this.lastMessageTime.set(tenantId, Date.now());
+                }
+                return;
+            }
+
             // ============ RESPOSTA PADRÃO - PRIMEIRA MENSAGEM DO DIA ============
             const welcomeAllowed = this.shouldSendWelcome(tenantId, jid);
             console.log(`[Welcome Check] shouldSendWelcome: ${welcomeAllowed}, jid: ${jid}`);
@@ -1291,12 +1318,32 @@ class WhatsAppService {
 
     /**
      * Reiniciar conexão WhatsApp (Forçar Reconexão)
+     * [FIX] Não usar logout() para não perder a sessão em restarts manuais
      */
     async restart(tenantId) {
         console.log(`[WhatsApp] 🔄 Reinicialização manual solicitada para tenant: ${tenantId}`);
-        await this.disconnect(tenantId);
+
+        // 1. Forçar limpeza de inicialização pendente (destrava se estiver preso em algum timeout)
+        this.pendingInitializations.delete(tenantId);
+
+        // 2. Parar socket atual sem deslogar (end() preserva a sessão)
+        const sock = this.clients.get(tenantId);
+        if (sock) {
+            try {
+                // sock.end(undefined) fecha a conexão sem deslogar do aparelho
+                sock.end();
+            } catch (e) { }
+            this.clients.delete(tenantId);
+        }
+
+        this.statuses.set(tenantId, 'INITIALIZING');
+
+        // 3. Aguardar um pouco para garantir liberação de sockets/arquivos
         await new Promise(r => setTimeout(r, 2000));
+
+        // 4. Inicializar novamente usando os arquivos existentes
         await this.initializeForTenant(tenantId);
+
         return { success: true };
     }
 
