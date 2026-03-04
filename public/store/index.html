@@ -1412,7 +1412,7 @@
         <div class="paper-modal w-full max-w-sm rounded-custom overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
             <!-- HEADER COM IMAGEM (Alterna entre circular/esticado via JS) -->
             <div id="modal-header"
-                class="relative bg-gradient-to-b from-zinc-200 to-zinc-100 flex flex-col items-center border-b-2 border-dark flex-shrink-0 transition-all duration-300">
+                class="relative bg-gradient-to-b from-zinc-200 to-zinc-100 flex flex-col items-center border-b-2 border-dark flex-shrink-0">
                 <button onclick="closeModal('product-modal')"
                     class="absolute top-4 right-4 bg-card border-2 border-dark rounded-full p-2 hover:bg-brand hover:text-white transition-colors z-30 shadow-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1422,8 +1422,7 @@
                 </button>
 
                 <!-- Container de Imagem -->
-                <div id="pizza-image-container"
-                    class="relative transition-all duration-500 overflow-hidden bg-zinc-200">
+                <div id="pizza-image-container" class="relative overflow-hidden bg-zinc-200">
                     <!-- Imagem unica (normal) - z-10 garante que fica por cima do split -->
                     <img id="modal-img" src="" class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200">
                     <!-- Container split (meio a meio) - escondido por padrao -->
@@ -3257,220 +3256,152 @@
             }
 
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
-
-            // NOVO: Sistema de grupos de adicionais (Substitui o array flat de addons)
-            let addonGroups = [];
-
-            // Verificar se e marmita/buffet - PRIMEIRO buscar adicionais da CATEGORIA
             const catName = (product._categoryName || '').toLowerCase();
-            const isMarmita = catName.includes('marmita') || catName.includes('buffet');
-
-            if (isMarmita && product.category_id) {
-                try {
-                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
-                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
-                    if (catAddonsRes.ok) {
-                        const catAddonsData = await catAddonsRes.json();
-                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            addonGroups = catAddonsData.groups.map(group => ({
-                                id: group.id,
-                                name: group.name,
-                                min_selection: group.min_selection || 0,
-                                max_selection: group.max_selection || 10,
-                                items: (group.items || []).map(item => ({
-                                    id: 'cat_' + item.id,
-                                    name: item.name,
-                                    price: Number(item.price) || 0
-                                }))
-                            }));
-                            console.log('Grupos de adicionais da categoria (marmita) carregados:', addonGroups);
-                        }
-                    }
-
-                    // FALLBACK: Se nao encontrou na categoria, usar sistema antigo de buffet
-                    if (addonGroups.length === 0 && storeData?.id) {
-                        const buffetRes = await fetch(`/api/buffet/tenant/${storeData.id}`);
-                        const buffetData = await buffetRes.json();
-                        if (buffetData.itens && buffetData.itens.length > 0) {
-                            addonGroups = [{
-                                id: 'buffet_group',
-                                name: 'Itens do Buffet',
-                                min_selection: 0,
-                                max_selection: 20,
-                                items: buffetData.itens.map(item => ({
-                                    id: 'buffet_' + item.id,
-                                    name: item.nome,
-                                    price: 0
-                                }))
-                            }];
-                            console.log('Fallback: Grupo de buffet antigo carregado:', addonGroups);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao carregar adicionais de marmita:', e);
-                }
-            }
-
-
-            // Verificar se e acai - PRIMEIRO buscar adicionais da CATEGORIA
-            const isAcai = catName.includes('acai') || catName.includes('açai') || catName.includes('açaí') || catName.includes('bowl');
-
-            if (isAcai && product.category_id) {
-                try {
-                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
-                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
-                    if (catAddonsRes.ok) {
-                        const catAddonsData = await catAddonsRes.json();
-                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            addonGroups = catAddonsData.groups.map(group => ({
-                                id: group.id,
-                                name: group.name,
-                                min_selection: group.min_selection || 0,
-                                max_selection: group.max_selection || 10,
-                                items: (group.items || []).map(item => ({
-                                    id: 'cat_' + item.id,
-                                    name: item.name,
-                                    price: Number(item.price) || 0
-                                }))
-                            }));
-                            console.log('Grupos de adicionais da categoria (acai) carregados:', addonGroups);
-                        }
-                    }
-
-                    // FALLBACK: Se nao encontrou na categoria, usar sistema antigo
-                    if (addonGroups.length === 0 && storeData?.id) {
-                        const acaiRes = await fetch(`/api/acai/adicionais/tenant/${storeData.id}`);
-                        const acaiData = await acaiRes.json();
-                        if (acaiData.adicionais && acaiData.adicionais.length > 0) {
-                            addonGroups = [{
-                                id: 'acai_group',
-                                name: 'Adicionais',
-                                min_selection: 0,
-                                max_selection: 10,
-                                items: acaiData.adicionais.map(item => ({
-                                    id: 'acai_' + item.id,
-                                    name: item.nome,
-                                    price: item.preco || 0
-                                }))
-                            }];
-                            console.log('Fallback: Grupo de acai antigo carregado:', addonGroups);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao carregar adicionais de acai:', e);
-                }
-            }
-
-            // Verificar se e hamburguer/lanche - PRIMEIRO buscar adicionais da CATEGORIA
-            const isHamburguer = catName.includes('hamburguer') || catName.includes('burger') ||
-                catName.includes('lanche') || catName.includes('sanduiche') ||
-                catName.includes('hot dog') || catName.includes('hotdog');
-
-            if (isHamburguer && product.category_id) {
-                try {
-                    // PRIORIDADE: Buscar adicionais da CATEGORIA (configurados no admin)
-                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
-                    if (catAddonsRes.ok) {
-                        const catAddonsData = await catAddonsRes.json();
-                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            addonGroups = catAddonsData.groups.map(group => ({
-                                id: group.id,
-                                name: group.name,
-                                min_selection: group.min_selection || 0,
-                                max_selection: group.max_selection || 10,
-                                items: (group.items || []).map(item => ({
-                                    id: 'cat_' + item.id,
-                                    name: item.name,
-                                    price: Number(item.price) || 0
-                                }))
-                            }));
-                            console.log('Grupos de adicionais da categoria (hamburguer) carregados:', addonGroups);
-                        }
-                    }
-
-                    // FALLBACK: Se nao encontrou na categoria, usar do produto
-                    if (addonGroups.length === 0 && product.has_addons) {
-                        let prodAddons = product.addons || [];
-                        if (typeof prodAddons === 'string') {
-                            prodAddons = JSON.parse(prodAddons);
-                        }
-                        if (prodAddons && prodAddons.length > 0) {
-                            addonGroups = [{
-                                id: 'product_addons_group',
-                                name: 'Adicionais',
-                                min_selection: 0,
-                                max_selection: 10,
-                                items: prodAddons.map((addon, idx) => ({
-                                    id: 'addon_' + (addon.id || idx),
-                                    name: addon.name || addon.nome,
-                                    price: parseFloat(addon.price || addon.preco || 0)
-                                }))
-                            }];
-                            console.log('Fallback: Adicionais do produto carregados:', addonGroups);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao carregar adicionais de hamburguer:', e);
-                }
-            }
-
-            // Se produto tem has_addons mas nao caiu em nenhuma categoria especifica
-            // usar os adicionais do produto
-            if (!isMarmita && !isAcai && !isHamburguer && product.has_addons) {
-                try {
-                    let prodAddons = product.addons || [];
-                    if (typeof prodAddons === 'string') {
-                        prodAddons = JSON.parse(prodAddons);
-                    }
-                    if (prodAddons && prodAddons.length > 0) {
-                        addonGroups = [{
-                            id: 'product_addons_group',
-                            name: 'Adicionais',
-                            min_selection: 0,
-                            max_selection: 10,
-                            items: prodAddons.map((addon, idx) => ({
-                                id: 'addon_' + (addon.id || idx),
-                                name: addon.name || addon.nome,
-                                price: parseFloat(addon.price || addon.preco || 0)
-                            }))
-                        }];
-                        console.log('Adicionais do produto carregados:', addonGroups);
-                    }
-                } catch (e) {
-                    console.error('Erro ao parsear adicionais:', e);
-                }
-            }
-
-            // FALLBACK GERAL: Se ainda nao tem nada, buscar da categoria
-            if (addonGroups.length === 0 && product.category_id) {
-                try {
-                    const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
-                    if (catAddonsRes.ok) {
-                        const catAddonsData = await catAddonsRes.json();
-                        if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            addonGroups = catAddonsData.groups.map(group => ({
-                                id: group.id,
-                                name: group.name,
-                                min_selection: group.min_selection || 0,
-                                max_selection: group.max_selection || 10,
-                                items: (group.items || []).map(item => ({
-                                    id: 'cat_' + item.id,
-                                    name: item.name,
-                                    price: parseFloat(item.price || 0)
-                                }))
-                            }));
-                            console.log('Adicionais da categoria carregados no fallback final:', addonGroups);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao carregar adicionais da categoria:', e);
-                }
-            }
-
-            // Verificar se e bebida - nao mostrar adicionais
             const isBebida = catName.includes('bebida') || catName.includes('drink') || catName.includes('refri') || catName.includes('suco');
 
-            openProduct(product.name, product.description || '', product.price, imgUrl, product.id, addonGroups, isBebida);
+            // 1. ABRIR MODAL IMEDIATAMENTE com dados basicos
+            // Passamos 'loading' como addonGroups para sinalizar estado
+            openProduct(product.name, product.description || '', product.price, imgUrl, product.id, 'loading', isBebida);
+
+            // 2. BUSCAR ADICIONAIS EM SEGUNDA PLANO
+            // Usamos uma IIFE ou apenas removemos o await da chamada principal para não bloquear
+            (async () => {
+                let addonGroups = [];
+                const isMarmita = catName.includes('marmita') || catName.includes('buffet');
+                const isAcai = catName.includes('acai') || catName.includes('açai') || catName.includes('açaí') || catName.includes('bowl');
+                const isHamburguer = catName.includes('hamburguer') || catName.includes('burger') ||
+                    catName.includes('lanche') || catName.includes('sanduiche') ||
+                    catName.includes('hot dog') || catName.includes('hotdog');
+
+                try {
+                    // PRIORIDADE: Marmita/Buffet
+                    if (isMarmita && product.category_id) {
+                        const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                        if (catAddonsRes.ok) {
+                            const catAddonsData = await catAddonsRes.json();
+                            if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                                addonGroups = catAddonsData.groups.map(group => ({
+                                    id: group.id,
+                                    name: group.name,
+                                    min_selection: group.min_selection || 0,
+                                    max_selection: group.max_selection || 10,
+                                    items: (group.items || []).map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }))
+                                }));
+                            }
+                        }
+                        if (addonGroups.length === 0 && storeData?.id) {
+                            const buffetRes = await fetch(`/api/buffet/tenant/${storeData.id}`);
+                            const buffetData = await buffetRes.json();
+                            if (buffetData.itens && buffetData.itens.length > 0) {
+                                addonGroups = [{
+                                    id: 'buffet_group', name: 'Itens do Buffet', min_selection: 0, max_selection: 20,
+                                    items: buffetData.itens.map(item => ({ id: 'buffet_' + item.id, name: item.nome, price: 0 }))
+                                }];
+                            }
+                        }
+                    }
+
+                    // PRIORIDADE: Acai
+                    if (isAcai && product.category_id && addonGroups.length === 0) {
+                        const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                        if (catAddonsRes.ok) {
+                            const catAddonsData = await catAddonsRes.json();
+                            if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                                addonGroups = catAddonsData.groups.map(group => ({
+                                    id: group.id,
+                                    name: group.name,
+                                    min_selection: group.min_selection || 0,
+                                    max_selection: group.max_selection || 10,
+                                    items: (group.items || []).map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }))
+                                }));
+                            }
+                        }
+                        if (addonGroups.length === 0 && storeData?.id) {
+                            const acaiRes = await fetch(`/api/acai/adicionais/tenant/${storeData.id}`);
+                            const acaiData = await acaiRes.json();
+                            if (acaiData.adicionais && acaiData.adicionais.length > 0) {
+                                addonGroups = [{
+                                    id: 'acai_group', name: 'Adicionais', min_selection: 0, max_selection: 10,
+                                    items: acaiData.adicionais.map(item => ({ id: 'acai_' + item.id, name: item.nome, price: item.preco || 0 }))
+                                }];
+                            }
+                        }
+                    }
+
+                    // PRIORIDADE: Hamburguer/Lanche
+                    if (isHamburguer && product.category_id && addonGroups.length === 0) {
+                        const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                        if (catAddonsRes.ok) {
+                            const catAddonsData = await catAddonsRes.json();
+                            if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                                addonGroups = catAddonsData.groups.map(group => ({
+                                    id: group.id,
+                                    name: group.name,
+                                    min_selection: group.min_selection || 0,
+                                    max_selection: group.max_selection || 10,
+                                    items: (group.items || []).map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: Number(item.price) || 0
+                                    }))
+                                }));
+                            }
+                        }
+                    }
+
+                    // Caso produto tenha has_addons direto nele
+                    if (addonGroups.length === 0 && product.has_addons) {
+                        let prodAddons = product.addons || [];
+                        if (typeof prodAddons === 'string') prodAddons = JSON.parse(prodAddons);
+                        if (prodAddons && prodAddons.length > 0) {
+                            addonGroups = [{
+                                id: 'product_addons_group', name: 'Adicionais', min_selection: 0, max_selection: 10,
+                                items: prodAddons.map((addon, idx) => ({
+                                    id: 'addon_' + (addon.id || idx), name: addon.name || addon.nome, price: parseFloat(addon.price || addon.preco || 0)
+                                }))
+                            }];
+                        }
+                    }
+
+                    // Fallback final da categoria
+                    if (addonGroups.length === 0 && product.category_id) {
+                        const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
+                        if (catAddonsRes.ok) {
+                            const catAddonsData = await catAddonsRes.json();
+                            if (catAddonsData.groups && catAddonsData.groups.length > 0) {
+                                addonGroups = catAddonsData.groups.map(group => ({
+                                    id: group.id,
+                                    name: group.name,
+                                    min_selection: group.min_selection || 0,
+                                    max_selection: group.max_selection || 10,
+                                    items: (group.items || []).map(item => ({
+                                        id: 'cat_' + item.id,
+                                        name: item.name,
+                                        price: parseFloat(item.price || 0)
+                                    }))
+                                }));
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar adicionais em background:', e);
+                }
+
+                // 3. ATUALIZAR APENAS A SECAO DE ADICIONAIS se o modal ainda estiver aberto para este produto
+                if (currentItem && currentItem.id === id) {
+                    productAddonGroups = addonGroups;
+                    renderAddonGroups(addonGroups, isBebida);
+                    updateModalPrice();
+                }
+            })();
         }
 
         // ===== EXTRAS/ADICIONAIS =====
@@ -3696,7 +3627,73 @@
             }
 
             updateModalPrice();
+            renderAddonGroups(addonGroups, isBebida);
             openModal('product-modal');
+        }
+
+        /**
+         * NOVO: Renderiza apenas a seção de adicionais
+         * Pode ser chamado com addonGroups = 'loading' para mostrar spinner
+         */
+        function renderAddonGroups(addonGroups, isBebida) {
+            const container = document.getElementById('extras-container');
+            const extrasSection = document.getElementById('extras-section');
+
+            if (isBebida) {
+                if (extrasSection) extrasSection.style.display = 'none';
+                return;
+            }
+
+            if (extrasSection) extrasSection.style.display = 'block';
+
+            if (addonGroups === 'loading') {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center py-4 opacity-40">
+                        <div class="w-6 h-6 border-2 border-dark border-t-transparent rounded-full animate-spin mb-2"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">Carregando adicionais...</span>
+                    </div>
+                `;
+                return;
+            }
+
+            if (Array.isArray(addonGroups) && addonGroups.length > 0) {
+                container.innerHTML = addonGroups.map(group => {
+                    const min = group.min_selection || 0;
+                    const max = group.max_selection || 10;
+                    let ruleText = '';
+                    if (min > 0 && max > 0) ruleText = `Escolha de ${min} a ${max}`;
+                    else if (max > 0) ruleText = `Escolha até ${max}`;
+                    else if (min > 0) ruleText = `Escolha pelo menos ${min}`;
+
+                    return `
+                    <div class="addon-group-container mb-6">
+                        <div class="flex justify-between items-baseline mb-3 border-b-2 border-dark/10 pb-1">
+                            <h4 class="bebas text-lg opacity-70 uppercase tracking-wider">${group.name}</h4>
+                            ${ruleText ? `<span class="text-[10px] font-black bg-brand/10 text-brand px-2 py-0.5 rounded-full uppercase">${ruleText}</span>` : ''}
+                        </div>
+                        <div class="space-y-3">
+                            ${group.items.map(addon => `
+                                <div class="flex items-center justify-between group cursor-pointer"
+                                     onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}', '${group.id}')">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
+                                             id="check-${addon.id}">
+                                            <svg class="w-4 h-4 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </div>
+                                        <span class="font-bold text-sm uppercase tracking-tight">${addon.name}</span>
+                                    </div>
+                                    <span class="font-black text-brand text-sm">${addon.price > 0 ? '+ R$ ' + addon.price.toFixed(2) : 'GRÁTIS'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm opacity-40 italic">Sem adicionais disponiveis</p>';
+            }
         }
 
 
