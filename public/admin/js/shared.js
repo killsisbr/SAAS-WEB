@@ -20,12 +20,61 @@ const API_HEADERS = {
 
 // 2. Global Actions
 function logout() {
-    if (confirm('Tem certeza que deseja sair?')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('tenantId');
-        localStorage.removeItem('tenantSlug');
-        window.location.href = '/login';
-    }
+    showConfirm({
+        title: 'Sair da Conta',
+        message: 'Tem certeza que deseja sair? Sua sessão será encerrada.',
+        confirmText: 'Sair agora',
+        cancelText: 'Continuar aqui',
+        type: 'danger',
+        onConfirm: () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('tenantId');
+            localStorage.removeItem('tenantSlug');
+            window.location.href = '/login';
+        }
+    });
+}
+
+/**
+ * Custom Neo-Brutalist Confirm Modal
+ */
+function showConfirm({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, type = 'primary' }) {
+    const modal = document.createElement('div');
+    modal.id = 'custom-confirm-modal';
+
+    const color = type === 'danger' ? '#ef4444' : '#d9432e';
+
+    modal.innerHTML = `
+        <div class="modal-backdrop">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>${title}</h2>
+                </div>
+                <p>${message}</p>
+                <div class="modal-actions">
+                    <button class="btn-modal btn-cancel">${cancelText}</button>
+                    <button class="btn-modal btn-confirm" style="background: ${color}">${confirmText}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const close = () => {
+        modal.classList.add('closing');
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('.btn-cancel').onclick = close;
+    modal.querySelector('.btn-confirm').onclick = () => {
+        if (onConfirm) onConfirm();
+        close();
+    };
+
+    // Trigger animation
+    requestAnimationFrame(() => modal.classList.add('active'));
 }
 
 // 3. Formatting Utilities
@@ -143,9 +192,23 @@ async function apiFetch(url, options = {}) {
     const headers = { ...API_HEADERS, ...options.headers };
 
     // Auto-detect JSON body
-    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json';
-        options.body = JSON.stringify(options.body);
+    if (options.body) {
+        if (typeof options.body === 'object' && !(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(options.body);
+        } else if (typeof options.body === 'string') {
+            // Check if it looks like a JSON string to be safe
+            try {
+                if ((options.body.startsWith('{') && options.body.endsWith('}')) ||
+                    (options.body.startsWith('[') && options.body.endsWith(']'))) {
+                    if (!headers['Content-Type']) {
+                        headers['Content-Type'] = 'application/json';
+                    }
+                }
+            } catch (e) {
+                // Not a valid JSON string, ignore
+            }
+        }
     }
 
     try {
@@ -184,6 +247,135 @@ if (!document.getElementById('shared-styles')) {
         @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         
+        /* Modal Styles */
+        #custom-confirm-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        #custom-confirm-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #custom-confirm-modal .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #custom-confirm-modal .modal-content {
+            background: #fff9f0;
+            border: 4px solid #1a1a1a;
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 12px 12px 0 #1a1a1a;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #custom-confirm-modal.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        #custom-confirm-modal.closing .modal-content {
+            transform: translateY(20px) scale(0.95);
+            opacity: 0;
+        }
+
+        #custom-confirm-modal .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        #custom-confirm-modal .modal-header i {
+            font-size: 2rem;
+            color: #ffb800;
+            filter: drop-shadow(2px 2px 0 #1a1a1a);
+        }
+
+        #custom-confirm-modal h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        #custom-confirm-modal p {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            color: #444;
+            line-height: 1.5;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        #custom-confirm-modal .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        #custom-confirm-modal .btn-modal {
+            padding: 16px;
+            border: 3px solid #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #custom-confirm-modal .btn-cancel {
+            background: white;
+            color: #1a1a1a;
+            box-shadow: 4px 4px 0 #1a1a1a;
+        }
+
+        #custom-confirm-modal .btn-confirm {
+            color: white;
+            box-shadow: 4px 4px 0 #1a1a1a;
+        }
+
+        #custom-confirm-modal .btn-modal:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #1a1a1a;
+        }
+
+        #custom-confirm-modal .btn-modal:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #1a1a1a;
+        }
+
+        @media (max-width: 480px) {
+            #custom-confirm-modal .modal-content {
+                padding: 24px;
+            }
+            #custom-confirm-modal h2 {
+                font-size: 2rem;
+            }
+        }
+
         @media (min-width: 769px) {
             .hide-on-desktop {
                 display: none !important;

@@ -183,6 +183,12 @@
             gap: 16px;
             box-shadow: 4px 4px 0 var(--dark);
             transition: 0.2s;
+            position: relative;
+        }
+
+        .category-card.inactive {
+            opacity: 0.6;
+            background: #f3f4f6;
         }
 
         .category-card:hover {
@@ -239,6 +245,25 @@
 
         .btn-delete {
             background: var(--danger);
+            color: white;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            border: 2px solid var(--dark);
+            background: var(--secondary);
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .status-badge.hidden {
+            background: #9ca3af;
             color: white;
         }
 
@@ -438,6 +463,12 @@
                     </select>
                     <small style="color: var(--text-muted);">Define como os produtos serao exibidos na loja</small>
                 </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="categoryActive" style="width: 20px; height: 20px; cursor: pointer;"
+                        checked>
+                    <label for="categoryActive" style="margin-bottom: 0; cursor: pointer;">Categoria Ativa (Visível na
+                        Loja)</label>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
                     <button type="submit" class="btn btn-primary">SALVAR</button>
@@ -503,7 +534,8 @@
                 return;
             }
             list.innerHTML = categories.map((c, index) => `
-                <div class="category-card">
+                <div class="category-card ${c.is_active ? '' : 'inactive'}">
+                    ${!c.is_active ? '<div class="status-badge hidden">OCULTO</div>' : ''}
                     <div class="category-icon"><i class="${c.icon || 'fas fa-folder'}"></i></div>
                     <div class="category-info">
                         <div class="category-name">${c.name}</div>
@@ -519,6 +551,9 @@
                             </button>
                         </div>
                         <div style="display: flex; gap: 4px;">
+                            <button class="btn-icon" onclick="toggleVisibility('${c.id}', ${c.is_active})" title="${c.is_active ? 'Ocultar na Loja' : 'Mostrar na Loja'}">
+                                <i class="fas ${c.is_active ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            </button>
                             <button class="btn-icon" onclick="editCategory('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                             <button class="btn-icon btn-delete" onclick="deleteCategory('${c.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
                         </div>
@@ -531,6 +566,7 @@
             document.getElementById('modalTitle').textContent = 'Nova Categoria';
             document.getElementById('categoryForm').reset();
             document.getElementById('categoryId').value = '';
+            document.getElementById('categoryActive').checked = true;
             document.getElementById('categoryDisplayMode').value = 'default';
             document.getElementById('categoryModal').classList.add('active');
         }
@@ -548,7 +584,21 @@
             document.getElementById('categoryIcon').value = c.icon || 'fas fa-folder';
             updateIconPreview();
             document.getElementById('categoryDisplayMode').value = c.display_mode || 'default';
+            document.getElementById('categoryActive').checked = c.is_active === 1 || c.is_active === true;
             document.getElementById('categoryModal').classList.add('active');
+        }
+
+        async function toggleVisibility(id, currentStatus) {
+            try {
+                await apiFetch(`/api/categories/${id}`, {
+                    method: 'PUT',
+                    body: { isActive: !currentStatus }
+                });
+                showToast(currentStatus ? 'Categoria ocultada!' : 'Categoria visivel!');
+                loadCategories();
+            } catch (e) {
+                showToast('Erro ao atualizar status', 'error');
+            }
         }
 
         // Icon Picker Logic
@@ -691,7 +741,8 @@
             const data = {
                 name: document.getElementById('categoryName').value,
                 icon: document.getElementById('categoryIcon').value,
-                displayMode: document.getElementById('categoryDisplayMode').value
+                displayMode: document.getElementById('categoryDisplayMode').value,
+                isActive: document.getElementById('categoryActive').checked
             };
             const url = id ? `/api/categories/${id}` : '/api/categories';
             const method = id ? 'PUT' : 'POST';

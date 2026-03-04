@@ -1,0 +1,62 @@
+Menu for: Q Delícia Sorveteria (127371eb-14c6-44bc-a9e5-e6b0b7d61d11)
+
+ID | Name | Price | Category
+------------------------------------------------------------
+7f654594-7fb6-409f-b14e-e8bd1453c651 | Barca de Açaí | R$ 50.00 | Açaí
+5f7c23c7-cb97-41d3-9dd3-cd35b65a5b23 | Copo Açaí 200ml | R$ 10.00 | Açaí
+d29dc171-97c1-43f2-a127-593a51b38ad1 | Copo Açaí 300ml | R$ 15.00 | Açaí
+a8f307a0-7615-4094-9aaa-435872e2e62f | Copo Açaí 400ml | R$ 20.00 | Açaí
+1c2e17e9-7c18-48b8-9a1a-2859c0a2eb95 | Copo Açaí 500ml | R$ 25.00 | Açaí
+63a2bedb-f9ee-44ec-9cf5-8524451c53bc | Copo Açaí 700ml | R$ 30.00 | Açaí
+89168ef7-1436-4eaf-8f4e-22e449a9ff10 | Mega Barca de Açaí | R$ 60.00 | Açaí
+6f51255d-df7e-454b-b9f5-c0501f7a3ca3 | Roleta de Açaí | R$ 50.00 | Açaí
+56fd0297-b329-4db3-8810-357d62fb3ba8 | Sorvete (Buffet) - 100g | R$ 6.29 | Buffet
+9554e32a-f888-4921-aed8-ce40e40fa744 | Café Gelado 300ml | R$ 15.00 | Café Gelado
+84632ba6-04a5-478a-85dc-ad509d4a5e0e | Café Gelado 400ml | R$ 20.00 | Café Gelado
+adfa317e-a90f-43d1-ade8-31088e0712b6 | Café Gelado 500ml | R$ 25.00 | Café Gelado
+be579877-79e7-4351-8139-8734ee07af99 | Cascão 1 Bola | R$ 8.00 | Casquinha e Cascão
+1e77ee71-c46b-4219-8ec2-53a8148a0769 | Cascão 2 Bolas | R$ 15.00 | Casquinha e Cascão
+09ad659e-8da8-4ab4-b037-a5cb85b670be | Casquinha 1 Bola | R$ 5.00 | Casquinha e Cascão
+3d294aeb-0dcf-4bcb-aee4-4767ff93fe68 | Casquinha 2 Bolas | R$ 10.00 | Casquinha e Cascão
+efdac44b-f1d9-4e00-91cc-42ee9ef3b52f | Milk Shake 300ml | R$ 15.00 | Milk Shake
+059bb076-c02b-4165-b880-64d2fa7df940 | Milk Shake 400ml | R$ 20.00 | Milk Shake
+0ea2eae0-1fe0-4ec5-b354-513dd13f6e27 | Milk Shake 500ml | R$ 25.00 | Milk Shake
+13faa501-3ffb-4516-b439-4ad2eadd3a74 | Milk Shake 700ml | R$ 30.00 | Milk Shake
+f4248c2d-2cb0-4ec3-b8ed-9b253a212b7b | Moreninha de Abacaxi | R$ 5.00 | Moreninhas
+74cebeca-5cd9-4423-9602-a97237264d80 | Moreninha de Chocolate | R$ 5.00 | Moreninhas
+2be1b0c1-e9aa-40ce-8f13-fcac8fb390ba | Moreninha de Flocos | R$ 5.00 | Moreninhas
+a908d77a-ad08-496c-ba74-7f38bffcfe3f | Moreninha de Morango | R$ 5.00 | Moreninhas
+28d903f1-e6df-4540-9b24-89d14febe844 | Paleta de Caipirinha | R$ 10.00 | Paleta Mexicana
+b34c093e-fea7-4ca2-aa2a-6d6bccff7762 | Paleta de Chocolate Belga | R$ 10.00 | Paleta Mexicana
+88e9fe15-4ae7-4564-a3be-b474f653a2c3 | Paleta de Kiwi | R$ 10.00 | Paleta Mexicana
+92f5cd6b-5bfc-4aa6-ae23-d1905da407f0 | Paleta de Leite Condensado | R$ 10.00 | Paleta Mexicana
+f7c143da-e30c-4fc2-8502-88a91173b5d6 | Paleta de Maracujá | R$ 10.00 | Paleta Mexicana
+9081d51a-a92e-40d6-98b1-209c31fb8c90 | Paleta de Morango | R$ 10.00 | Paleta Mexicana
+52e8256b-2884-44b6-9746-f0b492ca4e7e | Paleta de Paçoca | R$ 10.00 | Paleta Mexicana
+5abaaf5b-fb99-4575-bca4-0d00406c72ac | Picolé Azul | R$ 2.50 | Picolé de Creme
+0d459e77-5805-4425-b3f7-8b3544fbf4eb | Picolé de Banana | R$ 2.50 | Picolé de Creme
+77174e99-cd65-4098-85be-3c843e399282 | Picolé de Doce de Leite | R$ 2.50 | Picolé de Creme
+d0970404-55a7-47ac-9643-67372af6d24e | Picolé de Mamão | R$ 2.50 | Picolé de Creme
+da410f05-226d-4e36-a862-70d9df1dbfeb | Picolé de Menta | R$ 2.50 | Picolé de Creme
+d85f7d12-a14d-4615-a185-4b944af1a372 | Picolé de Milho Verde | R$ 2.50 | Picolé de Creme
+9411f620-54e6-40aa-ada6-b59386fcac4c | Picolé de Abacaxi | R$ 2.50 | Picolé de Gelo
+cfbfc814-2c4d-4de6-865f-e4f0aa3a4bc8 | Picolé de Limão | R$ 2.50 | Picolé de Gelo
+0d7625cc-6228-461c-92e7-f7e017ac0505 | Picolé de Maçã Verde | R$ 2.50 | Picolé de Gelo
+7b51e93a-1616-4a42-876d-1abc468dce0c | Picolé de Melancia | R$ 2.50 | Picolé de Gelo
+6c3c4ab6-62cb-41ae-adfc-68fd0788b7aa | Picolé de Morango | R$ 2.50 | Picolé de Gelo
+47e3668f-1344-4c52-8589-538279259ddd | Picolé de Tutti Fruti | R$ 2.50 | Picolé de Gelo
+59432483-2758-4240-bc91-ad7425dc52b5 | Picolé de Uva | R$ 2.50 | Picolé de Gelo
+0dbbbb23-dc92-471f-8845-7aad40f3c2a5 | Choquito - Branco | R$ 8.00 | Picolés Especiais
+7845456e-ac52-408c-be89-beb102d1758c | Choquito - Preto | R$ 8.00 | Picolés Especiais
+225af857-69a9-4d72-bb03-c8e5a12c48a8 | Corneto | R$ 8.00 | Picolés Especiais
+f9bdb970-a059-44ea-919f-16dea647260d | Geladinho Gourmet | R$ 6.00 | Picolés Especiais
+1a4f8549-e701-4267-bc99-23b2339890e5 | Picolé Itu | R$ 3.00 | Picolés Especiais
+ede99e82-e9d5-487b-b2ba-a6b38a71bea8 | Picolé Skimo | R$ 4.50 | Picolés Especiais
+2132c7e1-effa-4992-af5d-8a9fd46fe607 | Picolé Unicórnio - Sabor Chiclete | R$ 7.00 | Picolés Especiais
+5ee58bd1-5742-46f1-8ded-f6140a5a1790 | Picolé Zero Açúcar - Morango | R$ 7.00 | Picolés Especiais
+bdf35395-1bfb-40ef-9334-d8004489f0a1 | Pote Premium | R$ 20.00 | Potes de Sorveteria
+b5ee1041-f506-4d5b-9642-5e1ad9f70997 | Pote Sorvete 1L | R$ 15.00 | Potes de Sorveteria
+8af2001e-2711-473c-b23b-a012ae406cd7 | Pote Sorvete 2L | R$ 30.00 | Potes de Sorveteria
+4d081de1-90e6-4c1d-90d3-e791f15fc51b | Pote Sorvete 400ml | R$ 7.00 | Potes de Sorveteria
+f1b3a07c-a055-4583-af4b-ebfb807dec8d | Taça Kinder | R$ 25.00 | Taças Especiais
+22f125de-f7a5-47c7-a62d-c53f301b9c74 | Vaca Preta | R$ 15.00 | Taças Especiais

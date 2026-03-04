@@ -1034,11 +1034,25 @@
             pointer-events: all;
         }
 
-        /* Checkout modal deve ter scroll, nao centralizar */
+        /* Checkout modal deve ter scroll proprio e ocupar tela cheia em mobile se necessario */
         #checkout-modal.modal-overlay {
-            display: block;
-            align-items: unset;
-            justify-content: unset;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        @media (max-width: 640px) {
+            #checkout-modal .paper-modal {
+                width: 100% !important;
+                max-width: none !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                transform: none !important;
+            }
         }
 
         /* SIDEBAR NEO-BRUTALISTA PREMIUM */
@@ -1095,12 +1109,21 @@
             text-transform: uppercase;
         }
 
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+            background-color: var(--main-bg);
+        }
+
         .paper-modal {
             background-color: var(--card-bg);
             border: var(--border-width) var(--border-style) var(--dark);
             transform: scale(0.9) rotate(var(--modal-rotate));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-radius: var(--radius);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-active .paper-modal {
@@ -1481,7 +1504,7 @@
                     <!-- OBSERVACOES -->
                     <div>
                         <label class="bebas text-xl block mb-2 opacity-70">Observacoes</label>
-                        <textarea id="modal-obs" placeholder="Ex: Bem passado, sem cebola..."
+                        <textarea id="modal-obs" placeholder="Ex: Sem ingredientes, retirar itens..."
                             class="w-full bg-zinc-500/5 border-2 border-dark p-3 rounded-xl font-bold focus:outline-none min-h-[40px] text-sm resize-none"></textarea>
                     </div>
 
@@ -1555,18 +1578,26 @@
     </div>
 
     <!-- MODAL: CHECKOUT -->
-    <div id="checkout-modal" class="modal-overlay fixed inset-0 z-[200] overflow-y-auto py-4 px-4">
-        <div class="paper-modal w-full max-w-md mx-auto rounded-[2rem] overflow-hidden shadow-2xl">
-            <div class="p-6 pb-20">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="bebas text-5xl text-textMain">Finalizar</h2>
-                    <button onclick="closeModal('checkout-modal')" class="neo-card p-2 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+    <div id="checkout-modal" class="modal-overlay fixed inset-0 z-[200]">
+        <div
+            class="paper-modal w-full max-w-lg mx-auto bg-card shadow-2xl flex flex-col h-full sm:h-auto sm:my-10 sm:rounded-[2.5rem]">
+            <!-- Header Fixo -->
+            <div class="p-6 border-b-2 border-dark flex justify-between items-center bg-card z-10">
+                <div class="flex flex-col">
+                    <h2 class="bebas text-5xl text-textMain leading-none">Finalizar</h2>
+                    <p class="text-xs font-bold opacity-30 uppercase tracking-tighter">Confirme seus dados e endereco
+                    </p>
                 </div>
+                <button onclick="closeModal('checkout-modal')" class="neo-card p-3 rounded-2xl bg-zinc-100/50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Area de Conteudo com Scroll Interno -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
 
                 <div class="flex gap-2 p-2 bg-zinc-500/10 border-2 border-dark rounded-3xl mb-8">
                     <button id="btn-entrega" onclick="setCheckoutType('entrega')"
@@ -1651,7 +1682,7 @@
                                     ALTERAR
                                 </button>
                             </div>
-                            <input type="text" id="cust-address" placeholder="Rua, Numero..."
+                            <input type="text" id="cust-address" placeholder="Rua, Numero..." readonly
                                 class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
                             <input type="text" id="cust-neighbor" placeholder="Bairro / Complemento..."
                                 class="w-full bg-zinc-100/10 border-2 border-dark p-4 rounded-2xl font-bold focus:outline-none">
@@ -1702,20 +1733,28 @@
 
                     <!-- Resumo do Pedido -->
                     <div class="mt-8 p-4 bg-card/30 border-2 border-dark rounded-3xl">
-                        <label class="bebas text-xl block mb-4">Resumo do Pedido</label>
+                        <label class="bebas text-xl block mb-4 underline decoration-brand">Resumo do Pedido</label>
                         <div id="checkout-summary" class="space-y-2 text-sm max-h-40 overflow-y-auto">
                             <!-- Itens serao preenchidos dinamicamente -->
                         </div>
                         <div class="border-t-2 border-dark mt-4 pt-4 flex justify-between items-center">
                             <span class="bebas text-2xl">TOTAL:</span>
-                            <span id="checkout-total" class="bebas text-3xl text-brand">R$ 0,00</span>
+                            <span id="checkout-total" class="bebas text-3xl text-brand font-black">R$ 0,00</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Footer Fixo -->
+            <div class="p-6 border-t-2 border-dark/5 bg-card z-10">
                 <button onclick="openConfirmationModal()"
-                    class="neo-button w-full py-6 rounded-3xl bebas text-4xl bg-emerald-600 mt-6">CONFIRMAR
-                    PEDIDO</button>
+                    class="neo-button w-full py-6 rounded-3xl bebas text-4xl bg-emerald-600 text-white shadow-[0_8px_0_rgb(0,0,0,0.1)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3">
+                    <span>CONFIRMAR PEDIDO</span>
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>

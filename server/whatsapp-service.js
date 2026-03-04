@@ -759,7 +759,6 @@ class WhatsAppService {
             if (orderMode === 'direct') {
                 try {
                     const { processDirectOrder } = await import('./direct-order/index.js');
-                    const { broadcast } = await import('./server.js');
 
                     // Detectar mensagem de localização
                     const locationMessage = message.message?.locationMessage;
@@ -784,7 +783,7 @@ class WhatsAppService {
                         customerName: pushName,
                         sock,
                         db: this.db,
-                        broadcast,  // Passar broadcast SSE para atualizar quadro
+                        broadcast: this.broadcast,  // Passar broadcast SSE da instância para atualizar quadro corretamente
                         location: locationData,  // Passar localização se disponível
                         orderLink  // NOVO: Link já computado pelo mesmo código do Modo Link
                     });

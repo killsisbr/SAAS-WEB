@@ -182,7 +182,7 @@ async function handleGreeting(params, session, intent, interpreter, context) {
     const tenantSlug = settings?.slug || tenantId;
     const catalogUrl = settings?.aiEmployee?.catalogUrl;
     const domain = catalogUrl || `${process.env.APP_DOMAIN || 'localhost:3000'}/loja/${tenantSlug}`;
-    const linkMsg = `\n\nSe preferir pedir mais rápido, acesse nosso cardápio digital: *${domain}* 📲`;
+    const linkMsg = `\n\n*Cardápio Digital:* ${domain} 📲`;
 
     const aiResponse = await interpreter.generateResponse(AGENT_STATES.GREETING, context);
     if (aiResponse) return { text: aiResponse + linkMsg };

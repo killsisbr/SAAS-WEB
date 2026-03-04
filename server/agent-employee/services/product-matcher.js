@@ -1,243 +1,6 @@
 // ============================================================
-// Agent Employee - Product Matcher
-// Validação e busca de produtos no cardápio real
+// Agent Employee - Product Matcher (DEFINITIVE v20 - THE APEX)
 // ============================================================
-
-const IGNORE_TERMS = ['brutus', 'burger', 'boa', 'noite', 'tarde', 'dia', 'ola', 'oi', 'quero', 'queria', 'pedir', 'pra', 'mim', 've', 'lanca', 'manda', 'favor', 'por', 'com', 'sem', 'de', 'mais', 'um', 'uma'];
-
-export function findProduct(searchTerm, products) {
-    if (!searchTerm || !products || products.length === 0) return null;
-
-    const term = normalizeText(searchTerm);
-    if (IGNORE_TERMS.includes(term) || term.length < 3) return null;
-
-    const candidates = [];
-
-    products.forEach(p => {
-        const pNormalized = normalizeText(p.name);
-        if (pNormalized === term) {
-            candidates.push({ product: p, score: 100 });
-        } else if (term.length >= 3 && pNormalized.includes(term)) {
-            const score = pNormalized === term ? 90 : 80;
-            candidates.push({ product: p, score });
-        } else if (pNormalized.length > 3 && term.includes(pNormalized)) {
-            candidates.push({ product: p, score: 70 });
-        } else {
-            if (pNormalized.replace(/\s+/g, '') === term.replace(/\s+/g, '')) {
-                candidates.push({ product: p, score: 95 });
-            }
-        }
-    });
-
-    if (candidates.length > 0) {
-        return candidates.sort((a, b) => {
-            const typeA = a.product._type === 'product' ? 0 : 1;
-            const typeB = b.product._type === 'product' ? 0 : 1;
-            if (typeA !== typeB) return typeA - typeB;
-
-            if (b.score !== a.score) return b.score - a.score;
-
-            if (a.score === 70) {
-                return b.product.name.length - a.product.name.length;
-            }
-
-            const aDefaults = a.product.name.toLowerCase().includes('lata') || a.product.name.toLowerCase().includes('simples') || a.product.name.toLowerCase().includes('tradicional') || a.product.name.toLowerCase().includes('porcao');
-            const bDefaults = b.product.name.toLowerCase().includes('lata') || b.product.name.toLowerCase().includes('simples') || b.product.name.toLowerCase().includes('tradicional') || b.product.name.toLowerCase().includes('porcao');
-
-            if (aDefaults && !bDefaults) return -1;
-            if (bDefaults && !aDefaults) return 1;
-
-            return a.product.name.length - b.product.name.length;
-        })[0].product;
-    }
-
-    const searchWords = term.split(' ').filter(w => w.length > 3 && !IGNORE_TERMS.includes(w));
-    for (const word of searchWords) {
-        const match = products.find(p => normalizeText(p.name) === word && p._type === 'product');
-        if (match) return match;
-    }
-
-    return null;
-}
-
-export function findProductsInMessage(message, products) {
-    const results = [];
-
-    // Pre-limpeza de noise words
-    let msg = normalizeText(message);
-    msg = msg.replace(/\baguas?\b/gi, 'agua');
-    msg = msg.replace(/\bcocas?\b/gi, 'coca');
-    msg = msg.replace(/\b(?:quero|queria|pedir|ola|oi|boa|noite|tarde|dia|moça|moca|amigo|ve|lança|lanca|manda|favor|por|mim|levar|pra|viagem|inicio|vontade|cardapio|olhando)\b/gi, ' ');
-    msg = msg.trim().replace(/\s+/g, ' ');
-
-    let originalMsgPadded = " " + msg + " ";
-
-    const numberWords = {
-        'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'tres': 3, 'três': 3,
-        'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
-    };
-
-    const sortedProducts = [...products].sort((a, b) => b.name.length - a.name.length);
-
-    // Passo 1: Busca exata via Regex iterativo
-    for (const product of sortedProducts) {
-        let pName = normalizeText(product.name);
-        if (pName.length < 3 && pName !== 'x') continue;
-
-        let aliases = [pName];
-        let comboMatch = pName.match(/^combo \d+/);
-        if (comboMatch) aliases.push(comboMatch[0]);
-        if (pName.startsWith('x ')) aliases.push(pName.replace(/^x /, 'x'));
-        if (pName.includes('fritas') || pName.includes('batata')) {
-            aliases.push('fritas');
-            aliases.push('batata');
-            aliases.push('porcao de batata');
-        }
-        if (pName.includes('coca cola lata')) aliases.push('coca lata');
-
-        for (const alias of aliases) {
-            const words = alias.split(/\s+/);
-            let regexStrs = [];
-            for (let i = 0; i < words.length; i++) {
-                if (words[i] === 'x' && i < words.length - 1) {
-                    regexStrs.push('x\\s*');
-                } else {
-                    regexStrs.push(words[i]);
-                    if (i < words.length - 1) {
-                        regexStrs.push('\\s+(?:com\\s+|e\\s+|de\\s+|\\+\\s+)?');
-                    }
-                }
-            }
-            let regexStr = regexStrs.join('');
-            let pRegex = new RegExp(`(?:^|\\s)(${regexStr})(?:$|\\s|,)`, 'i');
-
-            let match;
-            while ((match = pRegex.exec(originalMsgPadded)) !== null) {
-                let matchedText = match[1];
-                let matchIndex = match.index;
-                if (originalMsgPadded[matchIndex] === ' ') matchIndex++;
-
-                const prefix = originalMsgPadded.substring(0, matchIndex).trim();
-                const prefixWords = prefix.split(/\s+/);
-                let q = 1;
-
-                for (let i = prefixWords.length - 1; i >= Math.max(0, prefixWords.length - 4); i--) {
-                    const w = prefixWords[i];
-                    if (!w) continue;
-                    let wClean = w.replace(/^x/i, '').replace(/x$/i, '');
-                    let parsed = parseInt(wClean);
-                    if (!isNaN(parsed) && parsed > 0 && parsed < 100) {
-                        q = parsed;
-                        prefixWords[i] = '';
-                        break;
-                    } else if (numberWords[w]) {
-                        q = numberWords[w];
-                        prefixWords[i] = '';
-                        break;
-                    }
-                }
-
-                const existing = results.find(r => r.product.id === product.id);
-                if (!existing) {
-                    results.push({ product, quantity: q });
-                } else {
-                    existing.quantity += q;
-                }
-
-                const reconstructPrefix = prefixWords.join(' ').replace(/\s+/g, ' ');
-                const suffix = originalMsgPadded.substring(matchIndex + matchedText.length);
-                originalMsgPadded = reconstructPrefix + " " + " ".repeat(matchedText.length) + " " + suffix;
-                originalMsgPadded = originalMsgPadded.replace(/\s+/g, ' ');
-
-                pRegex.lastIndex = 0;
-            }
-        }
-    }
-
-    msg = originalMsgPadded.trim();
-
-    // Passo 2: Fallback Optional Quantity e Plurais
-    const qtys = '10|[1-9]|um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez';
-    const pattern = new RegExp(`(?:^|\\s)(?:(${qtys})\\s*(?:x\\s*)?)?([a-z][a-z0-9\\s]*?)(?=\\s+(?:${qtys})\\b|\\s+e\\s+|\\s+com\\s+|\\s*,|$)`, 'gi');
-
-    let match2;
-    while ((match2 = pattern.exec(msg)) !== null) {
-        let productName = match2[2].trim();
-        productName = productName.replace(/^(a|o|as|os|um|uma)\s+/i, '');
-        if (productName.length < 3 && productName !== 'x') continue;
-
-        let quantity = 1;
-        if (match2[1]) {
-            let qText = match2[1].toLowerCase().replace(/^x/i, '').replace(/x$/i, '');
-            let parsed = parseInt(qText);
-            if (!isNaN(parsed)) quantity = parsed;
-            else if (numberWords[qText]) quantity = numberWords[qText];
-        }
-
-        let product = findProduct(productName, products);
-        if (!product) {
-            product = findProduct(productName.replace(/\b([a-z]{3,})s\b/g, '$1'), products);
-        }
-        if (!product) {
-            const noSpace = productName.replace(/\s+/g, '');
-            product = findProduct(noSpace, products);
-        }
-
-        if (product && !results.some(r => r.product.id === product.id)) {
-            results.push({ product, quantity });
-            msg = msg.replace(match2[0], ' ');
-            pattern.lastIndex = 0;
-        }
-    }
-
-    // Passo 3: Default fallback for "coca"
-    if (!results.some(r => r.product.name.toLowerCase().includes('coca'))) {
-        if (msg.includes('coca')) {
-            const coca = findProduct('coca lata', products) || findProduct('coca cola lata', products) || findProduct('coca', products);
-            if (coca) {
-                const cocaMatch = msg.match(/(\d+|um|uma|dois|duas|três|tres)\s*(?:x\s*)?coca/i);
-                let q = 1;
-                if (cocaMatch) {
-                    let cClean = cocaMatch[1].replace(/^x/i, '').replace(/x$/i, '');
-                    q = parseInt(cClean) || numberWords[cocaMatch[1].toLowerCase()] || 1;
-                }
-                results.push({ product: coca, quantity: q });
-            }
-        }
-    }
-
-    // Passo 4: Heurística Bruta para Observações (Blindagem sem IA)
-    if (results.length > 0) {
-        // Tenta achar "sem X" ou "com Y" globalmente na mensagem pura e anexar ao último item adicionado
-        // Suporta: "sem cebola e sem picles", "com bacon, sem cebola e sem tomate", etc.
-        const obsMatch = message.toLowerCase().match(/\b((?:sem|com|menos|mais)\s+[a-zãõáéíóúâêôç]+(?:(?:\s+e\s+|\s*,\s*)(?:(?:sem|com|menos|mais)\s+)?[a-zãõáéíóúâêôç]+)*)/i);
-        if (obsMatch) {
-            const lastItem = results[results.length - 1];
-            if (!lastItem.observation) {
-                lastItem.observation = obsMatch[1].trim();
-            }
-        }
-    }
-
-    return results;
-}
-
-export function getSuggestions(searchTerm, products, limit = 3) {
-    const term = normalizeText(searchTerm);
-    const scored = products.map(p => {
-        const name = normalizeText(p.name);
-        let score = 0;
-        const termWords = term.split(' ');
-        const nameWords = name.split(' ');
-        for (const tw of termWords) {
-            for (const nw of nameWords) {
-                if (nw.includes(tw) || tw.includes(nw)) score += 10;
-            }
-        }
-        return { product: p, score };
-    });
-    return scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, limit).map(s => s.product);
-}
 
 export function normalizeText(text) {
     if (!text) return '';
@@ -245,10 +8,306 @@ export function normalizeText(text) {
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[-_.,:]/g, ' ')
+        .replace(/([0-9]+)x\b/gi, '$1 ') // Corrigir '2x'
+        .replace(/([0-9]+)([a-z]+)/gi, '$1 $2')
+        .replace(/([a-z]+)([0-9]+)/gi, '$1 $2')
+        .replace(/[-_.,:;!?( )]/g, ' ')
         .replace(/[^a-z0-9\s]/g, '')
         .replace(/\s+/g, ' ')
+        // Typos comuns
+        .replace(/\bxis\b/g, 'x')
+        .replace(/\bepecial\b/g, 'especial')
+        .replace(/\bepeciais\b/g, 'especial')
         .trim();
 }
 
-export default { findProduct, findProductsInMessage, getSuggestions, normalizeText };
+function handleCommonTypos(text) {
+    return text
+        .replace(/\bepecial\b/gi, 'especial')
+        .replace(/\bepeciais\b/gi, 'especial')
+        .replace(/\bepeci(al|ais)\b/gi, 'especial')
+        .replace(/\btudo\b/gi, 'tudo')
+        .replace(/\bburger\b/gi, 'burger')
+        .replace(/\bburguer\b/gi, 'burger')
+        .replace(/\bburgue\b/gi, 'burger');
+}
+
+const numberWords = {
+    'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'tres': 3, 'três': 3,
+    'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
+};
+
+export function findProduct(searchTerm, products, lastCategoryId = null) {
+    if (!searchTerm || !products) return null;
+    const term = normalizeText(searchTerm);
+    if (term.length < 2 || ['300', '500', '700', 'com', 'sem', 'de', 'da', 'do', 'e'].includes(term)) return null;
+
+    const scored = products.map(p => {
+        const pN = normalizeText(p.name);
+        let score = 0;
+        if (pN === term) score = 100;
+        else if (pN.split(' ').includes(term)) score = 90;
+        else if (pN.includes(term)) score = 80;
+
+        // Afinidade de categoria para desempate
+        if (score > 0 && lastCategoryId && p.category_id === lastCategoryId) score += 5;
+
+        // Se score ainda for 0, testar se TODAS as palavras buscadas estão contidas no nome do produto
+        // Ex: termo "coca lata", produto "coca cola lata". As palavras "coca" e "lata" estão presentes.
+        if (score === 0) {
+            const termWords = term.split(' ').filter(w => w.length > 2 || w.match(/^\d+$/));
+            if (termWords.length > 1) {
+                const pWords = pN.split(' ');
+                let allPresent = true;
+                for (const tw of termWords) {
+                    if (pWords.includes(tw)) continue;
+                    if (tw.length >= 4 && pWords.some(pw => pw.startsWith(tw))) continue;
+                    if (tw.match(/^\d+$/) && pWords.some(pw => pw.includes(tw))) continue;
+                    allPresent = false;
+                    break;
+                }
+                if (allPresent) score = 85;
+            }
+        }
+
+        // Adicionar threshold mínimo rigoroso para evitar matches de puro ruído
+        if (score < 70) score = 0;
+
+        if (score < 85 && term.length >= 3) {
+            const tSet = new Set(term);
+            const pSet = new Set(pN);
+            let inter = 0;
+            for (let c of tSet) if (pSet.has(c)) inter++;
+            const sim = inter / Math.max(tSet.size, pSet.size);
+            if (sim >= 0.7 && Math.abs(term.length - pN.length) <= 3) score = Math.max(score, 75);
+        }
+        return { product: p, score };
+    }).filter(s => s.score >= 75).sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // Tie break by difference in length relative to the search term
+        const diffA = Math.abs(a.product.name.length - term.length);
+        const diffB = Math.abs(b.product.name.length - term.length);
+        return diffA - diffB;
+    });
+
+    return scored.length > 0 ? scored[0].product : null;
+}
+
+export function findProductsInMessage(message, products, addons = []) {
+    const raw = normalizeText(message);
+    let working = " " + raw + " ";
+
+    // Passo 0: Sinônimos Cirúrgicos (evita milk milk shake) e Palavras Ignoradas
+    const ignoredWords = ['por favor', 'pfv', 'pf', 'quero', 'querer', 'gostaria', 'manda', 'mandarem', 've', 'obrigado', 'obrigada', 'vlw', 'valeu', 'moça', 'moço', 'amigo', 'amiga', 'bom dia', 'boa tarde', 'boa noite', 'ola', 'olá', 'oi', 'opa', 'eae', 'eai', 'entao', 'então', 'vou', 'pra', 'para', 'pro', 'me', 'muito', 'muita', 'eu', 'demora', 'pedir', 'voces', 'estava', 'fiquei', 'vontade', 'olhando', 'cardapio', 'cardápio', 'um', 'uma', 'uns', 'umas', 'no', 'na', 'nos', 'nas', 'esse', 'essa', 'isso', 'dele', 'dela', 'deles', 'delas', 'preciso', 'envia', 'traz', 'traga', 'obg', 'dia', 'tarde', 'noite', 'bom', 'boa'];
+    let ignoredRegex = new RegExp(`\\b(?:${ignoredWords.join('|')})\\b`, 'gi');
+    working = working.replace(ignoredRegex, ' ');
+
+    working = working.replace(/\b(?:milk\s+)?shakings?\b/gi, ' milk shake ');
+    working = working.replace(/\b(?:milk\s+)?shakes?\b/gi, ' milk shake ');
+    working = working.replace(/\b(?!milk\s)shaking\b/gi, ' milk shake '); // Fallback extra
+
+    working = working.replace(/\bmonstros?\b/gi, ' monster ');
+    working = working.replace(/\bmstr\b/gi, ' monster ');
+    working = working.replace(/\bcocas?\b(?!\s*(?:de\s+)?(?:lata|2\s*l|litros?|zero|cola))/gi, ' coca lata ');
+    working = working.replace(/\bassais?\b/gi, ' acai ');
+    working = working.replace(/\btbm\b/gi, ' e ');
+    working = working.replace(/\s+/g, ' ');
+
+    const results = [];
+    const sortedProducts = [...products].sort((a, b) => b.name.length - a.name.length);
+    const qtysStr = '(?:\\d+|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez)';
+
+    // Step 1: Rigorous Scan
+    for (const p of sortedProducts) {
+        const pN = normalizeText(p.name);
+        const aliases = [pN];
+        if (pN.startsWith('copo ')) aliases.push(pN.replace('copo ', ''));
+        if (pN.includes('milk shake')) aliases.push(pN.replace('milk shake', 'shake').trim());
+        if (pN.includes('coca cola')) aliases.push(pN.replace('coca cola', 'coca').trim());
+        if (pN.match(/\bcoca\b(?!\scola)/)) aliases.push(pN.replace(/\bcoca\b/, 'coca lata').trim());
+
+        aliases.sort((a, b) => b.length - a.length);
+
+        for (let alias of aliases) {
+            if (alias.match(/^[0-9]+(?:\s*ml)?$/)) continue;
+
+            let regexStr = alias.split(' ').join('\\s*(?:(?:de|da|do|com|sem|e)\\s+)?');
+            if (regexStr.match(/\s*(?:500|300|700)$/)) {
+                // Se termina em número (ex: 500), o 'ml' e sua preposição são opcionais JUNTOS.
+                regexStr += '(?:\\s*(?:(?:de|da|do|com|sem|e)\\s+)?ml)?';
+            } else if (regexStr.match(/ml$/)) {
+                // Se o alias já tem ml (ex: "acai 500 ml"), tornamos o bloco de ' ml' opcional no fim.
+                const mlPart = '\\s*(?:(?:de|da|do|com|sem|e)\\s+)?ml$';
+                const mlRegex = new RegExp(mlPart);
+                if (regexStr.match(mlRegex)) {
+                    regexStr = regexStr.replace(mlRegex, '(?:\\s*(?:(?:de|da|do|com|sem|e)\\s+)?ml)?');
+                } else {
+                    regexStr = regexStr.replace(/ml$/, '(?:\\s*ml)?');
+                }
+            }
+            regexStr = regexStr.replace(/([a-z]{3,})\b/g, '$1s?');
+
+            const pRegex = new RegExp(`(?:^|\\s)(?:(${qtysStr})\\s+(?:de\\s+)?)?(${regexStr})(?=\\s|$)`, 'i');
+            let m;
+            while ((m = working.match(pRegex)) !== null) {
+                const matchIdx = m.index;
+                let q = 1;
+                if (m[1]) q = parseInt(m[1]) || numberWords[m[1].toLowerCase()] || 1;
+
+                results.push({ product: p, quantity: q, addons: [], index: matchIdx, length: m[0].length });
+                working = working.substring(0, matchIdx) + ' '.repeat(m[0].length) + working.substring(matchIdx + m[0].length);
+            }
+        }
+    }
+
+
+
+    const sizeRegex = /(?:\b)(?:(\d+|um|uma|dois|duas)\s+)?(?:de\s+)?([0-9]{3})(?:ml)?\b/gi;
+    let sMatch;
+    while ((sMatch = sizeRegex.exec(working)) !== null) {
+        const size = sMatch[2].trim();
+        const lastProd = results.slice().sort((a, b) => a.index - b.index).reverse().find(r => r.index < sMatch.index);
+        const catId = lastProd ? lastProd.product.category_id : null;
+
+        if (catId) {
+            const sibling = products.find(prod => prod.category_id === catId && normalizeText(prod.name).includes(size));
+            if (sibling) {
+                let q = 1;
+                if (sMatch[1]) q = parseInt(sMatch[1]) || numberWords[sMatch[1].toLowerCase()] || 1;
+
+                // Pegar o index real do match
+                const actualMatchIdx = sMatch.index;
+                const actualMatchLen = sMatch[0].length;
+
+                results.push({ product: sibling, quantity: q, addons: [], index: actualMatchIdx, length: actualMatchLen });
+                working = working.substring(0, actualMatchIdx) + ' '.repeat(actualMatchLen) + working.substring(actualMatchIdx + actualMatchLen);
+                sizeRegex.lastIndex = 0;
+            }
+        }
+    }
+
+
+
+    // Step 3: Addons
+    let sortedRes = results.sort((a, b) => a.index - b.index);
+    for (let i = 0; i < sortedRes.length; i++) {
+        const curr = sortedRes[i];
+        const nextIdx = (i < sortedRes.length - 1) ? sortedRes[i + 1].index : working.length;
+        const scanStart = curr.index + curr.length;
+        const scanEnd = Math.min(nextIdx, scanStart + 120);
+        const fragment = working.substring(scanStart, scanEnd);
+
+        if (addons.length > 0) {
+            const sortedAddons = [...addons].sort((a, b) => b.name.length - a.name.length);
+            for (const addon of sortedAddons) {
+                const aN = normalizeText(addon.name);
+                // Match exato ou inclui
+                if (fragment.includes(aN)) {
+                    curr.addons.push(addon);
+                    // Clear the matched addon from working string
+                    const aRegex = new RegExp(`(?:^|\\s)(?:com|e|extra|adicional|sem)?\\s*(${aN})s?(?:$|\\s)`, 'i');
+                    const aMatch = fragment.match(aRegex);
+                    if (aMatch) {
+                        const globalAIdx = scanStart + aMatch.index;
+                        working = working.substring(0, globalAIdx) + ' '.repeat(aMatch[0].length) + working.substring(globalAIdx + aMatch[0].length);
+                    }
+                    continue;
+                }
+                // Fuzzy match para adicionais (ex: nutela -> nutella)
+                if (aN.length >= 4) {
+                    const words = fragment.split(' ');
+                    for (const w of words) {
+                        if (w.length < 4) continue;
+                        // Jaccard simples para a palavra do fragment vs addon
+                        const s1 = new Set(w);
+                        const s2 = new Set(aN);
+                        let inter = 0;
+                        for (const char of s1) if (s2.has(char)) inter++;
+                        const score = (inter * 200) / (s1.size + s2.size);
+                        if (score > 80) {
+                            curr.addons.push(addon);
+                            // Clear the matched addon from working string
+                            const aRegex = new RegExp(`(?:^|\\s)(?:com|e|extra|adicional|sem)?\\s*(${w})s?(?:$|\\s)`, 'i'); // Use 'w' for clearing
+                            const aMatch = fragment.match(aRegex);
+                            if (aMatch) {
+                                const globalAIdx = scanStart + aMatch.index;
+                                working = working.substring(0, globalAIdx) + ' '.repeat(aMatch[0].length) + working.substring(globalAIdx + aMatch[0].length);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Step 4: Generic Fallback (Index-aware) - Multi-word attempt
+    const words = working.split(/\s+/).filter(w => w.trim().length > 0);
+    for (let w = 0; w < words.length; w++) {
+        // Tentar janelas de 3, 2 e 1 palavra(s)
+        for (let windowSize = 3; windowSize >= 1; windowSize--) {
+            if (w + windowSize <= words.length) {
+                const phrase = words.slice(w, w + windowSize).join(' ');
+
+                // Pular se a frase for vazia ou menor que 3 chars
+                if (phrase.length < 3) continue;
+
+                // Checar se a frase tem um prefixo de quantidade
+                let q = 1;
+                let searchPhrase = phrase;
+                const firstWord = words[w];
+                const isQty = firstWord.match(/^\d+$/) || numberWords[firstWord.toLowerCase()];
+
+                if (isQty && windowSize > 1) {
+                    q = parseInt(firstWord) || numberWords[firstWord.toLowerCase()] || 1;
+                    searchPhrase = words.slice(w + 1, w + windowSize).join(' ');
+                } else if (isQty && windowSize === 1) {
+                    continue; // Se é só uma quantidade isolada, pula
+                }
+
+                if (searchPhrase.length < 3) continue;
+
+                // Restrição severa: palavras pequenas não podem dar fallback genérico em produtos não relacionados
+                const lastCat = sortedRes.length > 0 ? sortedRes[sortedRes.length - 1].product.category_id : null;
+                const found = findProduct(searchPhrase, products, lastCat);
+                if (found) {
+                    // Evitar que palavras muito genéricas deem match (ex: 'com' não deve dar match em 'Combo')
+                    if (searchPhrase.length <= 3 && !normalizeText(found.name).split(' ').includes(searchPhrase)) {
+                        continue;
+                    }
+
+                    // Localizar a string exata em `working` para pegar o index
+                    const escapeRegex = (s) => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '\\s+');
+                    const matchRegex = new RegExp(`(?:^|\\s)(${escapeRegex(phrase)})(?:\\s|$)`, 'i');
+                    const gm = working.match(matchRegex);
+                    if (gm) {
+                        const matchIdx = gm.index + gm[0].indexOf(gm[1]);
+                        sortedRes.push({ product: found, quantity: q, addons: [], index: matchIdx, length: gm[1].length });
+                        working = working.substring(0, matchIdx) + ' '.repeat(gm[1].length) + working.substring(matchIdx + gm[1].length);
+                        words.splice(w, windowSize, ...Array(windowSize).fill(' ')); // Invalidar no array
+                        w += windowSize - 1; // Pular as palavras
+                        break; // Janela encontrada, break out do loop de janelas
+                    }
+                }
+            }
+        }
+    }
+
+    // Final Unique Position Filter
+    const unique = [];
+    const positions = new Set();
+    for (const r of sortedRes.sort((a, b) => a.index - b.index)) {
+        if (!positions.has(r.index)) {
+            unique.push(r);
+            positions.add(r.index);
+        }
+    }
+
+    return unique.map(({ index, length, ...rest }) => rest);
+}
+
+export function getSuggestions(searchTerm, products, limit = 3) {
+    const term = normalizeText(searchTerm);
+    return products.map(p => ({ product: p, score: normalizeText(p.name).includes(term) ? 10 : 0 }))
+        .sort((a, b) => b.score - a.score).slice(0, limit).map(s => s.product);
+}

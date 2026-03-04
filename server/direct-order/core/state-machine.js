@@ -53,6 +53,28 @@ export async function processMessage(params) {
 
     console.log(`[DirectOrder] Estado: ${cart.state}, Ações: ${JSON.stringify(actions.map(a => a.type))}`);
 
+    // --- LÓGICA GLOBAL: Ambiguidade detectada ---
+    const hasClarify = actions.some(a => a.type === 'CLARIFY_PRODUCT');
+    if (hasClarify && cart.state !== CART_STATES.COMPLETED) {
+        const action = actions.find(a => a.type === 'CLARIFY_PRODUCT');
+        cart.pendingClarification = {
+            candidates: action.candidates,
+            quantity: action.quantity,
+            notes: action.notes,
+            matchedKeyword: action.matchedKeyword
+        };
+        cartService.setState(tenantId, customerId, CART_STATES.CLARIFY);
+
+        // Retornar opções imediatamente sem processar a mensagem atual como uma escolha
+        let response = `Encontrei mais de uma opção para "*${action.matchedKeyword}*". Qual você deseja?\n\n`;
+        action.candidates.forEach((c, idx) => {
+            response += `*${idx + 1}*. ${c.name} - ${formatPrice(c.price)}\n`;
+        });
+        response += '\n_Digite o número da opção desejada._';
+
+        return { text: response };
+    }
+
     // --- LÓGICA GLOBAL: Adição de produtos em qualquer estado ---
     const hasProducts = actions.some(a => a.type === 'ADD_PRODUCT');
     if (hasProducts && cart.state !== CART_STATES.COMPLETED) {
@@ -98,6 +120,9 @@ export async function processMessage(params) {
 
         case CART_STATES.SUPPORT:
             return handleSupport(params, cart, actions);
+
+        case CART_STATES.CLARIFY:
+            return handleClarify(params, cart, actions);
 
         default:
             return handleBrowsing(params, cart, actions);
@@ -187,10 +212,11 @@ async function handleBrowsing(params, cart, actions) {
                 }
                 break;
 
+            case 'CANCEL':
             case 'REMOVE_ITEM':
                 cartService.removeLastItem(tenantId, customerId);
                 const cartViewRemove = cartService.formatCartView(tenantId, customerId);
-                return { text: `*Item removido!*\n\n${cartViewRemove}\n${getMenuSubMessage()}` };
+                return { text: `*Item removido!* 🗑️\n\n${cartViewRemove}\n${getMenuSubMessage()}` };
 
             case 'DELIVERY':
                 if (cart.items.length === 0 && !productAdded) {
@@ -651,7 +677,12 @@ async function finalizeOrder(params, cart) {
 
         // Calcular total final com taxa
         const deliveryFee = (cart.deliveryType === 'delivery' && cart.pendingFee) ? cart.pendingFee : 0;
-        const finalTotal = cart.total + deliveryFee;
+
+        // CORREÇÃO: Como o direct-order adiciona a taxa como um item (id: 0), o cart.total já contém a taxa.
+        // O subtotal real (produtos) é o cart.total menos a taxa.
+        // O total final (produtos + taxa) é o próprio cart.total.
+        const finalTotal = cart.total;
+        const realSubtotal = Math.max(0, cart.total - deliveryFee);
 
         const result = await db.run(`
             INSERT INTO orders (
@@ -670,9 +701,9 @@ async function finalizeOrder(params, cart) {
             cart.address || null,
             cart.paymentMethod || 'CASH',
             cart.observation || null,
-            cart.total,   // subtotal (itens)
+            realSubtotal, // subtotal (itens) - sem duplicar taxa
             deliveryFee,  // taxa de entrega
-            finalTotal    // total (itens + taxa)
+            finalTotal    // total (itens + taxa, como a taxa ja ta nos itens, é cart.total)
         ]);
 
         // Atribuir ID gerado ao resultado para uso posterior
@@ -858,3 +889,71 @@ async function handleLocationMessage(params, cart, location) {
 export default {
     processMessage
 };
+/**
+ * Handler: Estado de esclarecimento de ambiguidade
+ */
+async function handleClarify(params, cart, actions) {
+    const { message, tenantId, customerId } = params;
+    const msg = message.toLowerCase().trim();
+    const pending = cart.pendingClarification;
+
+    if (!pending) {
+        cartService.setState(tenantId, customerId, CART_STATES.BROWSING);
+        return handleBrowsing(params, cart, actions);
+    }
+
+    // 1. Verificar se é uma escolha numérica
+    const choice = parseInt(msg);
+    if (!isNaN(choice) && choice > 0 && choice <= pending.candidates.length) {
+        const product = pending.candidates[choice - 1];
+
+        // Adicionar o produto escolhido
+        cartService.addItem(
+            tenantId,
+            customerId,
+            product,
+            pending.quantity || 1,
+            pending.notes || '',
+            'product'
+        );
+
+        // Limpar pendência e voltar para BROWSING
+        cart.pendingClarification = null;
+        cartService.setState(tenantId, customerId, CART_STATES.BROWSING);
+
+        const cartView = cartService.formatCartView(tenantId, customerId);
+        return { text: `✅ *Item adicionado!* ${product.name}\n\n${cartView}\n${getMenuSubMessage()}` };
+    }
+
+    // 2. Verificar se quer cancelar
+    if (msg === 'c' || msg.includes('cancela') || msg.includes('nao quero')) {
+        cart.pendingClarification = null;
+        cartService.setState(tenantId, customerId, CART_STATES.BROWSING);
+        return { text: 'Esclarecimento cancelado. O que deseja pedir?' };
+    }
+
+    // 3. Gerar resposta amigável
+    let response = `Encontrei mais de uma opção para "*${pending.matchedKeyword}*". Qual você deseja?\n\n`;
+
+    // Detectar se são variações do mesmo produto (ex: Copos de Açaí)
+    const allSamePrefix = pending.candidates.length > 1 &&
+        pending.candidates.every(c => c.name.toLowerCase().includes('copo') && c.name.toLowerCase().includes('acai'));
+
+    if (allSamePrefix) {
+        response = `Temos vários tamanhos de *Copo de Açaí* disponíveis. Qual você prefere?\n\n`;
+    }
+
+    pending.candidates.forEach((c, idx) => {
+        response += `*${idx + 1}*. ${c.name} - ${formatPrice(c.price)}\n`;
+    });
+
+    response += '\n_Digite o número da opção ou *C* para cancelar._';
+    return { text: response };
+}
+
+/**
+ * Auxiliar: Formatar preço
+ */
+function formatPrice(value) {
+    return `R$ ${(Number(value) || 0).toFixed(2).replace('.', ',')}`;
+}

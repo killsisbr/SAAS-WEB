@@ -20,7 +20,8 @@ export const CART_STATES = {
     PAYMENT: 'forma-pagamento',
     CHANGE: 'definindo-troco',
     COMPLETED: 'finalizado',
-    SUPPORT: 'suporte'
+    SUPPORT: 'suporte',
+    CLARIFY: 'esclarecendo'
 };
 
 /**
@@ -58,8 +59,8 @@ export const INTENT_KEYWORDS = {
     PICKUP: ['buscar', 'busco', 'pegar', 'retirada', 'retirar', 'vou buscar'],
     PIX: ['pix', 'chave', 'pix?'],
     CONFIRM: ['s', 'sim', 'isso', 'correto', 'confirmo', 'confirmar'],
-    CANCEL: ['n', 'não', 'nao', 'cancelar', 'cancela'],
-    REMOVE_ITEM: ['c', 'cancelar', 'remover', 'tira', 'tirar'],
+    CANCEL: ['n', 'não', 'nao', 'cancelar', 'cancela', 'não quero', 'nao quero', 'cancela o ultimo', 'cancela o último'],
+    REMOVE_ITEM: ['c', 'remover', 'tira', 'tirar', 'apaga', 'apagar', 'excluir', 'exclui'],
     BACK: ['voltar', 'volta', 'retornar', 'v'],
     HELP: ['ajuda', 'help', 'suporte'],
     RESET: ['reiniciar', 'limpar', 'novo', 'pedir']

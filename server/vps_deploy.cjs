@@ -20,6 +20,10 @@ const filesToUpload = [
     {
         local: 'd:/VENDA/IZAQUE CAMPESTRE/Saas-Restaurante/public/admin/config.html',
         remote: '/root/killsis/SAAS-WEB/public/admin/config.html'
+    },
+    {
+        local: 'd:/VENDA/IZAQUE CAMPESTRE/Saas-Restaurante/server/agent-employee/services/product-matcher.js',
+        remote: '/root/killsis/SAAS-WEB/server/agent-employee/services/product-matcher.js'
     }
 ];
 

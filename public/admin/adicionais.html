@@ -801,13 +801,13 @@
                     // Editar
                     await apiFetch(`/api/category-addons/groups/${id}`, {
                         method: 'PUT',
-                        body: JSON.stringify({ name, minSelection, maxSelection })
+                        body: { name, minSelection, maxSelection }
                     });
                 } else {
                     // Criar
                     await apiFetch('/api/category-addons/groups', {
                         method: 'POST',
-                        body: JSON.stringify({ categoryId: currentCategoryId, name, minSelection, maxSelection })
+                        body: { categoryId: currentCategoryId, name, minSelection, maxSelection }
                     });
                 }
                 closeGroupModal();
@@ -847,7 +847,7 @@
             try {
                 await apiFetch(`/api/category-addons/groups/${groupId}/items`, {
                     method: 'POST',
-                    body: JSON.stringify({ name, price })
+                    body: { name, price }
                 });
                 nameInput.value = '';
                 priceInput.value = '';
@@ -866,7 +866,7 @@
             try {
                 await apiFetch(`/api/category-addons/items/${itemId}`, {
                     method: 'PUT',
-                    body: JSON.stringify({ name: newName, price: newPrice, isAvailable: true })
+                    body: { name: newName, price: newPrice, isAvailable: true }
                 });
                 await loadGroups();
                 showToast('Adicional atualizado!', 'success');

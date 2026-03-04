@@ -18,7 +18,7 @@ export const AGENT_STATES = {
 
 export const DEFAULT_MESSAGES = {
     // Boas-vindas
-    greeting: "Olá! 😊 Que bom ter você aqui! Eu sou a {employeeName}, sua atendente virtual do *{storeName}*.\n\nO que você gostaria de pedir hoje? Pode escrever do seu jeito, por exemplo: 'quero 2 x-bacon e uma coca lata'.",
+    greeting: "Olá! Bem-vindo ao *{storeName}*. 🍦\n\nComo posso ajudar com o seu pedido hoje? Você pode listar os itens aqui ou utilizar o cardápio digital abaixo:",
 
     // Item adicionado
     itemAdded: "✅ Registrado!\n\n{cartItems}\n\nO que mais você gostaria? Se preferir, podemos *fechar* o pedido.",
