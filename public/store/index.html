@@ -1424,7 +1424,8 @@
                 <!-- Container de Imagem -->
                 <div id="pizza-image-container" class="relative overflow-hidden bg-zinc-200">
                     <!-- Imagem unica (normal) - z-10 garante que fica por cima do split -->
-                    <img id="modal-img" src="" class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200">
+                    <img id="modal-img" src=""
+                        class="absolute inset-0 w-full h-full object-cover z-10 bg-zinc-200 opacity-0 transition-opacity duration-300">
                     <!-- Container split (meio a meio) - escondido por padrao -->
                     <div id="split-container" class="hidden absolute inset-0 flex">
                         <div class="w-1/2 h-full overflow-hidden">
@@ -3428,6 +3429,14 @@
             document.getElementById('modal-desc').innerText = desc;
 
             const modalImg = document.getElementById('modal-img');
+
+            // RESET IMAGE (Prevents flicker from previous product)
+            modalImg.src = '';
+            modalImg.classList.add('opacity-0');
+
+            modalImg.onload = () => {
+                modalImg.classList.remove('opacity-0');
+            };
             modalImg.src = img;
 
             // ===== AJUSTE DE LAYOUT (PIZZA VS LANCHE) =====
