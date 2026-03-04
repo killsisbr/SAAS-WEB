@@ -405,20 +405,9 @@
             grid-template-columns: 1fr 1fr 1fr;
         }
 
-        /* Ocultar boiao flutuante padrao nestes temas */
-        [data-theme="modern"] #floating-cart-btn,
-        [data-theme="modern-list"] #floating-cart-btn,
-        [data-theme="retro-list"] #floating-cart-btn,
-        [data-theme="midnight-list"] #floating-cart-btn,
-        [data-theme="vibe-list"] #floating-cart-btn,
-        [data-theme="doodle-list"] #floating-cart-btn,
-        [data-theme="luxury-list"] #floating-cart-btn,
-        [data-theme="matrix-list"] #floating-cart-btn,
-        [data-theme="candy-list"] #floating-cart-btn,
-        [data-theme="compact"] #floating-cart-btn,
-        [data-theme="organic"] #floating-cart-btn,
-        [data-theme="neon"] #floating-cart-btn,
-        [data-theme="sketch"] #floating-cart-btn {
+        /* Ocultar botão flutuante padrão em todos os temas */
+        #floating-cart-btn,
+        #cart-fab {
             display: none !important;
         }
 
@@ -1417,17 +1406,6 @@
         </div>
     </footer>
 
-    <!-- BOTAO FLUTUANTE DO CARRINHO (FAB) -->
-    <button id="cart-fab" onclick="openModal('cart-modal')"
-        class="fixed bottom-8 right-4 w-16 h-16 bg-brand text-white rounded-full shadow-2xl z-[150] flex items-center justify-center border-4 border-dark transition-all duration-300 hover:scale-110 opacity-0 pointer-events-none"
-        style="box-shadow: 4px 4px 0 var(--dark);">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        <span id="cart-fab-count"
-            class="absolute -top-1 -right-1 w-6 h-6 bg-dark text-mainBg rounded-full text-xs font-black flex items-center justify-center border-2 border-brand">0</span>
-    </button>
 
     <!-- MODAL: DETALHES DO PRODUTO (PIZZARIA) -->
     <div id="product-modal" class="modal-overlay fixed inset-0 p-6">
@@ -3279,8 +3257,9 @@
             }
 
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
-            // Inicializar como array vazio - adicionais serao carregados das fontes especificas
-            let addons = [];
+
+            // NOVO: Sistema de grupos de adicionais (Substitui o array flat de addons)
+            let addonGroups = [];
 
             // Verificar se e marmita/buffet - PRIMEIRO buscar adicionais da CATEGORIA
             const catName = (product._categoryName || '').toLowerCase();
@@ -3293,33 +3272,38 @@
                     if (catAddonsRes.ok) {
                         const catAddonsData = await catAddonsRes.json();
                         if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            // Juntar todos os itens de todos os grupos
-                            for (const group of catAddonsData.groups) {
-                                if (group.items && group.items.length > 0) {
-                                    const groupAddons = group.items.map(item => ({
-                                        id: 'cat_' + item.id,
-                                        name: item.name,
-                                        price: Number(item.price) || 0
-                                    }));
-                                    addons = [...addons, ...groupAddons];
-                                }
-                            }
-                            console.log('Adicionais da categoria (marmita) carregados:', addons);
+                            addonGroups = catAddonsData.groups.map(group => ({
+                                id: group.id,
+                                name: group.name,
+                                min_selection: group.min_selection || 0,
+                                max_selection: group.max_selection || 10,
+                                items: (group.items || []).map(item => ({
+                                    id: 'cat_' + item.id,
+                                    name: item.name,
+                                    price: Number(item.price) || 0
+                                }))
+                            }));
+                            console.log('Grupos de adicionais da categoria (marmita) carregados:', addonGroups);
                         }
                     }
 
                     // FALLBACK: Se nao encontrou na categoria, usar sistema antigo de buffet
-                    if (addons.length === 0 && storeData?.id) {
+                    if (addonGroups.length === 0 && storeData?.id) {
                         const buffetRes = await fetch(`/api/buffet/tenant/${storeData.id}`);
                         const buffetData = await buffetRes.json();
                         if (buffetData.itens && buffetData.itens.length > 0) {
-                            const buffetAddons = buffetData.itens.map(item => ({
-                                id: 'buffet_' + item.id,
-                                name: item.nome,
-                                price: 0 // Buffet items sao gratis
-                            }));
-                            addons = buffetAddons;
-                            console.log('Fallback: Itens do buffet antigo carregados:', addons);
+                            addonGroups = [{
+                                id: 'buffet_group',
+                                name: 'Itens do Buffet',
+                                min_selection: 0,
+                                max_selection: 20,
+                                items: buffetData.itens.map(item => ({
+                                    id: 'buffet_' + item.id,
+                                    name: item.nome,
+                                    price: 0
+                                }))
+                            }];
+                            console.log('Fallback: Grupo de buffet antigo carregado:', addonGroups);
                         }
                     }
                 } catch (e) {
@@ -3338,33 +3322,38 @@
                     if (catAddonsRes.ok) {
                         const catAddonsData = await catAddonsRes.json();
                         if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            // Juntar todos os itens de todos os grupos
-                            for (const group of catAddonsData.groups) {
-                                if (group.items && group.items.length > 0) {
-                                    const groupAddons = group.items.map(item => ({
-                                        id: 'cat_' + item.id,
-                                        name: item.name,
-                                        price: Number(item.price) || 0
-                                    }));
-                                    addons = [...addons, ...groupAddons];
-                                }
-                            }
-                            console.log('Adicionais da categoria (acai) carregados:', addons);
+                            addonGroups = catAddonsData.groups.map(group => ({
+                                id: group.id,
+                                name: group.name,
+                                min_selection: group.min_selection || 0,
+                                max_selection: group.max_selection || 10,
+                                items: (group.items || []).map(item => ({
+                                    id: 'cat_' + item.id,
+                                    name: item.name,
+                                    price: Number(item.price) || 0
+                                }))
+                            }));
+                            console.log('Grupos de adicionais da categoria (acai) carregados:', addonGroups);
                         }
                     }
 
                     // FALLBACK: Se nao encontrou na categoria, usar sistema antigo
-                    if (addons.length === 0 && storeData?.id) {
+                    if (addonGroups.length === 0 && storeData?.id) {
                         const acaiRes = await fetch(`/api/acai/adicionais/tenant/${storeData.id}`);
                         const acaiData = await acaiRes.json();
                         if (acaiData.adicionais && acaiData.adicionais.length > 0) {
-                            const acaiAddons = acaiData.adicionais.map(item => ({
-                                id: 'acai_' + item.id,
-                                name: item.nome,
-                                price: item.preco || 0
-                            }));
-                            addons = acaiAddons;
-                            console.log('Fallback: Adicionais de acai antigos carregados:', addons);
+                            addonGroups = [{
+                                id: 'acai_group',
+                                name: 'Adicionais',
+                                min_selection: 0,
+                                max_selection: 10,
+                                items: acaiData.adicionais.map(item => ({
+                                    id: 'acai_' + item.id,
+                                    name: item.nome,
+                                    price: item.preco || 0
+                                }))
+                            }];
+                            console.log('Fallback: Grupo de acai antigo carregado:', addonGroups);
                         }
                     }
                 } catch (e) {
@@ -3384,34 +3373,40 @@
                     if (catAddonsRes.ok) {
                         const catAddonsData = await catAddonsRes.json();
                         if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            // Juntar todos os itens de todos os grupos
-                            for (const group of catAddonsData.groups) {
-                                if (group.items && group.items.length > 0) {
-                                    const groupAddons = group.items.map(item => ({
-                                        id: 'cat_' + item.id,
-                                        name: item.name,
-                                        price: Number(item.price) || 0
-                                    }));
-                                    addons = [...addons, ...groupAddons];
-                                }
-                            }
-                            console.log('Adicionais da categoria (hamburguer) carregados:', addons);
+                            addonGroups = catAddonsData.groups.map(group => ({
+                                id: group.id,
+                                name: group.name,
+                                min_selection: group.min_selection || 0,
+                                max_selection: group.max_selection || 10,
+                                items: (group.items || []).map(item => ({
+                                    id: 'cat_' + item.id,
+                                    name: item.name,
+                                    price: Number(item.price) || 0
+                                }))
+                            }));
+                            console.log('Grupos de adicionais da categoria (hamburguer) carregados:', addonGroups);
                         }
                     }
 
                     // FALLBACK: Se nao encontrou na categoria, usar do produto
-                    if (addons.length === 0 && product.has_addons) {
+                    if (addonGroups.length === 0 && product.has_addons) {
                         let prodAddons = product.addons || [];
                         if (typeof prodAddons === 'string') {
                             prodAddons = JSON.parse(prodAddons);
                         }
                         if (prodAddons && prodAddons.length > 0) {
-                            addons = prodAddons.map((addon, idx) => ({
-                                id: 'addon_' + (addon.id || idx),
-                                name: addon.name || addon.nome,
-                                price: parseFloat(addon.price || addon.preco || 0)
-                            }));
-                            console.log('Fallback: Adicionais do produto carregados:', addons);
+                            addonGroups = [{
+                                id: 'product_addons_group',
+                                name: 'Adicionais',
+                                min_selection: 0,
+                                max_selection: 10,
+                                items: prodAddons.map((addon, idx) => ({
+                                    id: 'addon_' + (addon.id || idx),
+                                    name: addon.name || addon.nome,
+                                    price: parseFloat(addon.price || addon.preco || 0)
+                                }))
+                            }];
+                            console.log('Fallback: Adicionais do produto carregados:', addonGroups);
                         }
                     }
                 } catch (e) {
@@ -3428,37 +3423,43 @@
                         prodAddons = JSON.parse(prodAddons);
                     }
                     if (prodAddons && prodAddons.length > 0) {
-                        addons = prodAddons.map((addon, idx) => ({
-                            id: 'addon_' + (addon.id || idx),
-                            name: addon.name || addon.nome,
-                            price: parseFloat(addon.price || addon.preco || 0)
-                        }));
-                        console.log('Adicionais do produto carregados:', addons);
+                        addonGroups = [{
+                            id: 'product_addons_group',
+                            name: 'Adicionais',
+                            min_selection: 0,
+                            max_selection: 10,
+                            items: prodAddons.map((addon, idx) => ({
+                                id: 'addon_' + (addon.id || idx),
+                                name: addon.name || addon.nome,
+                                price: parseFloat(addon.price || addon.preco || 0)
+                            }))
+                        }];
+                        console.log('Adicionais do produto carregados:', addonGroups);
                     }
                 } catch (e) {
                     console.error('Erro ao parsear adicionais:', e);
                 }
             }
 
-            // FALLBACK: Se nao tem adicionais, buscar da categoria
-            if (addons.length === 0 && product.category_id) {
+            // FALLBACK GERAL: Se ainda nao tem nada, buscar da categoria
+            if (addonGroups.length === 0 && product.category_id) {
                 try {
                     const catAddonsRes = await fetch(`/api/category-addons/category/${product.category_id}`);
                     if (catAddonsRes.ok) {
                         const catAddonsData = await catAddonsRes.json();
                         if (catAddonsData.groups && catAddonsData.groups.length > 0) {
-                            // Juntar todos os itens de todos os grupos
-                            for (const group of catAddonsData.groups) {
-                                if (group.items && group.items.length > 0) {
-                                    const groupAddons = group.items.map(item => ({
-                                        id: 'cat_' + item.id,
-                                        name: item.name,
-                                        price: parseFloat(item.price || 0)
-                                    }));
-                                    addons = [...addons, ...groupAddons];
-                                }
-                            }
-                            console.log('Adicionais da categoria carregados:', addons);
+                            addonGroups = catAddonsData.groups.map(group => ({
+                                id: group.id,
+                                name: group.name,
+                                min_selection: group.min_selection || 0,
+                                max_selection: group.max_selection || 10,
+                                items: (group.items || []).map(item => ({
+                                    id: 'cat_' + item.id,
+                                    name: item.name,
+                                    price: parseFloat(item.price || 0)
+                                }))
+                            }));
+                            console.log('Adicionais da categoria carregados no fallback final:', addonGroups);
                         }
                     }
                 } catch (e) {
@@ -3469,22 +3470,23 @@
             // Verificar se e bebida - nao mostrar adicionais
             const isBebida = catName.includes('bebida') || catName.includes('drink') || catName.includes('refri') || catName.includes('suco');
 
-            openProduct(product.name, product.description || '', product.price, imgUrl, product.id, addons, isBebida);
+            openProduct(product.name, product.description || '', product.price, imgUrl, product.id, addonGroups, isBebida);
         }
 
         // ===== EXTRAS/ADICIONAIS =====
-        let productAddons = [];
+        let productAddonGroups = []; // NOVO: Estrutura de grupos
         let selectedSize = null; // Tamanho selecionado (ex: 'P', 'M', 'G')
         let productSizes = []; // Array de tamanhos disponiveis
         let productSizePrices = {}; // Mapa de tamanho -> preco
 
 
-
-        function openProduct(title, desc, price, img, productId, addons, isBebida = false) {
+        function openProduct(title, desc, price, img, productId, addonGroups, isBebida = false) {
             const product = findProductById(productId);
             currentItem = { id: productId, title, desc, price, img };
-            // Garantir que addons seja sempre um array
-            productAddons = Array.isArray(addons) ? addons : [];
+
+            // Garantir que addonGroups seja sempre um array de grupos
+            productAddonGroups = Array.isArray(addonGroups) ? addonGroups : [];
+
             qty = 1;
             selectedExtras = [];
             selectedSize = null;
@@ -3653,22 +3655,41 @@
             } else {
                 if (extrasSection) extrasSection.style.display = 'block';
 
-                if (productAddons.length > 0) {
-                    container.innerHTML = productAddons.map(addon => `
-                        <div class="flex items-center justify-between group cursor-pointer"
-                             onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}')">
-                            <div class="flex items-center gap-3">
-                                <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
-                                     id="check-${addon.id}">
-                                    <svg class="w-4 h-4 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                </div>
-                                <span class="font-bold text-sm uppercase tracking-tight">${addon.name}</span>
+                if (productAddonGroups.length > 0) {
+                    container.innerHTML = productAddonGroups.map(group => {
+                        const min = group.min_selection || 0;
+                        const max = group.max_selection || 10;
+                        let ruleText = '';
+                        if (min > 0 && max > 0) ruleText = `Escolha de ${min} a ${max}`;
+                        else if (max > 0) ruleText = `Escolha até ${max}`;
+                        else if (min > 0) ruleText = `Escolha pelo menos ${min}`;
+
+                        return `
+                        <div class="addon-group-container mb-6">
+                            <div class="flex justify-between items-baseline mb-3 border-b-2 border-dark/10 pb-1">
+                                <h4 class="bebas text-lg opacity-70 uppercase tracking-wider">${group.name}</h4>
+                                ${ruleText ? `<span class="text-[10px] font-black bg-brand/10 text-brand px-2 py-0.5 rounded-full uppercase">${ruleText}</span>` : ''}
                             </div>
-                            <span class="font-black text-brand text-sm">+ R$ ${(addon.price || 0).toFixed(2)}</span>
+                            <div class="space-y-3">
+                                ${group.items.map(addon => `
+                                    <div class="flex items-center justify-between group cursor-pointer"
+                                         onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}', '${group.id}')">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
+                                                 id="check-${addon.id}">
+                                                <svg class="w-4 h-4 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+                                            <span class="font-bold text-sm uppercase tracking-tight">${addon.name}</span>
+                                        </div>
+                                        <span class="font-black text-brand text-sm">${addon.price > 0 ? '+ R$ ' + addon.price.toFixed(2) : 'GRÁTIS'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 } else {
                     container.innerHTML = '<p class="text-sm opacity-40 italic">Sem adicionais disponiveis</p>';
                 }
@@ -4205,42 +4226,35 @@
             document.getElementById('main-menu').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function toggleExtra(id, price, name) {
-            const idx = selectedExtras.findIndex(e => e.id === id);
+        function toggleExtra(id, price, name, groupId) {
             const safePrice = parseFloat(price) || 0;
-            const isFree = safePrice === 0;
 
-            // Lógica de limites para Açaí
-            const isAcai = currentItem?.category_name?.toLowerCase().includes('açaí') ||
-                currentItem?.title?.toLowerCase().includes('açaí') ||
-                currentItem?.title?.toLowerCase().includes('barca') ||
-                currentItem?.title?.toLowerCase().includes('roleta');
+            // Buscar o grupo e suas regras
+            const group = productAddonGroups.find(g => g.id === groupId);
+            const maxSelection = group ? (group.max_selection || 10) : 10;
+            const minSelection = group ? (group.min_selection || 0) : 0;
+
+            const idx = selectedExtras.findIndex(e => e.id === id);
 
             if (idx > -1) {
+                // Se já está selecionado, remover
                 selectedExtras.splice(idx, 1);
             } else {
-                if (isAcai && isFree) {
-                    // Definir limites baseados no tamanho/produto
-                    let limit = 0;
-                    const title = (selectedSize || currentItem.title || '').toLowerCase();
+                // Se não está selecionado, verificar limites
+                const currentGroupCount = selectedExtras.filter(e => e.groupId === groupId).length;
 
-                    if (title.includes('200ml')) limit = 2;
-                    else if (title.includes('300ml')) limit = 3;
-                    else if (title.includes('400ml')) limit = 4;
-                    else if (title.includes('500ml')) limit = 5;
-                    else if (title.includes('700ml')) limit = 6;
-                    else if (title.includes('mega barca')) limit = 9;
-                    else if (title.includes('barca')) limit = 7;
-                    else if (title.includes('roleta')) limit = 7;
-                    else limit = 5; // Fallback
-
-                    const currentFreeCount = selectedExtras.filter(e => e.price === 0).length;
-                    if (currentFreeCount >= limit) {
-                        showToast(`LIMITE DE ${limit} ADICIONAIS GRÁTIS ATINGIDO!`);
-                        return;
-                    }
+                if (maxSelection === 1) {
+                    // Comportamento de rádio: remover qualquer outro do mesmo grupo
+                    selectedExtras = selectedExtras.filter(e => e.groupId !== groupId);
+                    selectedExtras.push({ id, price: safePrice, name, groupId });
+                } else if (currentGroupCount < maxSelection) {
+                    // Comportamento de checkbox: adicionar se houver espaço
+                    selectedExtras.push({ id, price: safePrice, name, groupId });
+                } else {
+                    // Limite atingido
+                    showToast(`LIMITE DE ${maxSelection} ITENS PARA ${group.name.toUpperCase()} ATINGIDO!`);
+                    return;
                 }
-                selectedExtras.push({ id, price: safePrice, name });
             }
             updateModalPrice();
         }
@@ -4250,37 +4264,38 @@
             const extrasTotal = selectedExtras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
             const total = (basePrice + extrasTotal) * qty;
 
-            // Tenta atualizar ambos os IDs posiveis
             const priceEl = document.getElementById('modal-price');
             const priceTotalEl = document.getElementById('modal-total-price');
 
             if (priceEl) priceEl.innerText = `R$ ${total.toFixed(2)}`;
             if (priceTotalEl) priceTotalEl.innerText = `R$ ${total.toFixed(2)}`;
 
-            productAddons.forEach(e => {
-                const check = document.getElementById(`check-${e.id}`);
-                if (!check) return;
+            // Atualizar visual de todos os itens em todos os grupos
+            productAddonGroups.forEach(group => {
+                (group.items || []).forEach(item => {
+                    const check = document.getElementById(`check-${item.id}`);
+                    if (!check) return;
 
-                const isSelected = selectedExtras.some(sel => sel.id === e.id);
-                const svg = check.querySelector('svg');
+                    const isSelected = selectedExtras.some(sel => sel.id === item.id);
+                    const svg = check.querySelector('svg');
 
-                if (isSelected) {
-                    check.classList.remove('bg-card');
-                    check.classList.add('bg-brand', 'border-brand');
-                    if (svg) {
-                        svg.classList.remove('scale-0');
-                        svg.classList.add('scale-100');
-                        svg.style.color = 'white';
+                    if (isSelected) {
+                        check.classList.remove('bg-card');
+                        check.classList.add('bg-brand', 'border-brand');
+                        if (svg) {
+                            svg.classList.remove('scale-0');
+                            svg.classList.add('scale-100');
+                            svg.style.color = 'white';
+                        }
+                    } else {
+                        check.classList.add('bg-card');
+                        check.classList.remove('bg-brand', 'border-brand');
+                        if (svg) {
+                            svg.classList.remove('scale-100');
+                            svg.classList.add('scale-0');
+                        }
                     }
-                } else {
-                    check.classList.add('bg-card');
-                    check.classList.remove('bg-brand', 'border-brand');
-                    if (svg) {
-                        svg.classList.remove('scale-100');
-                        svg.classList.add('scale-0');
-                        svg.style.color = 'var(--primary-red)';
-                    }
-                }
+                });
             });
         }
 
@@ -4294,30 +4309,35 @@
             // Verificar se loja esta aberta
             if (!isStoreOpen) {
                 showToast("LOJA FECHADA!");
-                // Mostrar modal de loja fechada (reutilizando a funcao ja criada)
-                if (typeof showClosedModal === 'function') {
-                    showClosedModal();
-                }
+                if (typeof showClosedModal === 'function') showClosedModal();
                 closeModal('product-modal');
                 return;
+            }
+
+            // ===== VALIDAR LIMITES MINIMOS =====
+            for (const group of productAddonGroups) {
+                const min = group.min_selection || 0;
+                const currentCount = selectedExtras.filter(e => e.groupId === group.id).length;
+                if (currentCount < min) {
+                    showToast(`POR FAVOR, ESCOLHA PELO MENOS ${min} ITENS EM ${group.name.toUpperCase()}`);
+                    return;
+                }
             }
 
             const extrasTotal = selectedExtras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
             const basePrice = parseFloat(currentItem.price) || 0;
 
-            // Montar item do carrinho com suporte a meio a meio
             const cartItem = {
                 ...currentItem,
                 qty,
                 obs: document.getElementById('modal-obs').value,
                 extras: [...selectedExtras],
                 totalPrice: (basePrice + extrasTotal) * qty,
-                // Dados de meio a meio
                 isHalfHalf: isHalfHalf,
-                secondFlavor: secondFlavor ? { ...secondFlavor } : null
+                secondFlavor: secondFlavor ? { ...secondFlavor } : null,
+                selectedSize: selectedSize // Adicionado para clareza no pedido
             };
 
-            // Se for meio a meio, ajustar o titulo
             if (isHalfHalf && secondFlavor) {
                 cartItem.title = `${currentItem.title} + ${secondFlavor.name} `;
                 cartItem.displayTitle = `1 / 2 ${currentItem.title} + 1 / 2 ${secondFlavor.name} `;
@@ -4334,19 +4354,7 @@
             const list = document.getElementById('cart-list');
             const totalEl = document.getElementById('cart-total');
 
-            // Atualizar FAB do carrinho
-            const fab = document.getElementById('cart-fab');
-            const fabCount = document.getElementById('cart-fab-count');
-            if (fab && fabCount) {
-                fabCount.innerText = cart.length;
-                if (cart.length > 0) {
-                    fab.classList.remove('opacity-0', 'pointer-events-none');
-                    fab.classList.add('opacity-100');
-                } else {
-                    fab.classList.add('opacity-0', 'pointer-events-none');
-                    fab.classList.remove('opacity-100');
-                }
-            }
+            // FAB removido - logic limpa
 
             if (cart.length === 0) {
                 list.innerHTML = '<p class="text-center py-20 opacity-30 italic bebas text-3xl uppercase">Vazio...</p>';
@@ -5286,6 +5294,14 @@
                     navCartBadge.classList.add('hidden');
                 }
             }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleCart() {
+            openModal('cart-modal');
         }
 
         function openOrdersModal() {

@@ -15,7 +15,12 @@ const filesToUpload = [
     { local: './server/server.js', remote: '/root/killsis/SAAS-WEB/server/server.js' },
     { local: './server/whatsapp-service.js', remote: '/root/killsis/SAAS-WEB/server/whatsapp-service.js' },
     { local: './server/services/follow-up.js', remote: '/root/killsis/SAAS-WEB/server/services/follow-up.js' },
-    { local: './public/admin/categorias.html', remote: '/root/killsis/SAAS-WEB/public/admin/categorias.html' }
+    { local: './server/routes/category-addons.js', remote: '/root/killsis/SAAS-WEB/server/routes/category-addons.js' },
+    { local: './public/admin/categorias.html', remote: '/root/killsis/SAAS-WEB/public/admin/categorias.html' },
+    { local: './public/admin/adicionais.html', remote: '/root/killsis/SAAS-WEB/public/admin/adicionais.html' },
+    { local: './public/admin/index.html', remote: '/root/killsis/SAAS-WEB/public/admin/index.html' },
+    { local: './public/admin/js/shared.js', remote: '/root/killsis/SAAS-WEB/public/admin/js/shared.js' },
+    { local: './public/store/index.html', remote: '/root/killsis/SAAS-WEB/public/store/index.html' }
 ];
 
 conn.on('ready', () => {
