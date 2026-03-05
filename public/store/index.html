@@ -1111,8 +1111,10 @@
             transform: scale(0.9) rotate(var(--modal-rotate));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-radius: var(--radius);
-            max-height: 90vh;
-            overflow-y: auto;
+            max-height: 95vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .modal-active .paper-modal {
@@ -1239,10 +1241,9 @@
         /* Mobile-first responsive - store */
         @media (max-width: 480px) {
             .paper-modal {
-                margin: 8px;
-                max-height: 95vh;
-                overflow-y: auto;
-                border-radius: 16px;
+                margin: 4px;
+                max-height: 98vh;
+                border-radius: 12px;
             }
 
             .pizza-card {
@@ -1354,33 +1355,39 @@
 
     <!-- Header -->
     <header class="px-6 py-10 flex flex-col items-center relative" style="overflow: visible;">
-        <div class="flex justify-between w-full items-center mb-8">
-            <button onclick="toggleSidebar()" class="neo-card p-4 rounded-custom flex-shrink-0">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <div class="flex-1 flex justify-center">
+        <div class="grid grid-cols-[80px_1fr_80px] w-full items-center mb-8">
+            <div class="flex justify-start">
+                <button onclick="toggleSidebar()" class="neo-card p-4 rounded-custom flex-shrink-0">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+            <div class="flex justify-center">
                 <!-- Logo container - shows either image or text -->
                 <div id="store-logo-container" class="text-center" style="background-color: transparent !important;">
                     <img id="store-logo-img" src="" alt="Logo"
                         style="display: none; max-height: 70px; max-width: 180px; margin: 0 auto; object-fit: contain; border-radius: 8px; background-color: transparent !important;">
                     <h1 id="store-name"
-                        class="bebas text-7xl leading-none text-brand transition-all drop-shadow-[4px_4px_0_var(--dark)]">
+                        class="bebas text-5xl sm:text-7xl leading-none text-brand transition-all drop-shadow-[4px_4px_0_var(--dark)]">
                         CARREGANDO...</h1>
-                    <p id="store-type" class="bebas text-xl tracking-[0.3em] uppercase opacity-50 font-bold">Delivery
+                    <p id="store-type" class="bebas text-lg sm:text-xl tracking-[0.3em] uppercase opacity-50 font-bold">
+                        Delivery
                     </p>
                 </div>
             </div>
-            <button onclick="openModal('cart-modal')"
-                class="neo-card p-4 rounded-custom bg-highlight relative flex-shrink-0">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span id="cart-count"
-                    class="absolute -top-3 -right-3 bg-brand text-white text-[10px] font-black w-7 h-7 rounded-full flex items-center justify-center border-4 border-card">0</span>
-            </button>
+            <div class="flex justify-end">
+                <button onclick="openModal('cart-modal')"
+                    class="neo-card p-4 rounded-custom bg-highlight relative flex-shrink-0">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span id="cart-count"
+                        class="absolute -top-3 -right-3 bg-brand text-white text-[10px] font-black w-7 h-7 rounded-full flex items-center justify-center border-4 border-card">0</span>
+                </button>
+            </div>
         </div>
         <div class="w-full relative px-2">
             <input type="text" id="search-input" placeholder="Deseja comer o quê hoje?..." onkeyup="handleSearch()"
@@ -1444,17 +1451,21 @@
                     </div>
                 </div>
 
-                <div id="modal-title-container" class="w-full pt-4 pb-4 flex flex-col items-center">
-                    <h2 id="modal-title" class="bebas text-3xl text-brand leading-none text-center px-4 uppercase"></h2>
-                    <p id="modal-desc" class="text-zinc-500 font-medium text-sm text-center px-6 mt-1"></p>
+                <div id="modal-title-container" class="w-full pt-2 pb-2 sm:pt-4 sm:pb-4 flex flex-col items-center">
+                    <h2 id="modal-title"
+                        class="bebas text-2xl sm:text-3xl text-brand leading-none text-center px-4 uppercase"></h2>
+                    <p id="modal-desc"
+                        class="text-zinc-500 font-medium text-[10px] sm:text-sm text-center px-6 mt-0.5 sm:mt-1"></p>
                 </div>
             </div>
 
-            <div class="p-6 overflow-y-auto no-scrollbar flex-1">
-                <div class="space-y-6">
+            <div class="p-4 sm:p-6 overflow-y-auto no-scrollbar flex-1">
+                <div class="space-y-4">
                     <!-- SECAO DE TAMANHOS (P/M/G) -->
                     <div id="sizes-section" class="hidden">
-                        <label class="bebas text-xl block mb-3 text-center uppercase tracking-wider">Escolha o
+                        <label
+                            class="bebas text-lg sm:text-xl block mb-2 sm:mb-3 text-center uppercase tracking-wider">Escolha
+                            o
                             Tamanho</label>
                         <div id="sizes-container" class="flex gap-2 justify-center"></div>
                     </div>
@@ -1462,7 +1473,7 @@
                     <!-- BOTAO MEIO A MEIO -->
                     <div id="half-section" class="hidden">
                         <button type="button" onclick="toggleHalfHalf()" id="half-btn"
-                            class="w-full py-3 rounded-2xl border-2 border-dashed border-brand bebas text-xl text-brand flex items-center justify-center gap-2 hover:bg-brand/10 transition-colors">
+                            class="w-full py-2 sm:py-3 rounded-2xl border-2 border-dashed border-brand bebas text-lg sm:text-xl text-brand flex items-center justify-center gap-2 hover:bg-brand/10 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="9" stroke-width="2" />
                                 <line x1="12" y1="3" x2="12" y2="21" stroke-width="2" />
@@ -1471,7 +1482,7 @@
                         </button>
                         <!-- Segundo sabor selecionado -->
                         <div id="second-flavor-container"
-                            class="hidden mt-3 p-3 bg-brand/10 rounded-xl border-2 border-brand">
+                            class="hidden mt-2 p-3 bg-brand/10 rounded-xl border-2 border-brand">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold">2o Sabor:</span>
                                 <span id="second-flavor-name" class="bebas text-lg text-brand">Selecionar...</span>
@@ -1480,15 +1491,18 @@
                     </div>
 
                     <!-- OBSERVACOES -->
-                    <div>
-                        <label class="bebas text-xl block mb-2 opacity-70">Observacoes</label>
+                    <div class="pt-1">
+                        <label
+                            class="bebas text-sm sm:text-base block mb-1 opacity-60 uppercase tracking-tight">Observacoes</label>
                         <textarea id="modal-obs" placeholder="Ex: Sem ingredientes, retirar itens..."
-                            class="w-full bg-zinc-500/5 border-2 border-dark p-3 rounded-xl font-bold focus:outline-none min-h-[40px] text-sm resize-none"></textarea>
+                            class="w-full bg-zinc-500/5 border-2 border-dark p-2 rounded-xl font-bold focus:outline-none min-h-[40px] text-sm resize-none"></textarea>
                     </div>
 
                     <!-- ADICIONAIS E COMPLEMENTOS -->
-                    <div id="extras-section">
-                        <label class="bebas text-xl block mb-3 uppercase tracking-tight">Adicionais e
+                    <div id="extras-section" class="pt-1">
+                        <label
+                            class="bebas text-sm sm:text-base block mb-2 opacity-60 uppercase tracking-tight">Adicionais
+                            e
                             Complementos</label>
                         <div class="space-y-3" id="extras-container"></div>
                     </div>
@@ -1496,19 +1510,18 @@
             </div>
 
             <!-- FOOTER COM PRECO -->
-            <div class="p-4 border-t-2 border-dark bg-zinc-500/5 flex-shrink-0">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-6 bg-card border-2 border-dark rounded-xl p-2 px-6">
-                        <button onclick="changeQty(-1)"
-                            class="bebas text-3xl font-bold opacity-30 hover:opacity-100 transition-opacity">-</button>
-                        <span id="modal-qty" class="bebas text-3xl w-8 text-center">1</span>
-                        <button onclick="changeQty(1)" class="bebas text-3xl font-bold text-brand">+</button>
-                    </div>
-                    <div id="modal-price" class="bebas text-4xl text-textMain font-black"></div>
+            <div class="p-3 border-t-2 border-dark bg-zinc-500/5 flex-shrink-0 flex items-center gap-3">
+                <div class="flex items-center gap-4 bg-card border-2 border-dark rounded-xl p-1 px-4">
+                    <button onclick="changeQty(-1)"
+                        class="bebas text-2xl font-bold opacity-30 hover:opacity-100 transition-opacity">-</button>
+                    <span id="modal-qty" class="bebas text-2xl w-6 text-center">1</span>
+                    <button onclick="changeQty(1)" class="bebas text-2xl font-bold text-brand">+</button>
                 </div>
                 <button onclick="addToOrder()"
-                    class="neo-button w-full py-5 rounded-xl bebas text-2xl tracking-widest uppercase shadow-xl">ADICIONAR
-                    A LISTA</button>
+                    class="neo-button flex-1 py-3 px-5 rounded-xl bebas text-xl tracking-wider uppercase shadow-lg flex justify-between items-center">
+                    <span>ADICIONAR</span>
+                    <span id="modal-price" class="font-black"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -3448,12 +3461,12 @@
 
             if (isPizza) {
                 // Layout Pizza: Circular/Quadrado centralizado
-                imgContainer.className = "relative w-40 h-40 border-4 border-dark shadow-xl overflow-hidden bg-zinc-200 rounded-xl my-6";
+                imgContainer.className = "relative w-32 h-32 sm:w-40 sm:h-40 border-4 border-dark shadow-xl overflow-hidden bg-zinc-200 rounded-xl my-4";
                 modalHeader.classList.add('pt-2');
                 modalHeader.classList.remove('p-0');
             } else {
                 // Layout Lanche: Esticado/Largura Total
-                imgContainer.className = "relative w-full h-64 border-b-2 border-dark bg-zinc-200";
+                imgContainer.className = "relative w-full h-40 sm:h-64 border-b-2 border-dark bg-zinc-200";
                 modalHeader.classList.remove('pt-2');
                 modalHeader.classList.add('p-0');
             }
