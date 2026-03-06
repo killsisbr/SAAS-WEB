@@ -1549,20 +1549,23 @@
 
     <!-- MODAL: CARRINHO -->
     <div id="cart-modal" class="modal-overlay fixed inset-0 items-end">
-        <div class="w-full bg-card border-t-8 border-dark p-8 rounded-t-[4rem] max-h-[85vh] flex flex-col shadow-2xl">
-            <div class="w-24 h-2 bg-zinc-300 rounded-full mx-auto mb-10 cursor-pointer"
+        <div class="w-full bg-card border-t-8 border-dark p-6 rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl">
+            <div class="w-20 h-1.5 bg-zinc-300 rounded-full mx-auto mb-6 cursor-pointer"
                 onclick="closeModal('cart-modal')"></div>
-            <div class="bebas text-6xl mb-10 flex justify-between items-baseline leading-none">
-                PEDIDO <span class="text-brand" id="cart-store-name">#</span>
+            <div class="bebas text-5xl mb-6 flex justify-between items-baseline leading-none">
+                MEU PEDIDO <span class="text-brand" id="cart-store-name">#</span>
             </div>
-            <div id="cart-list" class="flex-1 overflow-y-auto space-y-6 no-scrollbar mb-10 px-2"></div>
-            <div class="border-t-4 border-dark pt-10">
-                <div class="flex justify-between items-center mb-10">
-                    <span class="bebas text-4xl uppercase opacity-40">Valor Total</span>
-                    <span id="cart-total" class="bebas text-6xl text-brand">R$ 0,00</span>
+            <div id="cart-list" class="flex-1 overflow-y-auto space-y-4 no-scrollbar mb-6 px-1"></div>
+            <div class="border-t-4 border-dark pt-6 bg-card">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex flex-col">
+                        <span class="bebas text-2xl uppercase opacity-40 leading-none">Total do Pedido</span>
+                        <span class="text-[10px] font-bold opacity-30 uppercase tracking-widest">(sem taxas)</span>
+                    </div>
+                    <span id="cart-total" class="bebas text-5xl text-brand">R$ 0,00</span>
                 </div>
                 <button onclick="openCheckoutModal()"
-                    class="neo-button w-full py-7 rounded-[3rem] bebas text-5xl bg-dark text-mainBg">FINALIZAR
+                    class="neo-button w-full py-5 rounded-[2rem] bebas text-4xl bg-dark text-mainBg active:translate-y-1 transition-all">FINALIZAR
                     🚀</button>
             </div>
         </div>
@@ -4373,10 +4376,16 @@
             const list = document.getElementById('cart-list');
             const totalEl = document.getElementById('cart-total');
 
-            // FAB removido - logic limpa
-
             if (cart.length === 0) {
-                list.innerHTML = '<p class="text-center py-20 opacity-30 italic bebas text-3xl uppercase">Vazio...</p>';
+                list.innerHTML = `
+                    <div class="text-center py-20 flex flex-col items-center gap-4 opacity-30">
+                        <div class="w-20 h-20 rounded-full border-4 border-dashed border-dark flex items-center justify-center">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                        </div>
+                        <p class="bebas text-4xl uppercase tracking-widest">Carrinho Vazio</p>
+                    </div>`;
                 totalEl.innerText = 'R$ 0,00';
                 return;
             }
@@ -4386,50 +4395,73 @@
                 total += item.totalPrice;
                 const extrasSummary = item.extras.map(e => e.name).join(', ');
 
-                // Titulo para exibicao (usa displayTitle se for meio a meio)
+                // Titulo para exibicao
                 const displayTitle = item.displayTitle || item.title;
 
                 // Imagem para exibicao
-                let displayImg = item.img;
-                let imgClass = 'w-24 h-24 object-cover rounded-custom border-2 border-dark';
                 let imgHtml = '';
-
                 if (item.isHalfHalf && item.secondFlavor) {
-                    // Imagem dividida para meio a meio
                     imgHtml = `
-                <div class="w-24 h-24 rounded-custom border-2 border-dark overflow-hidden relative flex-shrink-0">
+                        <div class="w-20 h-20 rounded-2xl border-2 border-dark overflow-hidden relative flex-shrink-0 shadow-[4px_4px_0_var(--dark)]">
                             <div class="absolute inset-0 flex">
                                 <div class="w-1/2 h-full overflow-hidden">
-                                    <img src="${item.img}" class="w-full h-full object-cover object-right" onerror="this.src='https://via.placeholder.com/100'">
+                                    <img src="${item.img}" class="w-full h-full object-cover" onerror="this.src='/images/placeholder.png'">
                                 </div>
                                 <div class="w-1/2 h-full overflow-hidden">
-                                    <img src="${item.secondFlavor.img}" class="w-full h-full object-cover object-left" onerror="this.src='https://via.placeholder.com/100'">
+                                    <img src="${item.secondFlavor.img}" class="w-full h-full object-cover" onerror="this.src='/images/placeholder.png'">
                                 </div>
                             </div>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <span class="bg-brand text-white text-[8px] font-black px-1 rounded">1/2+1/2</span>
+                                <span class="bg-brand text-white text-[8px] font-black px-1 rounded border border-dark">1/2+1/2</span>
                             </div>
-                        </div>
-                `;
+                        </div>`;
                 } else {
-                    imgHtml = `<img src="${displayImg}" class="${imgClass}" onerror="this.src='https://via.placeholder.com/100'">`;
+                    imgHtml = `<img src="${item.img}" class="w-20 h-20 rounded-2xl border-2 border-dark object-cover flex-shrink-0 bg-white shadow-[4px_4px_0_var(--dark)]" onerror="this.src='/images/placeholder.png'">`;
                 }
 
                 return `
-                <div class="flex items-center gap-6 bg-zinc-500/5 p-6 rounded-custom border-2 border-dark">
+                <div class="flex items-center gap-4 bg-card border-2 border-dark p-4 rounded-3xl shadow-[4px_4px_0_var(--dark)] transition-all active:scale-[0.98] relative">
+                    <button onclick="removeItem(${index})" class="absolute -top-3 -right-3 w-8 h-8 bg-brand text-white border-2 border-dark rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all z-10">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                     ${imgHtml}
-                        <div class="flex-1 leading-none">
-                            <h4 class="bebas text-3xl uppercase tracking-tighter">${displayTitle}</h4>
-                            <p class="text-xs font-bold opacity-50 mb-2">${item.qty}X - R$ ${(item.totalPrice / item.qty).toFixed(2)}</p>
-                            ${extrasSummary ? `<p class="text-[10px] text-brand font-black uppercase tracking-widest">+ ${extrasSummary}</p>` : ''}
+                    <div class="flex-1 min-w-0 pr-2">
+                        <h4 class="bebas text-2xl uppercase truncate leading-none mb-1">${displayTitle}</h4>
+                        ${extrasSummary ? `<p class="text-[9px] text-brand font-black uppercase tracking-widest truncate">+ ${extrasSummary}</p>` : ''}
+                        
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="bebas text-xl opacity-50">${item.qty}X</span>
+                            <p class="bebas text-2xl text-dark">R$ ${item.totalPrice.toFixed(2)}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="bebas text-3xl">R$ ${item.totalPrice.toFixed(2)}</p>
-                            <button onclick="removeItem(${index})" class="text-xs font-black text-brand uppercase underline">Remover</button>
-                        </div>
-                    </div> `;
+                    </div>
+                </div>`;
             }).join('');
             totalEl.innerText = `R$ ${total.toFixed(2)}`;
+        }
+
+        function changeCartQty(idx, delta) {
+            const item = cart[idx];
+            const newQty = item.qty + delta;
+
+            if (newQty <= 0) {
+                // Confirmar remocao
+                showPopup('REMOVER ITEM?', `Deseja remover ${item.title} do carrinho?`, 'warning');
+                // Sobrescrever acao do botao 'ENTENDI' do popup seria complexo aqui, vamos simplificar:
+                // Se chegar a zero, remove. O usuario pode re-adicionar se errar.
+                removeItem(idx);
+                return;
+            }
+
+            const extrasTotal = item.extras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
+            const basePrice = parseFloat(item.price) || 0;
+
+            item.qty = newQty;
+            item.totalPrice = (basePrice + extrasTotal) * newQty;
+
+            updateCartUI();
+            showToast("QUANTIDADE ATUALIZADA!");
         }
 
         function removeItem(idx) {
