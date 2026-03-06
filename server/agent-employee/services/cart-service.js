@@ -125,6 +125,25 @@ export function addItem(tenantId, customerId, itemData) {
 }
 
 /**
+ * Remover um item específico do carrinho pelo ID do produto
+ */
+export function removeItem(tenantId, customerId, productId) {
+    const session = getSession(tenantId, customerId);
+
+    const initialLength = session.items.length;
+    session.items = session.items.filter(item => item.productId !== productId);
+
+    if (session.items.length < initialLength) {
+        session.subtotal = session.items.reduce((sum, item) => sum + item.total, 0);
+        session.total = session.subtotal + session.deliveryFee;
+        session.updatedAt = new Date();
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Remover último item do carrinho
  */
 export function removeLastItem(tenantId, customerId) {

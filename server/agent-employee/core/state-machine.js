@@ -202,10 +202,111 @@ async function handleGreeting(params, session, intent, interpreter, context) {
 async function handleOrdering(params, session, intent, interpreter, context) {
     const { tenantId, customerId, message, products, addons, buffet } = params;
 
+    // Tentar encontrar produtos em todos os catálogos (Definindo no topo para uso em REMOVE e ORDER)
+    const allKnownItems = [
+        ...(products || []).map(p => ({ ...p, _type: 'product' })),
+        ...(addons || []).map(a => ({ ...a, _type: 'addon', category: 'Adicionais' })),
+        ...(buffet || []).map(b => ({ ...b, name: b.nome, _type: 'buffet', category: 'Buffet', price: 0 }))
+    ];
+
+    // Se quer limpar o carrinho / recomeçar
+    if (intent.type === 'RESET') {
+        cartService.resetSession(tenantId, customerId);
+        // O resetSession recria a sessão no estado GREETING. Precisamos garantir que estamos avisando o cliente.
+        // Se quisermos manter no ORDERING, podemos setar o estado. Vamos forçar ORDERING para ele continuar o pedido.
+        cartService.setState(tenantId, customerId, AGENT_STATES.ORDERING);
+        return { text: '🗑️ Seu carrinho foi limpo e o pedido cancelado.\n\nO que você gostaria de pedir agora?' };
+    }
+
     // Se quer ver cardápio
     if (intent.type === 'SHOW_MENU') {
         const menuItems = products.map(p => `• *${p.name}* - R$ ${p.price.toFixed(2).replace('.', ',')}`).join('\n');
         return { text: `📋 *Cardápio:*\n\n${menuItems}\n\nO que você gostaria?` };
+    }
+
+    // Se o pedido for ambíguo/genérico (ex: "quero açaí", "tem sorvete?")
+    if ((intent.type === 'CLARIFY' || intent.type === 'AMBIGUOUS') && intent.items?.length > 0) {
+        let query = intent.items[0].name || '';
+        const queryNorm = productMatcher.normalizeText(query);
+
+        if (queryNorm) {
+            let options = allKnownItems.filter(p =>
+                p._type === 'product' &&
+                (productMatcher.normalizeText(p.name).includes(queryNorm) || p.name.toLowerCase().includes(queryNorm))
+            );
+
+            // Detectar se o usuario especificou um tamanho na mensagem original
+            const sizeMatch = message.match(/(\d{3,4})\s*(ml)?|(\d)\s*(l|litro)/i);
+            if (sizeMatch && options.length > 1) {
+                const sizeStr = sizeMatch[1] || (sizeMatch[3] ? sizeMatch[3] + 'l' : '');
+                if (sizeStr) {
+                    const sizeFiltered = options.filter(p =>
+                        p.name.includes(sizeStr) || p.name.toLowerCase().includes(sizeStr + 'ml') || p.name.toLowerCase().includes(sizeStr + 'l')
+                    );
+                    if (sizeFiltered.length === 1) {
+                        // Tamanho resolvido! Adicionar direto como ORDER
+                        console.log(`[AgentEmployee] CLARIFY resolvido via tamanho: ${sizeFiltered[0].name}`);
+
+                        // Detectar adicionais (modifiers) na mensagem
+                        const modifiers = intent.items[0].modifiers || [];
+                        const resolvedAddons = [];
+                        for (const modName of modifiers) {
+                            const mod = productMatcher.findProduct(modName, allKnownItems);
+                            if (mod && (mod._type === 'addon' || mod._type === 'buffet')) {
+                                resolvedAddons.push(mod);
+                            }
+                        }
+
+                        cartService.addItem(tenantId, customerId, {
+                            product: sizeFiltered[0],
+                            quantity: intent.items[0].quantity || 1,
+                            addons: resolvedAddons
+                        });
+                        const cartView = cartService.formatCart(tenantId, customerId);
+                        return { text: `Ótimo, adicionei à sacola! 🍔\n\n${cartView}\n\nDeseja algo mais ou podemos fechar o pedido?` };
+                    } else if (sizeFiltered.length > 0) {
+                        options = sizeFiltered; // Usar o filtro mais restrito
+                    }
+                }
+            }
+
+            if (options.length > 1) {
+                const menuItems = options.map(p => `• *${p.name}* - R$ ${p.price.toFixed(2).replace('.', ',')}`).join('\n');
+                return { text: `Temos estas opções de *${intent.items[0].name}*. Qual você prefere?\n\n${menuItems}` };
+            } else if (options.length === 1) {
+                // Se só tem UMA opção, adiciona direto
+                cartService.addItem(tenantId, customerId, { product: options[0], quantity: intent.items[0].quantity || 1 });
+                const cartView = cartService.formatCart(tenantId, customerId);
+                return { text: `Ótimo, adicionei à sacola! 🍔\n\n${cartView}\n\nDeseja algo mais ou podemos fechar o pedido?` };
+            }
+        }
+        // Se não encontrou nada relevante, mostrar cardápio
+        const menuItems = products.slice(0, 15).map(p => `• *${p.name}* - R$ ${p.price.toFixed(2).replace('.', ',')}`).join('\n');
+        return { text: `Não encontrei "${intent.items[0].name}" no cardápio. Veja nossas opções:\n\n${menuItems}` };
+    }
+
+    // [NOVO] Se quer REMOVER itens
+    if (intent.type === 'REMOVE' && intent.items?.length > 0) {
+        let removedAny = false;
+        let removedNames = [];
+
+        for (const item of intent.items) {
+            const product = productMatcher.findProduct(item.name, allKnownItems);
+            if (product) {
+                const success = cartService.removeItem(tenantId, customerId, product.id);
+                if (success) {
+                    removedAny = true;
+                    removedNames.push(product.name);
+                }
+            }
+        }
+
+        if (removedAny) {
+            const cartView = cartService.formatCart(tenantId, customerId);
+            return {
+                text: `✅ Entendido! Removi ${removedNames.join(', ')} da sua sacola.\n\n${cartView}\n\nDeseja algo mais?`
+            };
+        }
     }
 
     // Se quer finalizar
@@ -215,13 +316,15 @@ async function handleOrdering(params, session, intent, interpreter, context) {
         }
         return moveToDeliveryType(params, session, interpreter, context);
     }
-
-    // Tentar encontrar produtos em todos os catálogos (Reutilizando a lista completa com tipos)
-    const allKnownItems = [
-        ...(products || []).map(p => ({ ...p, _type: 'product' })),
-        ...(addons || []).map(a => ({ ...a, _type: 'addon', category: 'Adicionais' })),
-        ...(buffet || []).map(b => ({ ...b, name: b.nome, _type: 'buffet', category: 'Buffet', price: 0 }))
-    ];
+    // ====== GUARDA DE SEGURANÇA ======
+    // O regex matcher SÓ deve rodar se a IA indicou que é um pedido (ORDER) ou não conseguiu interpretar (UNKNOWN)
+    // Para qualquer outro intent (RESET, CLARIFY, SHOW_MENU, REMOVE, etc), já retornamos acima.
+    if (intent.type !== 'ORDER' && intent.type !== 'UNKNOWN') {
+        // Fallback IA para intenções não tratadas
+        const aiFallback = await interpreter.generateResponse(AGENT_STATES.ORDERING, context);
+        if (aiFallback) return { text: aiFallback };
+        return { text: 'Desculpe, não entendi. O que você gostaria de pedir?' };
+    }
 
     const foundProducts = productMatcher.findProductsInMessage(message, allKnownItems);
     console.log(`[AgentEmployee] foundByRegex:`, foundProducts.map(r => ({ name: r.product.name, q: r.quantity })));

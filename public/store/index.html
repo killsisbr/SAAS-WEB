@@ -53,7 +53,8 @@
             --font-main: 'Outfit', sans-serif;
         }
 
-        [data-theme="midnight"] {
+        [data-theme="midnight"],
+        [data-theme="midnight-list"] {
             --primary-red: #10b981;
             --bg-color: #050505;
             --dark: #ffffff;
@@ -69,7 +70,8 @@
             --modal-rotate: 0deg;
         }
 
-        [data-theme="vibe"] {
+        [data-theme="vibe"],
+        [data-theme="vibe-list"] {
             --primary-red: #4f46e5;
             --bg-color: #f8fafc;
             --dark: #e2e8f0;
@@ -85,7 +87,8 @@
             --modal-rotate: 0deg;
         }
 
-        [data-theme="doodle"] {
+        [data-theme="doodle"],
+        [data-theme="doodle-list"] {
             --primary-red: #e11d48;
             --bg-color: #ffffff;
             --dark: #000000;
@@ -101,7 +104,8 @@
             --modal-rotate: 1deg;
         }
 
-        [data-theme="luxury"] {
+        [data-theme="luxury"],
+        [data-theme="luxury-list"] {
             --primary-red: #c5a059;
             --bg-color: #0a0a0a;
             --dark: #c5a059;
@@ -117,7 +121,8 @@
             --modal-rotate: 0deg;
         }
 
-        [data-theme="matrix"] {
+        [data-theme="matrix"],
+        [data-theme="matrix-list"] {
             --primary-red: #00ff41;
             --bg-color: #000000;
             --dark: #00ff41;
@@ -134,7 +139,8 @@
             --font-main: 'Fira Code', monospace;
         }
 
-        [data-theme="candy"] {
+        [data-theme="candy"],
+        [data-theme="candy-list"] {
             --primary-red: #ff85a1;
             --bg-color: #fff5f7;
             --dark: #ff85a1;
@@ -150,7 +156,8 @@
             --modal-rotate: 0deg;
         }
 
-        [data-theme="modern"] {
+        [data-theme="modern"],
+        [data-theme="modern-list"] {
             --primary-red: #2B2B2B;
             --bg-color: #F5F5F7;
             --dark: #D1D1D6;
@@ -167,7 +174,8 @@
             --font-main: 'Inter', sans-serif;
         }
 
-        [data-theme="compact"] {
+        [data-theme="compact"],
+        [data-theme="compact-list"] {
             --primary-red: #333333;
             --bg-color: #f8f9fa;
             --dark: #e9ecef;
@@ -459,17 +467,20 @@
         }
 
         /* === TEMA ELEGANT (LISTA PREMIUM) === */
-        [data-theme="elegant"] {
+        [data-theme="elegant"],
+        [data-theme="elegant-list"] {
             --primary-red: #D4AF37;
             /* Dourado */
-            --bg-color: #121212;
-            /* Preto Fosco */
+            --bg-color: #0a0a0a;
+            /* Mais escuro para contraste */
             --dark: #D4AF37;
             --yellow: #F4E0A0;
-            --card-bg: #1E1E1E;
-            --text-color: #E0E0E0;
+            --card-bg: #151515;
+            /* Mais escuro */
+            --text-color: #ffffff;
+            /* Branco puro para brilho */
             --accent-blue: #D4AF37;
-            --pattern-opacity: 0.05;
+            --pattern-opacity: 0.1;
             --radius: 4px;
             --border-width: 1px;
             --border-style: solid;
@@ -513,13 +524,15 @@
         }
 
         /* === TEMA GLASS (GRID MODERNO) === */
-        [data-theme="glass"] {
+        [data-theme="glass"],
+        [data-theme="glass-list"] {
             --primary-red: #ffffff;
-            --bg-color: #2c0e52;
-            /* Sera substituido por gradient */
-            --dark: rgba(255, 255, 255, 0.2);
+            --bg-color: #1a1a2e;
+            --dark: rgba(255, 255, 255, 0.4);
+            /* Mais visivel */
             --yellow: #00d4ff;
-            --card-bg: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.15);
+            /* Mais opaco */
             --text-color: #ffffff;
             --accent-blue: #bd00ff;
             --pattern-opacity: 0;
@@ -687,15 +700,16 @@
         }
 
         /* === TEMA ORGANIC (🌿 NATUREZA) === */
-        [data-theme="organic"] {
-            --primary-red: #2d6a4f;
-            /* Verde Floresta */
+        [data-theme="organic"],
+        [data-theme="organic-list"] {
+            --primary-red: #1b4332;
+            /* Verde Escuro */
             --bg-color: #f1f8e9;
-            /* Creme Esverdeado */
-            --dark: #a2d149;
+            --dark: #2d6a4f;
             --yellow: #ffd60a;
             --card-bg: #ffffff;
-            --text-color: #1b4332;
+            --text-color: #081c15;
+            /* Texto mais escuro para contraste */
             --accent-blue: #40916c;
             --pattern-opacity: 0.1;
             --radius: 20px;
@@ -729,13 +743,11 @@
         }
 
         /* === TEMA NEON NIGHT (🌃 CYBER) === */
-        [data-theme="neon"] {
+        [data-theme="neon"],
+        [data-theme="neon-list"] {
             --primary-red: #ff0055;
-            /* Neon Pink */
             --bg-color: #050505;
-            /* Black */
             --dark: #00f2ff;
-            /* Cyan */
             --yellow: #00f2ff;
             --card-bg: #111111;
             --text-color: #ffffff;
@@ -1102,7 +1114,7 @@
         body {
             max-width: 100%;
             overflow-x: hidden;
-            background-color: var(--main-bg);
+            background-color: var(--bg-color);
         }
 
         .paper-modal {
@@ -1115,6 +1127,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            will-change: transform, opacity;
         }
 
         .modal-active .paper-modal {
@@ -1978,8 +1991,10 @@
         let map, marker;
         const themes = [
             'retro', 'midnight', 'vibe', 'doodle', 'luxury', 'matrix', 'candy', 'modern', 'compact',
-            'elegant', 'glass', 'social', 'arcade', 'organic', 'neon', 'sketch',
-            'retro-list', 'midnight-list', 'vibe-list', 'doodle-list', 'luxury-list', 'matrix-list', 'candy-list'
+            'elegant', 'glass', 'social', 'arcade', 'organic', 'neon', 'sketch', 'fashion', 'petshop', 'pharmacy',
+            'retro-list', 'midnight-list', 'vibe-list', 'doodle-list', 'luxury-list', 'matrix-list', 'candy-list',
+            'modern-list', 'compact-list', 'elegant-list', 'glass-list', 'social-list', 'arcade-list',
+            'organic-list', 'neon-list', 'sketch-list', 'fashion-list', 'petshop-list', 'pharmacy-list'
         ];
         let currentThemeIdx = 0;
         let isLayoutList = false; // Flag para forcar layout de lista nos temas padrao
@@ -3022,6 +3037,19 @@
             }
         }
 
+        // === FUNCOES UTILITARIAS DE PRECO ===
+        function getProductPrice(product) {
+            let price = parseFloat(product.price) || 0;
+            try {
+                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
+                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
+                    const values = Object.values(sizePrices).map(v => parseFloat(v));
+                    if (values.length > 0) price = Math.min(...values);
+                }
+            } catch (e) { }
+            return price;
+        }
+
         // === RENDERERS DE TEMAS ===
 
         function renderProductOrganic(product) {
@@ -3095,19 +3123,81 @@
             `;
         }
 
+        function renderProductElegant(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-elegant-item" onclick="openProductById('${product.id}')">
+                    <img src="${imgUrl}" alt="${product.name}" class="product-elegant-image"
+                        onerror="this.src='https://placehold.co/100x100?text=IMG'">
+
+                    <div style="flex: 1;">
+                        <h3 class="bebas" style="font-size: 1.4rem; color: var(--brand); margin-bottom: 2px;">${product.name}</h3>
+                        ${desc ? `<p style="font-size: 0.85rem; opacity: 0.7; font-family: 'Lato', sans-serif;">${desc}</p>` : ''}
+                    </div>
+
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700; color: var(--brand);">R$ ${priceStr}</div>
+                        <div style="font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; opacity: 0.6;">Desejar</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProductSocial(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/400x500?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-social-card" onclick="openProductById('${product.id}')">
+                    <div class="social-img-container">
+                        <img src="${imgUrl}" alt="${product.name}" class="social-img"
+                            onerror="this.src='https://placehold.co/400x500?text=IMG'">
+                    </div>
+                    <div class="social-actions">
+                        <div style="flex: 1;">
+                            <h3 style="font-weight: 800; font-size: 1.1rem;">${product.name}</h3>
+                            <div style="color: var(--yellow); font-weight: 800;">R$ ${priceStr}</div>
+                        </div>
+                        <button class="social-btn-pedir">
+                            <i class="fas fa-shopping-bag"></i> Pedir
+                        </button>
+                    </div>
+                    ${desc ? `<div style="padding: 0 16px; font-size: 0.85rem; opacity: 0.7; margin-top: 4px;">${desc}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderProductArcade(product) {
+            const imgUrl = product.images?.[0] || 'https://placehold.co/100x100/1a0b2e/43ffff?text=IMG';
+            const price = getProductPrice(product);
+            const priceStr = price.toFixed(2).replace('.', ',');
+            const desc = product.description || '';
+
+            return `
+                <div class="product-arcade-card" onclick="openProductById('${product.id}')">
+                    <div class="flex gap-4 items-center">
+                        <img src="${imgUrl}" alt="${product.name}" style="width: 60px; height: 60px; border: 2px solid var(--dark);"
+                            onerror="this.src='https://placehold.co/100x100/1a0b2e/43ffff?text=IMG'">
+                        <div style="flex: 1;">
+                            <h3 class="bebas">${product.name}</h3>
+                            <div style="color: var(--primary-red); font-size: 0.8rem;">[ PRECO: R$ ${priceStr} ]</div>
+                        </div>
+                    </div>
+                    ${desc ? `<p style="margin-top: 8px; line-height: 1;">>> ${desc}</p>` : ''}
+                    <div class="arcade-btn" style="margin-top: 10px;">SELECIONAR</div>
+                </div>
+            `;
+        }
+
         function renderProductCompact(product) {
             const imgUrl = product.images?.[0] || 'https://placehold.co/100x100?text=IMG';
-
-            // Calculo de preco
-            let price = parseFloat(product.price) || 0;
-            try {
-                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
-                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
-                    const values = Object.values(sizePrices).map(v => parseFloat(v));
-                    if (values.length > 0) price = Math.min(...values);
-                }
-            } catch (e) { }
-
+            const price = getProductPrice(product);
             const priceStr = price.toFixed(2).replace('.', ',');
             const desc = product.description || '';
 
@@ -3135,17 +3225,7 @@
 
         function renderProductList(product) {
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
-
-            // Calculo de preco
-            let price = parseFloat(product.price) || 0;
-            try {
-                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
-                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
-                    const values = Object.values(sizePrices).map(v => parseFloat(v));
-                    if (values.length > 0) price = Math.min(...values);
-                }
-            } catch (e) { }
-
+            const price = getProductPrice(product);
             const priceStr = price.toFixed(2).replace('.', ',');
             const desc = product.description || '';
 
@@ -3173,16 +3253,7 @@
 
         function renderProductCard(product) {
             const imgUrl = product.images?.[0] || 'https://placehold.co/400x300?text=Sem+Imagem';
-
-            // Se tem tamanhos, pegar o menor preco
-            let price = parseFloat(product.price) || 0;
-            try {
-                const sizePrices = typeof product.size_prices === 'string' ? JSON.parse(product.size_prices || '{}') : (product.size_prices || {});
-                if (typeof sizePrices === 'object' && !Array.isArray(sizePrices)) {
-                    const values = Object.values(sizePrices).map(v => parseFloat(v));
-                    if (values.length > 0) price = Math.min(...values);
-                }
-            } catch (e) { }
+            const price = getProductPrice(product);
 
             const priceStr = price.toFixed(2).replace('.', ',');
             const desc = product.description || '';
@@ -3446,14 +3517,16 @@
 
             const modalImg = document.getElementById('modal-img');
 
-            // RESET IMAGE (Prevents flicker from previous product)
-            modalImg.src = '';
-            modalImg.classList.add('opacity-0');
-
-            modalImg.onload = () => {
+            // SMARTER IMAGE LOAD: Only reset if product changed
+            if (modalImg.src !== img) {
+                modalImg.classList.add('opacity-0');
+                modalImg.onload = () => {
+                    modalImg.classList.remove('opacity-0');
+                };
+                modalImg.src = img;
+            } else {
                 modalImg.classList.remove('opacity-0');
-            };
-            modalImg.src = img;
+            }
 
             // ===== AJUSTE DE LAYOUT (PIZZA VS LANCHE) =====
             const imgContainer = document.getElementById('pizza-image-container');
@@ -3602,53 +3675,10 @@
                 halfSection.style.display = 'none';
             }
 
-            const container = document.getElementById('extras-container');
+            // Extras section is now handled exclusively by renderAddonGroups
             const extrasSection = document.getElementById('extras-section');
-
-            // Esconder secao MONTAR para bebidas
-            if (isBebida) {
-                if (extrasSection) extrasSection.style.display = 'none';
-            } else {
-                if (extrasSection) extrasSection.style.display = 'block';
-
-                if (productAddonGroups.length > 0) {
-                    container.innerHTML = productAddonGroups.map(group => {
-                        const min = group.min_selection || 0;
-                        const max = group.max_selection || 10;
-                        let ruleText = '';
-                        if (min > 0 && max > 0) ruleText = `Escolha de ${min} a ${max}`;
-                        else if (max > 0) ruleText = `Escolha até ${max}`;
-                        else if (min > 0) ruleText = `Escolha pelo menos ${min}`;
-
-                        return `
-                        <div class="addon-group-container mb-6">
-                            <div class="flex justify-between items-baseline mb-3 border-b-2 border-dark/10 pb-1">
-                                <h4 class="bebas text-lg opacity-70 uppercase tracking-wider">${group.name}</h4>
-                                ${ruleText ? `<span class="text-[10px] font-black bg-brand/10 text-brand px-2 py-0.5 rounded-full uppercase">${ruleText}</span>` : ''}
-                            </div>
-                            <div class="space-y-3">
-                                ${group.items.map(addon => `
-                                    <div class="flex items-center justify-between group cursor-pointer"
-                                         onclick="toggleExtra('${addon.id}', ${addon.price}, '${addon.name}', '${group.id}')">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-7 h-7 border-2 border-dark rounded-lg flex items-center justify-center bg-card transition-all" 
-                                                 id="check-${addon.id}">
-                                                <svg class="w-4 h-4 text-brand scale-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                            </div>
-                                            <span class="font-bold text-sm uppercase tracking-tight">${addon.name}</span>
-                                        </div>
-                                        <span class="font-black text-brand text-sm">${addon.price > 0 ? '+ R$ ' + addon.price.toFixed(2) : 'GRÁTIS'}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        `;
-                    }).join('');
-                } else {
-                    container.innerHTML = '<p class="text-sm opacity-40 italic">Sem adicionais disponiveis</p>';
-                }
+            if (extrasSection) {
+                extrasSection.style.display = isBebida ? 'none' : 'block';
             }
 
             updateModalPrice();
@@ -3895,8 +3925,11 @@
         }
 
         function openModal(id) {
-            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-            document.body.style.paddingRight = scrollbarWidth + 'px';
+            // No mobile bypass scrollbar padding to avoid layout jump
+            if (window.innerWidth > 768) {
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                document.body.style.paddingRight = scrollbarWidth + 'px';
+            }
             document.body.style.overflow = 'hidden';
             document.getElementById(id).classList.add('modal-active');
             if (id === 'checkout-modal' && checkoutType === 'entrega') setTimeout(initMap, 300);

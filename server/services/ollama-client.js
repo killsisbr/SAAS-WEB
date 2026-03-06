@@ -14,7 +14,7 @@ class OllamaClient {
         }
         this.baseUrl = url;
         this.model = options.model || DEFAULT_MODEL;
-        this.timeout = options.timeout || 60000;
+        this.timeout = options.timeout || 120000;
     }
 
     /**

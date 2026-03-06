@@ -142,4 +142,12 @@ list_*.js
 check-*.mjs
 check-*.js
 vps_*.txt
-vps_*.log
+# Whisper & AI Cache
+server/.whisper-cache/
+server/services/local-whisper.js
+
+# Temporary & Test Scripts
+get_slug.py
+get_vps_logs.cjs
+server/list-tenants-test.mjs
+server/temp_tenants.json

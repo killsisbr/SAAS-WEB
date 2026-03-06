@@ -390,51 +390,143 @@ function updateThemePreview() {
     if (!themeSelect) return;
     const theme = themeSelect.value;
 
+    // Mapa completo — cores extraidas de public/store/index.html CSS vars reais
     const themeStyles = {
-        'retro': { bg: '#fff9f0', text: '#1a1a1a', brand: '#d9432e', card: '#ffffff', cardBorder: '#1a1a1a', btnBg: '#d9432e', btnText: '#ffffff', label: 'Tema Retro' },
-        'midnight': { bg: '#0a0a0f', text: '#ffffff', brand: '#6366f1', card: '#1a1a2e', cardBorder: '#333355', btnBg: '#6366f1', btnText: '#ffffff', label: 'Tema Midnight' },
-        'vibe': { bg: '#0f0f2e', text: '#ffffff', brand: '#f472b6', card: '#1e1e4a', cardBorder: '#3d3d7a', btnBg: '#f472b6', btnText: '#0f0f2e', label: 'Tema Vibe' },
-        'doodle': { bg: '#f5f5f5', text: '#333333', brand: '#ff6b6b', card: '#ffffff', cardBorder: '#333333', btnBg: '#ff6b6b', btnText: '#ffffff', label: 'Tema Doodle' },
-        'luxury': { bg: '#0d0d0d', text: '#d4af37', brand: '#d4af37', card: '#1a1a1a', cardBorder: '#d4af37', btnBg: '#d4af37', btnText: '#0d0d0d', label: 'Tema Luxury' },
-        'matrix': { bg: '#0a0a0a', text: '#00ff00', brand: '#00ff00', card: '#0d1a0d', cardBorder: '#00ff00', btnBg: '#00ff00', btnText: '#0a0a0a', label: 'Tema Matrix' },
-        'candy': { bg: '#ffd6e0', text: '#ff4081', brand: '#ff4081', card: '#ffffff', cardBorder: '#ff4081', btnBg: '#ff4081', btnText: '#ffffff', label: 'Tema Candy' }
+        'retro': { bg: '#fff9f0', text: '#1a1a1a', brand: '#d9432e', card: '#ffffff', cardBorder: '#1a1a1a', btnBg: '#d9432e', btnText: '#ffffff', radius: '20px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Retro', marquee: '#1a1a1a', marqueeText: '#fff9f0', searchBg: '#f0e6d6' },
+        'midnight': { bg: '#050505', text: '#f9fafb', brand: '#10b981', card: '#111827', cardBorder: '#1f2937', btnBg: '#10b981', btnText: '#ffffff', radius: '12px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Midnight', marquee: '#10b981', marqueeText: '#050505', searchBg: '#1f2937' },
+        'vibe': { bg: '#f8fafc', text: '#0f172a', brand: '#4f46e5', card: '#ffffff', cardBorder: '#e2e8f0', btnBg: '#4f46e5', btnText: '#ffffff', radius: '32px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Vibe', marquee: '#4f46e5', marqueeText: '#ffffff', searchBg: '#f1f5f9' },
+        'doodle': { bg: '#ffffff', text: '#000000', brand: '#e11d48', card: '#ffffff', cardBorder: '#000000', btnBg: '#e11d48', btnText: '#ffffff', radius: '2px', borderStyle: 'dashed', font: 'Outfit', layoutType: 'grid', label: 'Doodle', marquee: '#000000', marqueeText: '#ffffff', searchBg: '#f5f5f5' },
+        'luxury': { bg: '#0a0a0a', text: '#f5f5f5', brand: '#c5a059', card: '#151515', cardBorder: '#c5a059', btnBg: '#c5a059', btnText: '#0a0a0a', radius: '0px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Luxury', marquee: '#c5a059', marqueeText: '#0a0a0a', searchBg: '#1a1a1a' },
+        'matrix': { bg: '#000000', text: '#00ff41', brand: '#00ff41', card: '#000000', cardBorder: '#00ff41', btnBg: '#00ff41', btnText: '#000000', radius: '4px', borderStyle: 'solid', font: 'Fira Code', layoutType: 'grid', label: 'Matrix', marquee: '#00ff41', marqueeText: '#000000', searchBg: '#0a1a0a' },
+        'candy': { bg: '#fff5f7', text: '#4a4e69', brand: '#ff85a1', card: '#ffffff', cardBorder: '#ff85a1', btnBg: '#ff85a1', btnText: '#ffffff', radius: '40px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Candy', marquee: '#ff85a1', marqueeText: '#ffffff', searchBg: '#ffe4ec' },
+        'modern': { bg: '#F5F5F7', text: '#1C1C1E', brand: '#2B2B2B', card: '#FFFFFF', cardBorder: '#D1D1D6', btnBg: '#2B2B2B', btnText: '#FFFFFF', radius: '12px', borderStyle: 'solid', font: 'Inter', layoutType: 'list', label: 'Modern', marquee: '#2B2B2B', marqueeText: '#F5F5F7', searchBg: '#E5E5EA' },
+        'compact': { bg: '#f8f9fa', text: '#212529', brand: '#333333', card: '#ffffff', cardBorder: '#e9ecef', btnBg: '#333333', btnText: '#ffffff', radius: '8px', borderStyle: 'solid', font: 'Inter', layoutType: 'list', label: 'Compact', marquee: '#333333', marqueeText: '#ffffff', searchBg: '#e9ecef' },
+        'elegant': { bg: '#121212', text: '#E0E0E0', brand: '#D4AF37', card: '#1E1E1E', cardBorder: 'rgba(212,175,55,0.3)', btnBg: '#D4AF37', btnText: '#121212', radius: '4px', borderStyle: 'solid', font: 'Playfair Display', layoutType: 'list', label: 'Elegant', marquee: '#D4AF37', marqueeText: '#121212', searchBg: '#2a2a2a' },
+        'glass': { bg: 'linear-gradient(135deg, #1a1a2e, #16213e, #2c0e52)', text: '#ffffff', brand: '#bd00ff', card: 'rgba(255,255,255,0.08)', cardBorder: 'rgba(255,255,255,0.15)', btnBg: '#bd00ff', btnText: '#ffffff', radius: '24px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Glass', marquee: 'rgba(255,255,255,0.15)', marqueeText: '#ffffff', searchBg: 'rgba(255,255,255,0.08)' },
+        'social': { bg: '#000000', text: '#ffffff', brand: '#ff0055', card: '#1a1a1a', cardBorder: '#333333', btnBg: '#ff0055', btnText: '#ffffff', radius: '16px', borderStyle: 'none', font: 'Inter', layoutType: 'feed', label: 'Social', marquee: '#ff0055', marqueeText: '#ffffff', searchBg: '#1a1a1a' },
+        'arcade': { bg: '#1a0b2e', text: '#43ffff', brand: '#ff00de', card: '#11081f', cardBorder: '#43ffff', btnBg: '#ff00de', btnText: '#ffffff', radius: '0px', borderStyle: 'dashed', font: 'Press Start 2P', layoutType: 'arcade', label: 'Arcade', marquee: '#ff00de', marqueeText: '#ffffff', searchBg: '#11081f' },
+        'organic': { bg: '#f1f8e9', text: '#1b4332', brand: '#2d6a4f', card: '#ffffff', cardBorder: 'rgba(162,209,73,0.3)', btnBg: '#2d6a4f', btnText: '#ffffff', radius: '20px', borderStyle: 'none', font: 'Quicksand', layoutType: 'list', label: 'Organic', marquee: '#2d6a4f', marqueeText: '#ffffff', searchBg: '#e8f5e9' },
+        'neon': { bg: '#050505', text: '#ffffff', brand: '#ff0055', card: '#111111', cardBorder: '#00f2ff', btnBg: '#ff0055', btnText: '#ffffff', radius: '4px', borderStyle: 'solid', font: 'Inter', layoutType: 'list', label: 'Neon Night', marquee: '#ff0055', marqueeText: '#ffffff', searchBg: '#1a1a1a' },
+        'sketch': { bg: '#fdf6e3', text: '#222222', brand: '#333333', card: 'transparent', cardBorder: '#555555', btnBg: '#333333', btnText: '#fdf6e3', radius: '0px', borderStyle: 'solid', font: 'Gloria Hallelujah', layoutType: 'list', label: 'Sketch', marquee: '#333333', marqueeText: '#fdf6e3', searchBg: '#f5ecda' },
+        'fashion': { bg: '#ffffff', text: '#111827', brand: '#9333ea', card: '#ffffff', cardBorder: '#111827', btnBg: '#9333ea', btnText: '#ffffff', radius: '0px', borderStyle: 'solid', font: 'Outfit', layoutType: 'grid', label: 'Fashion', marquee: '#9333ea', marqueeText: '#ffffff', searchBg: '#f3e8ff' },
+        'petshop': { bg: '#f8fafc', text: '#1f2937', brand: '#f97316', card: '#ffffff', cardBorder: '#0f172a', btnBg: '#f97316', btnText: '#ffffff', radius: '30px', borderStyle: 'none', font: 'Quicksand', layoutType: 'grid', label: 'Pet Shop', marquee: '#f97316', marqueeText: '#ffffff', searchBg: '#fff7ed' },
+        'pharmacy': { bg: '#f9fafb', text: '#111827', brand: '#059669', card: '#ffffff', cardBorder: '#e5e7eb', btnBg: '#059669', btnText: '#ffffff', radius: '12px', borderStyle: 'solid', font: 'Inter', layoutType: 'grid', label: 'Pharmacy', marquee: '#059669', marqueeText: '#ffffff', searchBg: '#ecfdf5' }
     };
 
-    const style = themeStyles[theme] || themeStyles['retro'];
+    // Variantes -list herdam cores do tema base
+    const baseTheme = theme.replace('-list', '');
+    const isListVariant = theme !== baseTheme;
+    const style = themeStyles[theme] || themeStyles[baseTheme] || themeStyles['retro'];
 
-    const elements = {
-        preview: 'themePreview', header: 'previewHeader', content: 'previewContent',
-        card: 'previewCard', button: 'previewButton', label: 'previewLabel',
-        price: 'previewPrice', storeName: 'previewStoreName'
+    const layoutLabel = isListVariant ? 'list' : (style.layoutType || 'grid');
+    const layoutIcons = { grid: '▦ GRID', list: '☰ LISTA', feed: '◉ FEED', arcade: '▣ ARCADE' };
+    const isGradientBg = style.bg.startsWith('linear');
+    const solidBg = isGradientBg ? '#1a1a2e' : style.bg;
+    const borderVal = style.borderStyle === 'none' ? 'solid' : style.borderStyle;
+
+    // Buscar todos os elementos
+    const el = id => document.getElementById(id);
+    const els = {
+        preview: el('themePreview'), marquee: el('previewMarquee'), header: el('previewHeader'),
+        content: el('previewContent'), search: el('previewSearch'),
+        catActive: el('previewCatActive'), catInactive: el('previewCatInactive'), catInactive2: el('previewCatInactive2'),
+        card: el('previewCard'), card2: el('previewCard2'),
+        price: el('previewPrice'), price2: el('previewPrice2'),
+        addBtn: el('previewAddBtn'), addBtn2: el('previewAddBtn2'),
+        button: el('previewButton'), bottomNav: el('previewBottomNav'),
+        cartBadge: el('previewCartBadge'), label: el('previewLabel'),
+        storeName: el('previewStoreName'), layoutBadge: el('previewLayoutBadge')
     };
 
-    const els = {};
-    for (let key in elements) els[key] = document.getElementById(elements[key]);
-
-    if (els.preview) els.preview.style.borderColor = style.brand;
+    // === Aplicar estilos ===
+    if (els.preview) {
+        els.preview.style.borderColor = style.brand;
+        els.preview.style.borderRadius = parseInt(style.radius) > 20 ? '28px' : style.radius;
+    }
+    if (els.marquee) {
+        els.marquee.style.background = style.marquee;
+        els.marquee.style.color = style.marqueeText;
+        els.marquee.style.fontFamily = style.font + ', sans-serif';
+    }
     if (els.header) {
-        els.header.style.background = style.brand;
-        els.header.style.color = style.btnText;
+        els.header.style.background = solidBg;
+        els.header.style.color = style.text;
+        els.header.style.fontFamily = style.font + ', sans-serif';
     }
     if (els.content) {
         els.content.style.background = style.bg;
         els.content.style.color = style.text;
+        els.content.style.fontFamily = style.font + ', sans-serif';
     }
-    if (els.card) {
-        els.card.style.background = style.card;
-        els.card.style.border = `2px solid ${style.cardBorder}`;
+    if (els.search) {
+        els.search.style.background = style.searchBg;
+        els.search.style.color = style.text;
+        els.search.style.borderRadius = style.radius;
+        els.search.style.border = `1px ${borderVal} ${style.cardBorder}`;
     }
+    // Category tabs
+    if (els.catActive) {
+        els.catActive.style.background = style.brand;
+        els.catActive.style.color = style.btnText;
+        els.catActive.style.borderRadius = style.radius;
+    }
+    [els.catInactive, els.catInactive2].forEach(cat => {
+        if (cat) {
+            cat.style.background = style.card;
+            cat.style.color = style.text;
+            cat.style.border = `1px solid ${style.cardBorder}`;
+            cat.style.borderRadius = style.radius;
+        }
+    });
+    // Product cards
+    [els.card, els.card2].forEach(card => {
+        if (card) {
+            card.style.background = style.card;
+            card.style.border = `2px ${borderVal} ${style.cardBorder}`;
+            card.style.borderRadius = style.radius;
+        }
+    });
+    // Prices
+    if (els.price) els.price.style.color = style.brand;
+    if (els.price2) els.price2.style.color = style.brand;
+    // Add buttons
+    [els.addBtn, els.addBtn2].forEach(btn => {
+        if (btn) {
+            btn.style.background = style.brand;
+            btn.style.color = style.btnText;
+        }
+    });
+    // CTA button
     if (els.button) {
         els.button.style.background = style.btnBg;
         els.button.style.color = style.btnText;
+        els.button.style.borderRadius = style.radius;
+        els.button.style.fontFamily = style.font + ', sans-serif';
     }
+    // Bottom nav
+    if (els.bottomNav) {
+        els.bottomNav.style.background = solidBg;
+        els.bottomNav.style.color = style.text;
+        els.bottomNav.style.borderColor = style.cardBorder;
+    }
+    // Cart badge
+    if (els.cartBadge) {
+        els.cartBadge.style.background = style.brand;
+        els.cartBadge.style.color = style.btnText;
+    }
+    // Store name & layout badge
+    if (els.storeName) els.storeName.style.color = style.text;
+    if (els.layoutBadge) {
+        els.layoutBadge.innerText = layoutIcons[layoutLabel] || layoutIcons['grid'];
+        els.layoutBadge.style.background = style.brand;
+        els.layoutBadge.style.color = style.btnText;
+    }
+    // Theme label
     if (els.label) {
-        els.label.style.background = style.bg;
+        els.label.style.background = solidBg;
         els.label.style.color = style.text;
-        els.label.innerText = style.label;
+        els.label.innerText = style.label + (isListVariant ? ' (Lista)' : '');
     }
-    if (els.price) els.price.style.color = style.brand;
-    if (els.storeName) els.storeName.style.color = style.btnText;
 }
 
 function toggleLogoType() {

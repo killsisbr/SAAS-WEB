@@ -71,15 +71,16 @@ export function findProduct(searchTerm, products, lastCategoryId = null) {
         }
 
         // Adicionar threshold mínimo rigoroso para evitar matches de puro ruído
-        if (score < 70) score = 0;
+        if (score < 75) score = 0; // Mais rigor: threshold de 75 mínimo
 
-        if (score < 85 && term.length >= 3) {
+        if (score < 85 && term.length >= 4) { // Evita palavras de 3 letras dando falso positivo
             const tSet = new Set(term);
             const pSet = new Set(pN);
             let inter = 0;
             for (let c of tSet) if (pSet.has(c)) inter++;
             const sim = inter / Math.max(tSet.size, pSet.size);
-            if (sim >= 0.7 && Math.abs(term.length - pN.length) <= 3) score = Math.max(score, 75);
+            // Threshold aumentado de 0.7 para 0.85 para evitar absurdos e obriga diferença de tamanho menor
+            if (sim >= 0.85 && Math.abs(term.length - pN.length) <= 2) score = Math.max(score, 75);
         }
         return { product: p, score };
     }).filter(s => s.score >= 75).sort((a, b) => {
@@ -98,7 +99,9 @@ export function findProductsInMessage(message, products, addons = []) {
     let working = " " + raw + " ";
 
     // Passo 0: Sinônimos Cirúrgicos (evita milk milk shake) e Palavras Ignoradas
-    const ignoredWords = ['por favor', 'pfv', 'pf', 'quero', 'querer', 'gostaria', 'manda', 'mandarem', 've', 'obrigado', 'obrigada', 'vlw', 'valeu', 'moça', 'moço', 'amigo', 'amiga', 'bom dia', 'boa tarde', 'boa noite', 'ola', 'olá', 'oi', 'opa', 'eae', 'eai', 'entao', 'então', 'vou', 'pra', 'para', 'pro', 'me', 'muito', 'muita', 'eu', 'demora', 'pedir', 'voces', 'estava', 'fiquei', 'vontade', 'olhando', 'cardapio', 'cardápio', 'um', 'uma', 'uns', 'umas', 'no', 'na', 'nos', 'nas', 'esse', 'essa', 'isso', 'dele', 'dela', 'deles', 'delas', 'preciso', 'envia', 'traz', 'traga', 'obg', 'dia', 'tarde', 'noite', 'bom', 'boa'];
+    const ignoredWords = ['por favor', 'pfv', 'pf', 'quero', 'querer', 'gostaria', 'manda', 'mandarem', 've', 'obrigado', 'obrigada', 'vlw', 'valeu', 'moça', 'moço', 'amigo', 'amiga', 'bom dia', 'boa tarde', 'boa noite', 'ola', 'olá', 'oi', 'opa', 'eae', 'eai', 'entao', 'então', 'vou', 'pra', 'para', 'pro', 'me', 'muito', 'muita', 'eu', 'demora', 'pedir', 'voces', 'estava', 'fiquei', 'vontade', 'olhando', 'cardapio', 'cardápio', 'um', 'uma', 'uns', 'umas', 'no', 'na', 'nos', 'nas', 'esse', 'essa', 'isso', 'dele', 'dela', 'deles', 'delas', 'preciso', 'envia', 'traz', 'traga', 'obg', 'dia', 'tarde', 'noite', 'bom', 'boa',
+        // Anti-alucinacao: palavras administrativas que NUNCA sao produtos
+        'carrinho', 'sacola', 'pedido', 'limpa', 'limpar', 'cancelar', 'cancela', 'resetar', 'reiniciar', 'zerar', 'esvaziar', 'teste', 'testar', 'fechar', 'finalizar', 'pronto', 'acabou'];
     let ignoredRegex = new RegExp(`\\b(?:${ignoredWords.join('|')})\\b`, 'gi');
     working = working.replace(ignoredRegex, ' ');
 

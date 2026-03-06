@@ -29,6 +29,17 @@ export class TranscriptionService {
 
         console.log(`[Transcription] Iniciando transcrição (${audioBuffer.length} bytes)...`);
 
+        // 0. PRIORIDADE MÁXIMA: Whisper Local (offline, sem API key)
+        try {
+            const { transcribeLocal } = await import('./local-whisper.js');
+            const result = await transcribeLocal(audioBuffer, mimetype);
+            if (result && result.trim().length > 0) {
+                return result;
+            }
+        } catch (err) {
+            console.warn('[Transcription] Local Whisper falhou, tentando APIs...', err.message);
+        }
+
         // 1. Tentar Groq (Distil-Whisper) - Mais rápido
         if (this.groqKey) {
             try {
@@ -47,9 +58,9 @@ export class TranscriptionService {
             }
         }
 
-        // Fallback se não houver chaves ou erros
-        console.warn('[Transcription] Nenhuma API configurada ou falha na transcrição.');
-        return "[Áudio Recebido] (Configure GROQ_API_KEY ou OPENAI_API_KEY para transcrição automática)";
+        // Fallback se todas falharem
+        console.warn('[Transcription] Todas as opções de transcrição falharam.');
+        return "[Áudio Recebido] (Transcrição indisponível)";
     }
 
     async transcribeWithGroq(audioBuffer, mimetype) {
@@ -58,7 +69,7 @@ export class TranscriptionService {
         const formData = new FormData();
         // Groq requer nome de arquivo para detectar tipo
         formData.append('file', audioBuffer, { filename: 'audio.ogg', contentType: mimetype || 'audio/ogg' });
-        formData.append('model', 'distil-whisper-large-v3-en'); // Ou 'whisper-large-v3'
+        formData.append('model', 'whisper-large-v3'); // Multilingual - suporta PT-BR
         formData.append('response_format', 'json');
         formData.append('language', 'pt'); // Forçar português
 

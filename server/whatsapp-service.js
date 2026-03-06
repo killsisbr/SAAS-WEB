@@ -557,7 +557,33 @@ class WhatsAppService {
                     const BoomError = lastDisconnect?.error;
                     const statusCode = BoomError?.output?.statusCode;
                     const reason = BoomError?.message || 'Unknown reason';
-                    const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+                    let shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+                    // Tratar 401 com "Connection Failure" (falso logout)
+                    if (statusCode === DisconnectReason.loggedOut && reason.includes('Connection Failure')) {
+                        // Contar tentativas consecutivas de 401 para este tenant
+                        const attempts = (this.reconnectAttempts.get(tenantId) || 0) + 1;
+                        this.reconnectAttempts.set(tenantId, attempts);
+
+                        if (attempts <= 3) {
+                            console.log(`[WhatsApp] ⚠️ 401 Falso (Connection Failure) para ${tenantId}. Tentativa ${attempts}/3. Reconectando...`);
+                            shouldReconnect = true;
+                        } else {
+                            console.log(`[WhatsApp] 🛑 401 persistente para ${tenantId} após ${attempts} tentativas. Sessão inválida. Parando reconexão.`);
+                            this.statuses.set(tenantId, 'FAILED');
+                            this.clients.delete(tenantId);
+                            this.reconnectAttempts.set(tenantId, 0);
+                            // Cooldown de 1h antes de tentar novamente
+                            setTimeout(() => {
+                                if (this.statuses.get(tenantId) === 'FAILED') {
+                                    console.log(`[WhatsApp] ⏰ Cooldown expirado para ${tenantId}. Pronto para reconexão manual.`);
+                                    this.statuses.set(tenantId, 'DISCONNECTED');
+                                }
+                            }, 60 * 60 * 1000);
+                            return;
+                        }
+                    }
 
                     console.log(`[WhatsApp] Conexao fechada para tenant ${tenantId}. Motivo: ${statusCode} (${reason}). Reconectando: ${shouldReconnect}`);
 
@@ -577,8 +603,10 @@ class WhatsAppService {
 
                     if (shouldReconnect) {
                         this.statuses.set(tenantId, 'RECONNECTING');
-                        // Delay randomizado para evitar rate-limit do WhatsApp
-                        const delay = 5000 + Math.random() * 5000; // 5-10 segundos
+                        // Delay progressivo: 5s na 1a, 15s na 2a, 30s na 3a tentativa
+                        const attempts = this.reconnectAttempts.get(tenantId) || 1;
+                        const delay = Math.min(5000 * attempts, 30000) + Math.random() * 3000;
+                        console.log(`[WhatsApp] Reconectando ${tenantId} em ${Math.round(delay / 1000)}s...`);
                         setTimeout(() => this.initializeForTenant(tenantId), delay);
                     } else {
                         this.statuses.set(tenantId, 'LOGGED_OUT');
@@ -710,10 +738,14 @@ class WhatsAppService {
                 message.message?.extendedTextMessage?.text ||
                 '';
 
-            if (!messageBody) return; // Ignorar mensagens sem texto
+            // Detectar audio (voice note / audio message)
+            const audioMessage = message.message?.audioMessage;
+            const hasAudio = !!audioMessage;
+
+            if (!messageBody && !hasAudio) return; // Ignorar mensagens sem texto E sem audio
 
             // ============ COMANDO DE TESTE ============
-            if (messageBody.trim().toLowerCase() === '.teste') {
+            if (messageBody && messageBody.trim().toLowerCase() === '.teste') {
                 console.log(`[Command] .teste recebido de ${message.pushName || 'Cliente'} (${realPhoneJid})`);
                 const uptime = process.uptime();
                 const hours = Math.floor(uptime / 3600);
@@ -826,7 +858,6 @@ class WhatsAppService {
                         await sock.sendPresenceUpdate('composing', jid);
 
                         // Detectar localização
-                        // Detectar localização
                         const locationMessage = message.message?.locationMessage;
                         let location = null;
                         if (locationMessage) {
@@ -837,17 +868,48 @@ class WhatsAppService {
                             console.log(`[AgentEmployee] 📍 Localização recebida: ${JSON.stringify(location)}`);
                         }
 
-                        // Detectar áudio (DESATIVADO TEMPORARIAMENTE)
-                        /*
-                        const audioMessage = message.message?.audioMessage;
+                        // ====== TRANSCRIÇÃO DE ÁUDIO ======
                         let audioText = null;
-                        if (audioMessage) { ... }
-                        */
+                        if (hasAudio) {
+                            try {
+                                console.log(`[AgentEmployee] 🎤 Áudio recebido de ${pushName}. Transcrevendo...`);
+
+                                // Baixar o buffer do áudio via Baileys
+                                const audioBuffer = await downloadMediaMessage(message, 'buffer', {});
+                                const mimetype = audioMessage.mimetype || 'audio/ogg; codecs=opus';
+
+                                console.log(`[AgentEmployee] Áudio: ${audioBuffer.length} bytes, tipo: ${mimetype}`);
+
+                                // Transcrever usando o serviço existente (Groq Whisper / OpenAI)
+                                const { TranscriptionService } = await import('./services/transcription-service.js');
+                                const transcriber = new TranscriptionService();
+                                audioText = await transcriber.transcribe(audioBuffer, mimetype);
+
+                                if (audioText && !audioText.startsWith('[')) {
+                                    console.log(`[AgentEmployee] ✅ Transcrição: "${audioText}"`);
+                                } else {
+                                    console.log(`[AgentEmployee] ⚠️ Transcrição falhou ou sem API key.`);
+                                }
+                            } catch (err) {
+                                console.error(`[AgentEmployee] ❌ Erro na transcrição:`, err.message);
+                                audioText = null;
+                            }
+                        }
 
                         // Se for localização, definimos um texto padrão.
-                        const finalMessage = location
-                            ? '📍 [Localização Enviada]'
-                            : (messageBody || '');
+                        // Se for áudio, usamos o texto transcrito.
+                        let finalMessage;
+                        if (location) {
+                            finalMessage = '📍 [Localização Enviada]';
+                        } else if (audioText && !audioText.startsWith('[')) {
+                            finalMessage = audioText;
+                        } else if (hasAudio && (!audioText || audioText.startsWith('['))) {
+                            // Audio sem transcrição: avisar o cliente
+                            await this.safeSendMessage(tenantId, jid, '🎤 Recebi seu áudio! Infelizmente ainda não consigo ouvir áudios. Por favor, digite sua mensagem. 😊', sock);
+                            return;
+                        } else {
+                            finalMessage = messageBody || '';
+                        }
 
                         // Se não tem mensagem nem mídia, ignora
                         if (!finalMessage) return;
@@ -857,7 +919,7 @@ class WhatsAppService {
                             sanitizedNumber,
                             finalMessage,
                             pushName,
-                            { location, audio: false } // Audio disabled
+                            { location, audio: hasAudio } // Marcar se veio de áudio
                         );
 
                         // Parar digitação

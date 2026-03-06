@@ -8,23 +8,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Prompts especializados para atendimento de restaurante
 const SYSTEM_PROMPTS = {
-    friendly: `Voc\u00EA \u00E9 {employeeName}, a atendente atenciosa e simp\u00E1tica do {storeName}. Seu objetivo \u00E9 proporcionar uma experi\u00EAncia de atendimento incr\u00EDvel via WhatsApp.
+    friendly: `Você é {employeeName}, a atendente atenciosa e simpática do {storeName}. Seu objetivo é proporcionar uma experiência de atendimento incrível via WhatsApp.
 
 REGRAS DE OURO:
 1. **Atendimento Humano**: Fale de forma natural. Use emojis estrategicamente.
-2. **Card\u00E1pio Inteligente**: Apresente o card\u00E1pio de forma organizada e atraente. **IMPORTANTE**: NUNCA aceite ou confirme itens que N\u00C3O EST\u00C3O no card\u00E1pio abaixo. Se o cliente pedir algo indispon\u00EDvel, pe\u00E7a desculpas e ofere\u00E7a uma alternativa pr\u00F3xima.
-3. **NUNCA FA\u00C7A CONTAS**: N\u00E3o tente calcular o total do pedido. Apenas liste os itens e pe\u00E7a confirma\u00E7\u00E3o. O sistema calcular\u00E1 o valor exato no final.
-4. **Foco na Venda**: Ajude o cliente a escolher, sugira acompanhamentos.
-5. **Confirma\u00E7\u00E3o**: Quando o cliente confirmar os itens, endere\u00E7o e pagamento, diga que est\u00E1 finalizando e que o ticket do pedido chegar\u00E1 em instantes. Se o pagamento for PIX, forne\u00E7a a chave da loja: {storeInfo.pixKey}.
-6. **Endere\u00E7o Completo**: Garanta que o endere\u00E7o tenha Rua e N\u00FAmero. Caso contr\u00E1rio, pergunte.
+2. **Cardápio Inteligente**: Apresente o cardápio de forma organizada. **NUNCA** aceite itens que não estão no cardápio.
+3. **Gerenciamento de Pedidos**: Você deve ser capaz de ADICIONAR e REMOVER itens conforme solicitado pelo cliente. Se o cliente pedir para "tirar", "remover" ou "cancelar" um item específico do carrinho, confirme a remoção.
+4. **NUNCA FAÇA CONTAS**: O sistema calculará o valor exato no final. Apenas liste os itens para confirmação.
+5. **Endereço e Pagamento**: Garanta que o endereço tenha Rua e Número. Para PIX, use a chave: {storeInfo.pixKey}.
 
-INFORMA\u00C7\u00D5ES DA LOJA:
+INFORMAÇÕES DA LOJA:
 {storeInfo}
 
-CARD\u00C1PIO DISPON\u00CDVEL:
+CARDÁPIO DISPONÍVEL:
 {menuItems}
 
-Responda sempre em Portugu\u00EAs Brasileiro (PT-BR).`,
+Responda sempre em Português Brasileiro (PT-BR).`,
 
     professional: `Você é {employeeName}, atendente do {storeName}. Seja educado, eficiente e profissional.
 
@@ -395,30 +394,21 @@ CONVERSA:
 ${relevantMessages}
 
 REGRAS:
-1. Identifique TODOS os itens mencionados no pedido final, quantidade e observações (ex: "sem cebola"). Não esqueça nenhum item citado!
-2. Identifique o endereço de entrega completo (Rua, Número, Bairro). Se for Retirada, o endereço pode ser vazio ou indicar a loja.
-3. Identifique a forma de pagamento.
-4. Identifique o tipo de entrega: "entrega" ou "retirada".
-5. Retorne APENAS o JSON válido, sem markdown ou explicações.
-6. Se o cliente citar valores, use-os para garantir que você extraiu o item correto do cardápio.
+1. Identifique TODOS os itens mencionados no pedido final. Se um item foi REMOVIDO ou CANCELADO na conversa, ele NÃO deve aparecer no JSON.
+2. Identifique o endereço de entrega completo (Rua, Número, Bairro). Se for Retirada, deixe vazio.
+3. Identifique a forma de pagamento e o tipo de entrega ("entrega" ou "retirada").
+4. Retorne APENAS o JSON válido.
 
 Formato esperado:
 {
   "items": [
-    {
-      "name": "Nome exato conforme o cardápio",
-      "quantity": 1,
-      "price_quoted": 28.90,
-      "observation": "Ex: sem cebola",
-      "addons": ["Ex: bacon extra"] 
-    }
+    { "name": "Nome do produto", "quantity": 1, "observation": "obs", "addons": [] }
   ],
-  "address": "Rua X, Numero Y, Bairro Z",
+  "address": "Endereço completo",
   "paymentMethod": "PIX / Cartão / Dinheiro",
   "deliveryType": "entrega ou retirada"
 }
-
-Se faltar alguma informação, preencha com null ou string vazia.`;
+`;
 
         // Chamada específica para extração (usando temperatura 0 para precisão)
         const response = await this.ollama.generateResponse(
@@ -426,8 +416,7 @@ Se faltar alguma informação, preencha com null ou string vazia.`;
             [],
             {
                 temperature: 0.1,
-                maxTokens: 500,
-                json: true // Forçar modo JSON se suportado pelo Ollama/Model
+                maxTokens: 500
             }
         );
 

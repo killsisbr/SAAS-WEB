@@ -19,7 +19,7 @@ export class AgentEmployee {
             employeeName: config.employeeName || 'Ana',
             storeName: config.storeName || 'Restaurante',
             ollamaUrl: config.ollamaUrl || 'http://localhost:11434',
-            model: config.model || 'gemma3:4b',
+            model: config.model || 'llama3:8b',
             ...config
         };
         this.products = [];

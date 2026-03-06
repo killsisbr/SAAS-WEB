@@ -703,6 +703,7 @@
                     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Escolha o tema
                         visual que será exibido para seus clientes na loja online. </p>
                     <div class="form-group"><label>Tema Visual</label><select id="storeTheme"
+                            onchange="updateThemePreview()"
                             style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem;">
                             <option value="retro">🍔 Retro (Padrão)</option>
                             <option value="retro-list">📋 Retro (Lista)</option>
@@ -731,53 +732,142 @@
                             <option value="petshop">🐾 Pet Shop (Animais)</option>
                             <option value="pharmacy">💊 Pharmacy (Farmácia)</option>
                         </select></div>
-                    <!-- Preview Aprimorado -->
+                    <!-- Preview Premium: Phone Mockup -->
                     <div id="themePreview"
-                        style="margin-top: 16px; border-radius: 16px; overflow: hidden; border: 3px solid #333; transition: all 0.3s ease;">
+                        style="margin-top: 20px; border-radius: 28px; overflow: hidden; border: 4px solid #333; transition: all 0.4s ease; max-width: 360px; margin-left: auto; margin-right: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+
+                        <!-- Marquee Bar -->
+                        <div id="previewMarquee"
+                            style="padding: 6px 12px; font-size: 0.55rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; text-align: center; white-space: nowrap; overflow: hidden;">
+                            PEDIDOS ABERTOS ★ ENTREGA RAPIDA ★ FRETE GRATIS</div>
+
                         <!-- Header -->
                         <div id="previewHeader"
-                            style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-                            <span id="previewStoreName" style="font-weight: 800; font-size: 1.1rem;">SUA
-                                LOJA</span>
-                            <div style="display: flex; gap: 8px;">
-                                <div
-                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
+                            style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div id="previewMenuIcon" style="width: 20px; height: 20px; opacity: 0.6;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round">
+                                        <line x1="4" y1="6" x2="20" y2="6" />
+                                        <line x1="4" y1="12" x2="20" y2="12" />
+                                        <line x1="4" y1="18" x2="20" y2="18" />
+                                    </svg>
                                 </div>
-                                <div
-                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
-                                </div>
-                                <div
-                                    style="width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: 0.5;">
+                                <span id="previewStoreName"
+                                    style="font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em;">SUA
+                                    LOJA</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span id="previewLayoutBadge"
+                                    style="font-size: 0.55rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase;">▦
+                                    GRID</span>
+                                <div id="previewCartIcon" style="position: relative; width: 24px; height: 24px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                    <div id="previewCartBadge"
+                                        style="position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; border-radius: 50%; font-size: 0.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center;">
+                                        2</div>
                                 </div>
                             </div>
                         </div>
+
                         <!-- Content -->
-                        <div id="previewContent" style="padding: 16px;">
-                            <!-- Product Card -->
-                            <div id="previewCard"
-                                style="border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center;">
-                                <div
-                                    style="width: 60px; height: 60px; border-radius: 8px; background: linear-gradient(135deg, #ff6b6b, #ffd93d); flex-shrink: 0;">
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">
-                                        X-Bacon Especial</div>
-                                    <div style="font-size: 0.75rem; opacity: 0.6;">Hamburguer
-                                        artesanal...</div>
-                                    <div id="previewPrice" style="font-weight: 800; font-size: 1rem; margin-top: 4px;">
-                                        R$ 32,
-                                        90</div>
-                                </div>
+                        <div id="previewContent" style="padding: 0 14px 14px;">
+                            <!-- Search Bar -->
+                            <div id="previewSearch"
+                                style="padding: 10px 14px; border-radius: 12px; font-size: 0.7rem; opacity: 0.5; font-weight: 600; margin-bottom: 12px;">
+                                🔍 Deseja comer o que hoje?...</div>
+
+                            <!-- Category Tabs -->
+                            <div style="display: flex; gap: 6px; margin-bottom: 14px; overflow: hidden;">
+                                <div id="previewCatActive"
+                                    style="padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 800; white-space: nowrap; text-transform: uppercase;">
+                                    Lanches</div>
+                                <div id="previewCatInactive"
+                                    style="padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 600; white-space: nowrap; opacity: 0.5; text-transform: uppercase;">
+                                    Bebidas</div>
+                                <div id="previewCatInactive2"
+                                    style="padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 600; white-space: nowrap; opacity: 0.5; text-transform: uppercase;">
+                                    Combos</div>
                             </div>
+
+                            <!-- Product Card 1 -->
+                            <div id="previewCard"
+                                style="border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; margin-bottom: 8px; transition: all 0.3s ease;">
+                                <div
+                                    style="width: 56px; height: 56px; border-radius: 8px; background: linear-gradient(135deg, #ff6b6b, #ffd93d); flex-shrink: 0;">
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 2px;">X-Bacon
+                                        Especial</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.5;">Hamburguer artesanal com bacon...
+                                    </div>
+                                    <div id="previewPrice"
+                                        style="font-weight: 800; font-size: 0.85rem; margin-top: 3px;">R$ 32,90</div>
+                                </div>
+                                <div id="previewAddBtn"
+                                    style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; cursor: pointer;">
+                                    +</div>
+                            </div>
+
+                            <!-- Product Card 2 -->
+                            <div id="previewCard2"
+                                style="border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; margin-bottom: 12px; transition: all 0.3s ease;">
+                                <div
+                                    style="width: 56px; height: 56px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #a78bfa); flex-shrink: 0;">
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 2px;">Acai 500ml
+                                    </div>
+                                    <div style="font-size: 0.6rem; opacity: 0.5;">Acai cremoso com granola...</div>
+                                    <div id="previewPrice2"
+                                        style="font-weight: 800; font-size: 0.85rem; margin-top: 3px;">R$ 18,90</div>
+                                </div>
+                                <div id="previewAddBtn2"
+                                    style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; cursor: pointer;">
+                                    +</div>
+                            </div>
+
                             <!-- CTA Button -->
                             <div id="previewButton"
-                                style="margin-top: 12px; padding: 10px 20px; border-radius: 25px; text-align: center; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                                🛒 ADICIONAR AO CARRINHO </div>
+                                style="padding: 10px 20px; border-radius: 25px; text-align: center; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.3s ease;">
+                                🛒 FINALIZAR PEDIDO</div>
                         </div>
-                        <!-- Theme Name -->
+
+                        <!-- Bottom Nav -->
+                        <div id="previewBottomNav"
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid rgba(128,128,128,0.2); padding: 8px 0;">
+                            <div
+                                style="text-align: center; font-size: 0.5rem; font-weight: 700; opacity: 0.4; padding: 4px;">
+                                <svg style="width:16px; height:16px; margin: 0 auto 2px;" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                </svg>
+                                INICIO
+                            </div>
+                            <div style="text-align: center; font-size: 0.5rem; font-weight: 700; padding: 4px;">
+                                <svg style="width:16px; height:16px; margin: 0 auto 2px;" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                                CARRINHO
+                            </div>
+                            <div
+                                style="text-align: center; font-size: 0.5rem; font-weight: 700; opacity: 0.4; padding: 4px;">
+                                <svg style="width:16px; height:16px; margin: 0 auto 2px;" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                PEDIDOS
+                            </div>
+                        </div>
+
+                        <!-- Theme Label -->
                         <div id="previewLabel"
-                            style="padding: 8px; text-align: center; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">
-                            Tema Retro </div>
+                            style="padding: 6px; text-align: center; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7;">
+                            Retro</div>
                     </div><button class="btn btn-primary" onclick="saveTheme()" style="margin-top: 16px;"><i
                             class="fas fa-save"></i>Salvar Tema </button>
                 </div>

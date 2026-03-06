@@ -11,7 +11,7 @@ import OllamaClient from '../../services/ollama-client.js';
 export class AIInterpreter {
     constructor(config = {}) {
         this.ollamaUrl = config.ollamaUrl || 'http://localhost:11434';
-        this.model = config.model || 'gemma:2b';
+        this.model = config.model || 'llama3:8b';
         this.ollama = new OllamaClient({
             url: this.ollamaUrl,
             model: this.model
@@ -52,55 +52,52 @@ export class AIInterpreter {
      * Detectar intenções rápidas sem IA
      */
     getQuickIntent(msg, currentState) {
-        // Saudações
-        if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eae|eai|hey|hello|hi)$/i.test(msg)) {
+        // Saudações (apenas se a mensagem INTEIRA for saudação)
+        if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eae|eai|hey|hello|hi)[!.,]?$/i.test(msg)) {
             return { type: 'GREETING' };
         }
 
-        // Ver cardápio
-        if (/cardapio|menu|o que tem|opcoes|opções/i.test(msg)) {
-            return { type: 'SHOW_MENU' };
+        // ===== PRIORIDADE ALTA: Ações destrutivas/administrativas =====
+
+        // Cancelar/Limpar/Resetar (ANTES de qualquer outra verificação)
+        if (/\b(cancelar|limpar?|resetar|reiniciar|zerar|esvaziar)\b/i.test(msg) && /\b(carrinho|pedido|sacola|tudo|ordem)\b/i.test(msg)) {
+            return { type: 'RESET' };
+        }
+        // Cancelar genérico (sem contexto de carrinho)
+        if (/^(cancelar|cancelar tudo|cancela|limpar|limpa|resetar|reiniciar)$/i.test(msg)) {
+            return { type: 'RESET' };
         }
 
-        // Confirmar/Sim
-        if (/^(sim|s|yes|confirma|confirmo|isso|exato|correto|pode ser|tá|ta)$/i.test(msg) || (msg.includes('certo') && msg.includes('isso'))) {
+        // ===== PRIORIDADE MEDIA: Navegação =====
+
+        // "Só isso" / Finalizar (exato ou com contexto)
+        if (/^(so isso|só isso|somente isso|era isso|é isso|pronto|finalizar|fechar|acabou|ja deu|já deu|isso|isso ai|beleza|pode fechar|certo|só|so)$/i.test(msg)) {
+            return { type: 'FINALIZE_CART' };
+        }
+
+        // Confirmar/Sim (exato)
+        if (/^(sim|s|yes|confirma|confirmo|exato|correto|pode ser|tá|ta|isso mesmo)$/i.test(msg)) {
             return { type: 'CONFIRM' };
         }
 
-        // Negar/Não
+        // Negar/Não (exato)
         if (/^(não|nao|n|no|nope|nenhuma?|nada|sem obs)$/i.test(msg)) {
             return { type: 'DENY' };
         }
 
-        // Entrega
-        if (/\b(entrega|entregar|delivery|trazer)\b/i.test(msg)) {
-            return { type: 'DELIVERY' };
-        }
-
-        // Retirada
-        if (/retirada|retirar|buscar|balcão|balcao|pegar/i.test(msg)) {
-            return { type: 'PICKUP' };
-        }
+        // Entrega / Retirada
+        if (/\b(entrega|entregar|delivery|trazer)\b/i.test(msg)) return { type: 'DELIVERY' };
+        if (/\b(retirada|retirar|buscar|balcão|balcao|pegar)\b/i.test(msg)) return { type: 'PICKUP' };
 
         // Pagamentos
-        if (/^(pix|1)$/i.test(msg) || msg.includes('pix')) {
-            return { type: 'PAYMENT', method: 'PIX' };
-        }
-        if (/^(cartao|cartão|credito|crédito|debito|débito|2)$/i.test(msg) || msg.includes('cartao') || msg.includes('cartão')) {
-            return { type: 'PAYMENT', method: 'CARD' };
-        }
-        if (/^(dinheiro|3)$/i.test(msg) || msg.includes('dinheiro')) {
-            return { type: 'PAYMENT', method: 'CASH' };
-        }
+        if (/\bpix\b/i.test(msg)) return { type: 'PAYMENT', method: 'PIX' };
+        if (/\b(cart[aã]o|credito|cr[eé]dito|d[eé]bito|debito)\b/i.test(msg)) return { type: 'PAYMENT', method: 'CARD' };
+        if (/\bdinheiro\b/i.test(msg)) return { type: 'PAYMENT', method: 'CASH' };
 
-        // Cancelar/Voltar
-        if (/cancelar|voltar|reiniciar|limpar|resetar/i.test(msg)) {
-            return { type: 'RESET' };
-        }
-
-        // "Só isso" / Finalizar
-        if (/so isso|só isso|somente isso|era isso|é isso|pronto|finalizar|fechar|acabou|so|só|ja deu|já deu|^isso$|^isso ai$|^beleza$|^pode fechar$|^certo$/i.test(msg)) {
-            return { type: 'FINALIZE_CART' };
+        // ===== PRIORIDADE BAIXA: Navegação genérica =====
+        // Ver cardápio (APENAS se for a intenção principal, NÃO como substring)
+        if (/^(cardapio|cardápio|menu|ver cardapio|ver cardápio|ver menu|o que tem|opcoes|opções|quais opcoes|mostra o cardapio)$/i.test(msg)) {
+            return { type: 'SHOW_MENU' };
         }
 
         return null; // Precisa de IA
@@ -118,25 +115,61 @@ export class AIInterpreter {
         const productList = mainProducts.map(p => `- ${p.name}: R$ ${p.price}`).join('\n');
         const addonList = addonItems.map(a => `- ${a.name}: R$ ${a.price}`).join('\n');
 
-        const systemPrompt = `Aja como um extrator de JSON.
-Responda APENAS o JSON.
+        const systemPrompt = `Você é um extrator de intenções para um sistema de pedidos de restaurante.
+Retorne APENAS um JSON válido, sem texto adicional.
 
-CATALOGO:
+CATÁLOGO DE PRODUTOS:
 ${productList}
 
-ADICIONAIS:
+ADICIONAIS/COMPLEMENTOS:
 ${addonList || 'Nenhum'}
 
-FORMATO:
-{"type":"ORDER","items":[{"name":"NOME_EXATO","quantity":1,"modifiers":["ADICIONAL_EXATO"],"observation":null}],"understood":true}
+TIPOS DE INTENÇÃO E QUANDO USAR:
 
-MENSAGEM: "${message}"`;
+1. "ORDER" - Quando o cliente pede um item ESPECÍFICO do catálogo.
+   Use o NOME_EXATO do catálogo. Inclua quantity e modifiers (adicionais).
+   Se o cliente mencionar um TAMANHO (ex: "700", "500ml", "2L", "1 bola"), 
+   encontre o item NO CATÁLOGO que corresponde a esse tamanho e retorne ORDER.
+   Se o cliente pedir COM adicional (ex: "com granola", "com paçoca"), coloque o nome do adicional em modifiers.
+
+2. "REMOVE" - Quando o cliente quer TIRAR/CANCELAR um item do pedido.
+
+3. "CLARIFY" - APENAS quando o pedido é COMPLETAMENTE genérico, SEM tamanho e SEM especificação.
+   Ex: "quero açaí" (sem tamanho) mas existem vários tamanhos = CLARIFY
+   Ex: "tem sorvete?" (sem tipo definido) = CLARIFY
+   SE O CLIENTE ESPECIFICOU TAMANHO OU TIPO, NÃO USE CLARIFY. Use ORDER.
+
+4. "SHOW_MENU" - Quando o cliente quer VER o cardápio completo.
+
+5. "FINALIZE_CART" - Quando quer fechar/finalizar o pedido.
+
+6. "RESET" - Quando quer limpar/cancelar o carrinho.
+
+7. "UNKNOWN" - Quando não é possível determinar a intenção.
+
+FORMATO:
+{"type":"...","items":[{"name":"...","quantity":1,"modifiers":[],"observation":null}],"understood":true}
+
+EXEMPLOS:
+Cliente: "quero um açaí" -> {"type":"CLARIFY","items":[{"name":"açaí","quantity":1}],"understood":true}
+Cliente: "açaí 700 com granola" -> {"type":"ORDER","items":[{"name":"Copo Açaí 700ml","quantity":1,"modifiers":["Granola"]}],"understood":true}
+Cliente: "me vê um Copo Açaí 300ml" -> {"type":"ORDER","items":[{"name":"Copo Açaí 300ml","quantity":1}],"understood":true}
+Cliente: "quero 2 picolé de mamão" -> {"type":"ORDER","items":[{"name":"Picolé de Mamão","quantity":2}],"understood":true}
+Cliente: "1 açaí 500 com paçoca e leite condensado" -> {"type":"ORDER","items":[{"name":"Copo Açaí 500ml","quantity":1,"modifiers":["Paçoca","Leite Condensado"]}],"understood":true}
+Cliente: "tira o picolé" -> {"type":"REMOVE","items":[{"name":"Picolé","quantity":1}],"understood":true}
+Cliente: "tem sorvete?" -> {"type":"CLARIFY","items":[{"name":"sorvete","quantity":1}],"understood":true}
+Cliente: "limpa o carrinho" -> {"type":"RESET","items":[],"understood":true}
+Cliente: ".teste" -> {"type":"UNKNOWN","items":[],"understood":false}
+
+MENSAGEM DO CLIENTE: "${message}"`;
 
         const response = await this.ollama.generateResponse(
             systemPrompt,
-            [{ role: 'user', content: `Mensagem do cliente: "${message}"` }],
-            { temperature: 0.1, maxTokens: 300, model: this.model }
+            [{ role: 'user', content: message }],
+            { temperature: 0.05, maxTokens: 200, model: this.model }
         );
+
+        console.log(`[AIInterpreter] Raw Response for "${message}":`, response.content);
 
         if (!response.success) return { type: 'UNKNOWN', raw: message, understood: false };
 
@@ -144,7 +177,11 @@ MENSAGEM: "${message}"`;
         if (jsonMatch) {
             try {
                 let jsonStr = jsonMatch[0].trim();
-                // Limpeza agressiva para gemma:2b que às vezes repete o texto antes do JSON
+                // Limpeza para modelos de raciocínio (como DeepSeek-R1) que incluem blocos <think>
+                const contentClean = response.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+                const cleanMatch = contentClean.match(/\{[\s\S]*\}/);
+                if (cleanMatch) jsonStr = cleanMatch[0].trim();
+
                 const parsed = JSON.parse(jsonStr);
                 return {
                     type: parsed.type || 'UNKNOWN',
@@ -203,18 +240,19 @@ MENSAGEM: "${message}"`;
             ? '1. **Resuma e Confirme**: Como há marmita no carrinho, cite brevemente os itens do buffet escolhidos nela.'
             : '1. **Resuma e Confirme**: Confirme brevemente os itens que o cliente adicionou ao carrinho.';
 
-        const systemPrompt = `Você é a atendente virtual ${employeeName} do restaurante ${storeName}.
-MENSAGEM DO CLIENTE: "${message}"
+        const systemPrompt = `Você é ${employeeName}, atendente do restaurante ${storeName}. Responda ao cliente de forma natural.
 
-DIRETRIZES DE RESPOSTA (OBRIGATÓRIO):
-1. NUNCA responda com mais de 10 palavras.
-2. Responda em UMA ÚNICA LINHA.
-3. Não repita o cliente.
-4. ${greetingRule}
+CARRINHO ATUAL:
+${cartItems}
 
-Sua missão agora: ${this.getStateObjective(state, lastIntent)}
+DIRETRIZES:
+1. Confirme adições ou remoções de forma clara.
+2. Seja simpático, mas direto.
+3. ${greetingRule}
 
-Sua única frase de resposta:`;
+MISSÃO: ${this.getStateObjective(state, lastIntent)}
+
+FRASE DE RESPOSTA:`;
 
         const response = await this.ollama.generateResponse(
             systemPrompt,
@@ -228,7 +266,10 @@ Sua única frase de resposta:`;
 
         if (!response.success) return null;
 
-        const cleanLines = response.content.split('\n')
+        // Limpar blocos de raciocínio (<think>) da resposta final
+        const cleanContent = response.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        const cleanLines = cleanContent.split('\n')
             .map(line => line.trim())
             .filter(line => line.length > 0);
 
